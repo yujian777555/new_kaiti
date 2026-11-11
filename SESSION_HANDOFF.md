@@ -69,3 +69,16 @@ CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687
 Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Output probes confirmed case sensitivity, comma normalization, and multiple-response mismatches. Domain Error return is marked success by EvoTool and affects progress shaping (representative progress 1.0 vs 0.5; shaped component delta 0.15). Official conversational user simulator/wiki loop is absent from EvoTool; official max steps 30 vs EvoTool 6. Thus tool/reward gold parity does not imply full interaction parity.
 
 Next: independent review harness semantics, then define separate legacy and corrected-status treatments. No model/API/A800/optimizer run occurred.
+
+
+## Step 3-R1 — independent conformance review (2026-11-11)
+
+- Branch: audit/step3-independent-review (created from main cf83f08da748f3b7889465c3b19432e6389ca7b7).
+- The initial Step 3 report's Action History check compared only lengths. Step 3-R1 upgrades this to exact ordered action-name/kwargs equality for all 635 Gold tasks.
+- Added direct reset/copy isolation checks: official Env.reset() and independent EvoTool TauBenchEnv() instances are compared against the pinned DB.
+- Added environment-wrapper dispatch probes for a successful Train Gold Action, a Train/Gold domain rejection, unknown tool, and missing required argument. Unknown-tool and malformed-argument serialization differences are recorded as known deviations.
+- Conformance now verifies the preceding dataset integrity report, pinned source commit, 42 source-file checks, and SHA-256 hashes for Train/Dev/Test JSONL before running.
+- CI dataset preparation no longer masks the command's exit code with || true.
+- Keep the original EvoTool status/reward unchanged. Do not classify every returned Error: as failed execution; distinguish execution status from business outcome in any future corrected arm.
+- Official max_num_steps=30 conversational turns and EvoTool max_steps=6 planner substeps are different units and must not be compared as a direct ratio.
+- This milestone remains deterministic source/environment conformance only. No LLM/API/A800/vLLM/optimizer/training/policy-performance evaluation.

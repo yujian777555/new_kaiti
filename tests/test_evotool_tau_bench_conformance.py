@@ -113,3 +113,50 @@ def test_protocol_difference_is_explicit_and_projection_scope_is_bounded(conform
     assert projection["actual_products_mutated_by_any_gold_action"] == 0
     assert projection["hypothetical_product_only_change_ignored_by_evotool_projection"] is True
     assert conformance_report["overall_gate"] == "PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS"
+
+
+
+def test_action_history_matches_exact_ordered_sequence_for_every_gold_task(conformance_report):
+    reward = conformance_report["reward_parity"]
+    assert reward["action_history_checked_task_count"] == 635
+    assert reward["action_history_mismatch_count"] == 0
+    probe = reward["action_history_probe"]
+    assert probe["matches_source_behavior"] is True
+    assert probe["observed_history_length"] == probe["expected_history_length"]
+    assert probe["first_mismatch_index"] is None
+    assert len(probe["expected_sequence_sha256"]) == 64
+    assert probe["observed_sequence_sha256"] == probe["expected_sequence_sha256"]
+
+
+def test_official_reset_and_evotool_fresh_instances_are_isolated(conformance_report):
+    probe = conformance_report["db_reset_copy_probe"]
+    assert probe["gate"] == "PASS"
+    assert probe["initial_official_matches_base"] is True
+    assert probe["initial_adapter_matches_base"] is True
+    assert probe["adapter_instances_are_isolated"] is True
+    assert probe["official_reset_restores_base"] is True
+    assert probe["adapter_reconstruction_restores_base"] is True
+    assert probe["fresh_adapter_matches_official_reset"] is True
+
+
+def test_environment_dispatch_parity_and_known_error_serialization(conformance_report):
+    probes = conformance_report["dispatch_semantics_probe"]
+    success = probes["successful_gold_action"]
+    assert success["output_equal"] is True
+    assert success["state_equal"] is True
+    domain = probes["domain_rejection_gold_action"]
+    assert domain["output_equal"] is True
+    assert domain["state_equal"] is True
+    assert domain["official_done"] is False
+    assert domain["adapter_status"] == "success"
+    assert domain["official_output"].startswith("Error:")
+    unknown = probes["unknown_tool"]
+    assert unknown["output_equal"] is False
+    assert unknown["adapter_status"] == "error"
+    assert unknown["official_output"].startswith("Unknown action")
+    assert unknown["adapter_output"].startswith("Error:")
+    malformed = probes["missing_required_argument"]
+    assert malformed["output_equal"] is False
+    assert malformed["adapter_status"] == "error"
+    assert malformed["official_output"].startswith("Error:")
+    assert malformed["adapter_output"].startswith("Error:")

@@ -29,6 +29,7 @@ TAU_DATA = TAU_ROOT / "tau_bench" / "envs" / "retail" / "data"
 EVOTOOL_ROOT = ROOT / "vendor" / "evotool"
 EVOTOOL_LOCK = EVOTOOL_ROOT / "SOURCE_LOCK.json"
 SPLITS = ("train", "dev", "test")
+EXPECTED_TAU_BENCH_COMMIT = "59a200c6d575d595120f1cb70fea53cef0632f6b"
 
 
 def _sha256(data: bytes) -> str:
@@ -50,6 +51,38 @@ def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> str:
     ).encode("utf-8")
     path.write_bytes(payload)
     return _sha256(payload)
+
+
+def _verify_dataset_integrity(dataset_dir: Path) -> dict:
+    """Require the split-preserving dataset audit to pass before adapter conformance."""
+    report_path = dataset_dir / "integrity_report.json"
+    if not report_path.is_file():
+        raise RuntimeError(f"missing dataset integrity report: {report_path}")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    if report.get("source_integrity_gate") != "PASS":
+        raise RuntimeError("official tau-bench source integrity gate did not pass")
+    if report.get("source", {}).get("commit") != EXPECTED_TAU_BENCH_COMMIT:
+        raise RuntimeError("official tau-bench source commit does not match the conformance pin")
+    verified_count = report.get("source", {}).get("verified_file_count")
+    if verified_count != 42:
+        raise RuntimeError(f"expected 42 verified official source files, got {verified_count}")
+    split_hashes = {}
+    for split in SPLITS:
+        split_path = dataset_dir / f"{split}.jsonl"
+        if not split_path.is_file():
+            raise RuntimeError(f"missing normalized split: {split_path}")
+        actual = _sha256(split_path.read_bytes())
+        expected = report.get("splits", {}).get(split, {}).get("normalized_jsonl_sha256")
+        if actual != expected:
+            raise RuntimeError(f"{split} normalized dataset hash does not match integrity report")
+        split_hashes[split] = actual
+    return {
+        "gate": report["gate"],
+        "source_integrity_gate": report["source_integrity_gate"],
+        "source_commit": report["source"]["commit"],
+        "verified_file_count": verified_count,
+        "split_sha256": split_hashes,
+    }
 
 
 def _verify_evotool_snapshot() -> dict:
@@ -394,6 +427,9 @@ def _audit_reward_parity(rows_by_split, all_tools, load_data, Env, Action, Task,
         "official_vs_evotool_gold_mismatch_examples": [],
         "official_reward_sum": 0.0,
         "evotool_gold_success_count": 0,
+        "action_history_checked_task_count": 0,
+        "action_history_mismatch_count": 0,
+        "action_history_mismatch_examples": [],
         "action_history_probe": None,
     }
     for split, rows in rows_by_split.items():
@@ -407,6 +443,45 @@ def _audit_reward_parity(rows_by_split, all_tools, load_data, Env, Action, Task,
             official_reward, history, _ = _official_score(
                 env, index, predicted, [answer], Action, fake_user
             )
+
+            # Verify the exact sequence, not merely its length:
+            # candidate actions -> response(s), unless a terminal tool ran
+            # -> official Gold Action replay performed inside calculate_reward().
+            executed_candidates = []
+            candidate_terminated = False
+            for action in predicted:
+                executed_candidates.append(
+                    {"name": action["tool"], "kwargs": action["args"]}
+                )
+                if action["tool"] in env.terminate_tools:
+                    candidate_terminated = True
+                    break
+            expected_history = list(executed_candidates)
+            if not candidate_terminated:
+                expected_history.extend(
+                    {"name": "respond", "kwargs": {"content": content}}
+                    for content in [answer]
+                )
+            expected_history.extend(
+                {"name": action["name"], "kwargs": action["kwargs"]}
+                for action in row["actions"]
+                if action["name"] not in env.terminate_tools
+            )
+            actual_history = [
+                {"name": action.name, "kwargs": action.kwargs}
+                for action in history
+            ]
+            history_matches = actual_history == expected_history
+            result["action_history_checked_task_count"] += 1
+            if not history_matches:
+                result["action_history_mismatch_count"] += 1
+                if len(result["action_history_mismatch_examples"]) < 20:
+                    result["action_history_mismatch_examples"].append({
+                        "task_id": row["task_id"],
+                        "expected_length": len(expected_history),
+                        "observed_length": len(actual_history),
+                    })
+
             instance = {
                 "id": row["task_id"],
                 "gold_plan": predicted,
@@ -432,15 +507,30 @@ def _audit_reward_parity(rows_by_split, all_tools, load_data, Env, Action, Task,
                         "evotool_success": evotool_success,
                     })
             if result["action_history_probe"] is None:
-                response_count = 0 if any(a["tool"] == "transfer_to_human_agents" for a in predicted) else 1
-                gold_replay_count = sum(a["name"] != "transfer_to_human_agents" for a in row["actions"])
-                expected = len(predicted) + response_count + gold_replay_count
+                expected_bytes = json.dumps(
+                    expected_history, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                ).encode("utf-8")
+                observed_bytes = json.dumps(
+                    actual_history, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                ).encode("utf-8")
+                first_mismatch = next(
+                    (
+                        i for i in range(max(len(expected_history), len(actual_history)))
+                        if i >= len(expected_history)
+                        or i >= len(actual_history)
+                        or expected_history[i] != actual_history[i]
+                    ),
+                    None,
+                )
                 result["action_history_probe"] = {
                     "task_id": row["task_id"],
-                    "observed_history_length": len(history),
-                    "expected_candidate_response_and_gold_replay_length": expected,
-                    "matches_source_behavior": len(history) == expected,
-                    "explanation": "Env.calculate_reward replays Gold Actions through self.step(), which appends them to the same self.actions list after the candidate response.",
+                    "observed_history_length": len(actual_history),
+                    "expected_history_length": len(expected_history),
+                    "matches_source_behavior": history_matches,
+                    "first_mismatch_index": first_mismatch,
+                    "expected_sequence_sha256": _sha256(expected_bytes),
+                    "observed_sequence_sha256": _sha256(observed_bytes),
+                    "explanation": "Exact ordered (action name, kwargs) sequence: candidate actions, candidate response(s) unless a terminal tool ran, then the non-terminal official Gold Actions replayed by calculate_reward().",
                 }
     return result
 
@@ -497,6 +587,8 @@ def _protocol_audit():
             "injects_retail_wiki": "wiki" in evotool_agent,
             "exposes_terminal_done_flag": "done" in evotool_agent,
             "max_steps_config": 6 if "max_steps: 6" in evotool_config else None,
+            "step_limit_units_comparable": False,
+            "step_limit_comparison_note": "Official max_num_steps counts tool/response turns in the conversational loop; EvoTool max_steps truncates planner substeps before selector/caller execution. The numeric caps are not directly commensurate.",
             "progress_status_success_fraction": 's.get("status") == "success"' in (
                 EVOTOOL_ROOT / "src" / "metrics.py"
             ).read_text(encoding="utf-8"),
@@ -510,7 +602,122 @@ def _protocol_audit():
     }
 
 
+def _audit_db_reset_copy(rows_by_split, all_tools, load_data, Env, Action, Task, fake_user, evotool_env, base_data):
+    """Compare official reset and EvoTool fresh-instance DB isolation."""
+    row = rows_by_split["train"][0]
+    official_env = _make_official_env(
+        [row], all_tools, load_data, Env, Action, Task, fake_user
+    )
+    official_env.reset(task_index=0)
+    adapter_a = evotool_env.TauBenchEnv()
+    adapter_b = evotool_env.TauBenchEnv()
+
+    initial_official_matches_base = official_env.data == base_data
+    initial_adapter_matches_base = adapter_a.db == base_data
+    order_id = next(iter(base_data["orders"]))
+    sentinel = "__new_kaiti_reset_copy_probe__"
+    official_env.data["orders"][order_id]["status"] = sentinel
+    adapter_a.db["orders"][order_id]["status"] = sentinel
+
+    adapter_instances_are_isolated = (
+        adapter_a.db["orders"][order_id]["status"] == sentinel
+        and adapter_b.db == base_data
+    )
+    official_env.reset(task_index=0)
+    adapter_c = evotool_env.TauBenchEnv()
+    official_reset_restores_base = official_env.data == base_data
+    adapter_reconstruction_restores_base = adapter_c.db == base_data
+    fresh_adapter_matches_official_reset = official_env.data == adapter_c.db
+
+    passed = all((
+        initial_official_matches_base,
+        initial_adapter_matches_base,
+        adapter_instances_are_isolated,
+        official_reset_restores_base,
+        adapter_reconstruction_restores_base,
+        fresh_adapter_matches_official_reset,
+    ))
+    return {
+        "gate": "PASS" if passed else "FAIL",
+        "initial_official_matches_base": initial_official_matches_base,
+        "initial_adapter_matches_base": initial_adapter_matches_base,
+        "adapter_instances_are_isolated": adapter_instances_are_isolated,
+        "official_reset_restores_base": official_reset_restores_base,
+        "adapter_reconstruction_restores_base": adapter_reconstruction_restores_base,
+        "fresh_adapter_matches_official_reset": fresh_adapter_matches_official_reset,
+        "scope_note": "EvoTool TauBenchEnv has constructor-based fresh DB initialization, not an explicit reset() method; this probe verifies independent instances and reconstruction.",
+    }
+
+
+def _run_dispatch_probe(all_tools, load_data, Env, Action, Task, fake_user, evotool_env, tool, kwargs):
+    probe_row = {
+        "user_id": "offline_dispatch_probe_user",
+        "instruction": "Deterministic tool dispatch conformance probe.",
+        "actions": [],
+        "outputs": [],
+    }
+    official_env = _make_official_env(
+        [probe_row], all_tools, load_data, Env, Action, Task, fake_user
+    )
+    official_env.reset(task_index=0)
+    adapter_env = evotool_env.TauBenchEnv()
+    official_result = official_env.step(Action(name=tool, kwargs=kwargs))
+    adapter_result = adapter_env.execute(tool, kwargs)
+    return {
+        "tool": tool,
+        "kwargs": kwargs,
+        "official_output": str(official_result.observation),
+        "adapter_output": str(adapter_result["output"]),
+        "output_equal": official_result.observation == adapter_result["output"],
+        "state_equal": official_env.data == adapter_env.db,
+        "official_done": bool(official_result.done),
+        "adapter_status": adapter_result["status"],
+    }
+
+
+def _find_successful_train_action(rows_by_split, all_tools, base_data):
+    official_map = {_tool_name(tool): tool for tool in all_tools}
+    for row in rows_by_split["train"]:
+        for action in row["actions"]:
+            if action["name"] == "transfer_to_human_agents":
+                continue
+            tool = official_map.get(action["name"])
+            if tool is None:
+                continue
+            try:
+                output = tool.invoke(copy.deepcopy(base_data), **action["kwargs"])
+            except Exception:
+                continue
+            if not (isinstance(output, str) and output.startswith("Error:")):
+                return action
+    raise RuntimeError("no successful non-terminal Train Gold Action found for dispatch probe")
+
+
+def _audit_dispatch_semantics(rows_by_split, all_tools, load_data, Env, Action, Task, fake_user, evotool_env, base_data, tool_replay):
+    successful_action = _find_successful_train_action(rows_by_split, all_tools, base_data)
+    domain_example = tool_replay["domain_rejection_examples"][0]
+    return {
+        "successful_gold_action": _run_dispatch_probe(
+            all_tools, load_data, Env, Action, Task, fake_user, evotool_env,
+            successful_action["name"], successful_action["kwargs"],
+        ),
+        "domain_rejection_gold_action": _run_dispatch_probe(
+            all_tools, load_data, Env, Action, Task, fake_user, evotool_env,
+            domain_example["tool"], domain_example["kwargs"],
+        ),
+        "unknown_tool": _run_dispatch_probe(
+            all_tools, load_data, Env, Action, Task, fake_user, evotool_env,
+            "__new_kaiti_unknown_tool_probe__", {},
+        ),
+        "missing_required_argument": _run_dispatch_probe(
+            all_tools, load_data, Env, Action, Task, fake_user, evotool_env,
+            "get_order_details", {},
+        ),
+    }
+
+
 def build_conformance_report(dataset_dir: Path) -> dict:
+    dataset_integrity = _verify_dataset_integrity(dataset_dir)
     evotool_source = _verify_evotool_snapshot()
     all_tools, load_data = install_vendored_runtime()
     evotool_env, evotool_tools, metrics = _load_evotool_snapshot()
@@ -542,6 +749,14 @@ def build_conformance_report(dataset_dir: Path) -> dict:
     reward_parity = _audit_reward_parity(
         rows_by_split, all_tools, load_data, Env, Action, Task,
         fake_user, evotool_env, base_data,
+    )
+    reset_copy_probe = _audit_db_reset_copy(
+        rows_by_split, all_tools, load_data, Env, Action, Task,
+        fake_user, evotool_env, base_data,
+    )
+    dispatch_probes = _audit_dispatch_semantics(
+        rows_by_split, all_tools, load_data, Env, Action, Task,
+        fake_user, evotool_env, base_data, tool_replay,
     )
 
     output_probes = {
@@ -604,18 +819,33 @@ def build_conformance_report(dataset_dir: Path) -> dict:
         reward_parity["official_vs_evotool_gold_mismatch_count"] == 0
         and not reward_parity["official_gold_reward_failures"]
         and not reward_parity["evotool_gold_success_failures"]
+        and reward_parity["action_history_checked_task_count"] == reward_parity["gold_task_count"]
+        and reward_parity["action_history_mismatch_count"] == 0
     )
+    dispatch_gate = (
+        dispatch_probes["successful_gold_action"]["output_equal"]
+        and dispatch_probes["successful_gold_action"]["state_equal"]
+        and dispatch_probes["domain_rejection_gold_action"]["output_equal"]
+        and dispatch_probes["domain_rejection_gold_action"]["state_equal"]
+        and dispatch_probes["domain_rejection_gold_action"]["adapter_status"] == "success"
+        and not dispatch_probes["unknown_tool"]["output_equal"]
+        and dispatch_probes["unknown_tool"]["adapter_status"] == "error"
+        and not dispatch_probes["missing_required_argument"]["output_equal"]
+        and dispatch_probes["missing_required_argument"]["adapter_status"] == "error"
+    )
+    reset_copy_gate = reset_copy_probe["gate"] == "PASS"
 
     return {
-        "schema_version": 1,
-        "overall_gate": "PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS" if tool_gate and reward_gate else "REVIEW_REQUIRED",
+        "schema_version": 2,
+        "overall_gate": "PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS" if tool_gate and reward_gate and dispatch_gate and reset_copy_gate else "REVIEW_REQUIRED",
         "model_inference_performed": False,
         "llm_api_calls": 0,
         "optimizer_runs": 0,
         "sources": {
             "tau_bench_repository": "https://github.com/sierra-research/tau-bench",
             "tau_bench_commit": "59a200c6d575d595120f1cb70fea53cef0632f6b",
-            "tau_bench_source_files_verified_by_dataset_gate": 42,
+            "tau_bench_source_files_verified_by_dataset_gate": dataset_integrity["verified_file_count"],
+            "tau_bench_dataset_integrity": dataset_integrity,
             "evotool": evotool_source,
         },
         "adapted_split_artifacts": adapted_manifest,
@@ -629,6 +859,9 @@ def build_conformance_report(dataset_dir: Path) -> dict:
         },
         "output_semantics_probes": output_probes,
         "domain_error_progress_probe": progress_probe,
+        "db_reset_copy_probe": reset_copy_probe,
+        "dispatch_semantics_probe": dispatch_probes,
+        "dispatch_semantics_gate": "PASS_WITH_KNOWN_DEVIATIONS" if dispatch_gate else "FAIL",
         "mutable_state_projection_probe": {
             "actual_products_mutated_by_any_gold_action": tool_replay["product_mutation_count"],
             "hypothetical_product_only_change_ignored_by_evotool_projection": projection_ignores_product_only_change,
@@ -641,7 +874,9 @@ def build_conformance_report(dataset_dir: Path) -> dict:
             "EvoTool progress counts every tool function that returns normally as status=success, including domain-level Error strings. This is call-return success, not business-operation success.",
             "Official tau-bench's default ToolCallingAgent runs a user-simulator conversation and stops on ###STOP### or transfer_to_human_agents; EvoTool uses a single-instruction modular rollout and does not implement that conversation/termination loop.",
             "Official Env hashes the complete DB; EvoTool compares only orders/users. This is equivalent for the pinned current tool set because products are read-only in all audited calls, but it is not a general equivalence if future tools mutate products.",
-            "Official tool-calling default allows up to 30 steps; EvoTool's base config uses max_steps=6.",
+            "Official tool-calling default allows up to 30 loop turns; EvoTool's base config uses max_steps=6 planner substeps. These are different units and must not be compared as a direct 30-versus-6 budget ratio.",
+            "Unknown-tool dispatch differs: official Env.step returns 'Unknown action ...', while EvoTool TauBenchEnv.execute returns an Error string with status=error.",
+            "Malformed required arguments are serialized differently: official Env.step returns the caught exception text, while EvoTool execute prefixes the exception type.",
             "The official Retail Env stores a rules list, but the default ToolCallingAgent constructor receives wiki and tool schemas, not the separate rules list.",
         ],
     }

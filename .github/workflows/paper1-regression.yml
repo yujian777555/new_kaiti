@@ -30,7 +30,7 @@ jobs:
             test_task_semantics.py
       - name: Build split-preserving legacy tau-bench Retail dataset
         run: |
-          python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail" || true
+          python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail"
           python - <<'PY'
           import json, os
           path = os.path.join(os.environ["RUNNER_TEMP"], "tau-bench-retail", "integrity_report.json")

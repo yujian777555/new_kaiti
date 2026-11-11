@@ -86,3 +86,16 @@
 - Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Keep legacy EvoTool unchanged. Any corrected-status/full-conversation implementation must be a separate treatment.
 - No LLM, model, API, A800/vLLM, optimizer, training, or policy evaluation.
 - Full report: `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md`.
+
+
+
+## D-010 — 2026-11-11: strengthen independent conformance evidence before baseline execution
+
+- Independent review of Step 3 found that the initial Action History assertion checked only the number of records, not the ordered action/kwargs sequence. It also found no direct comparison of official Env.reset() with EvoTool fresh-instance DB isolation, and no environment-wrapper dispatch probes.
+- Step 3-R1 adds exact Action History comparison for all 635 Gold tasks, reset/copy isolation checks, and actual environment dispatch probes for a successful action, a domain-level rejection, an unknown tool, and a missing required argument.
+- The conformance runner now requires a passing integrity_report.json, the exact pinned tau-bench source commit, 42 verified source files, and matching SHA-256 hashes for Train/Dev/Test normalized JSONL before it reports parity.
+- The CI dataset-builder command no longer uses || true.
+- Expected wrapper deviations are explicit: unknown-tool messages and malformed-argument exception serialization differ between official Env and EvoTool. These are protocol findings, not a reason to mutate the legacy snapshot.
+- Do not blindly reclassify every Error: result as status=error. Keep legacy EvoTool unchanged. A corrected treatment must distinguish function execution status from business outcome and justify any new shaping metric.
+- Official 30 conversational loop turns and EvoTool 6 planner substeps are different units; do not compare the numeric caps directly.
+- No LLM/API/A800/vLLM/optimizer/training/policy-performance run was authorized or performed.

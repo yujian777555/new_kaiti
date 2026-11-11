@@ -30,7 +30,9 @@
   - official gold reward failures: 0;
   - EvoTool gold success failures: 0;
   - official/EvoTool Gold outcome mismatches: 0.
-- The action-history probe confirms official `calculate_reward()` appends replayed Gold Actions after candidate actions and response action(s).
+- Exact ordered Action History is checked across all 635 Gold tasks: candidate actions, response action(s) unless a terminal tool ran, then non-terminal Gold Actions replayed by official `calculate_reward()`.
+- Official `Env.reset()` and EvoTool fresh-instance DB isolation are checked against the same pinned DB snapshot.
+- Environment dispatch probes cover one successful Gold action, one domain-level `Error:` return, an unknown tool, and a missing required argument. Expected unknown-tool/exception serialization differences are retained as known deviations.
 
 ## Important interpretation
 
@@ -59,3 +61,26 @@ The zero Gold mismatch result is expected on exact reference trajectories; it do
 ## Artifact
 
 The workflow uploads the normalized splits plus `evotool_train.jsonl`, `evotool_dev.jsonl`, `evotool_test.jsonl`, and the machine-readable/Markdown conformance report. Use the artifact from run 42987687316; do not infer local files from its title.
+
+
+## Independent review — Step 3-R1
+
+The first conformance report correctly established tool-function parity on the frozen Gold Action set, but an independent source review found that two claims needed stronger executable evidence: the Action History probe compared only sequence length, and the harness did not directly compare official Env.reset() with EvoTool's constructor-based fresh DB isolation. The earlier direct tool-function comparison also did not exercise each environment's dispatch wrapper.
+
+Step 3-R1 strengthens the harness without changing either pinned upstream implementation:
+
+- Exact ordered Action History comparison is performed for all 635 tasks, including action names and kwargs. Candidate terminal actions suppress the response turn; official reward replay then appends each non-terminal Gold Action.
+- Reset/copy isolation checks compare official Env.reset() and independently constructed EvoTool environments against the pinned DB. EvoTool exposes fresh initialization through TauBenchEnv() rather than a separate reset() method.
+- Dispatch probes compare a successful action and a domain-level rejection through the actual environment wrappers. They also explicitly record the known differences for unknown tools and missing required arguments.
+- The conformance runner now requires the dataset integrity report to pass, verifies the pinned official source commit and 42 source-file checks, and rechecks all three normalized split hashes before producing a conformance result.
+- CI no longer suppresses the dataset-builder exit code with || true.
+
+Interpretation remains deliberately narrow: exact Gold replay is a source/reward conformance check, not a policy-performance experiment. The Train-only successful-action dispatch probe is a deterministic implementation test, not a policy score. The official conversational user-simulator loop is still absent from EvoTool; this project continues to label the adapter as a reduced/offline treatment.
+
+### Metric design decision
+
+Do not redefine every returned Error: as a failed tool execution. The legacy adapter's status="success" means the function returned without raising; it does not mean the requested business operation succeeded. A future corrected treatment should preserve the legacy field for reproducibility and add separate fields such as execution_status and business_outcome. Any new progress/reward formula must be justified independently; an Error: response can be a valid observation (for example, a lookup proving that a user or product does not exist) rather than automatically a negative task outcome.
+
+### Step-limit interpretation
+
+The official max_num_steps=30 counts turns in a conversational action loop, including response turns. EvoTool max_steps=6 truncates planner substeps before selector/caller execution. Report the values, but do not describe them as directly comparable step budgets or as a 5x protocol gap.

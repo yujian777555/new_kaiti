@@ -107,3 +107,18 @@ CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687
 Important: overall `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`, not full parity. Synthetic output probes confirm case, comma-normalization, and multiple-response mismatches. Error-return status changes progress by 0.5 in a representative step (0.15 on the 0.3 shaping term). Official conversational user simulator/wiki loop is absent in EvoTool; official max steps 30 vs EvoTool 6. Full details in docs/10.
 
 Next task: independent review of the harness and fake-user semantics; then design separate legacy and corrected-status treatments. No LLM, model, A800, API, or optimizer execution without separate approval.
+
+
+## Step 3-R1 independent review — 2026-11-11
+
+The first conformance report established parity for the frozen Gold Action calls, but its Action History check was length-only and it did not directly test reset/copy isolation or actual environment-wrapper dispatch. Continue with branch audit/step3-independent-review and review the Step 3-R1 changes:
+
+- Exact ordered Action History comparison for all 635 Gold tasks.
+- Official Env.reset() versus EvoTool constructor-based DB initialization and instance isolation.
+- Actual wrapper dispatch probes: successful action, domain-level Error: return, unknown tool, and missing required argument.
+- Dataset integrity precondition: verify the pinned official source commit, 42 source-file hashes, and all three split JSONL hashes before conformance.
+- CI now fails immediately if dataset preparation exits nonzero.
+
+Expected unknown-tool and malformed-argument output differences remain documented. Do not change the original EvoTool adapter or its status/reward semantics. In any corrected treatment, distinguish execution_status from business_outcome; do not automatically penalize every Error:. Also note that official 30 conversational turns and EvoTool 6 planner substeps are different units.
+
+After review, inspect the PR CI and update this prompt, SESSION_HANDOFF.md, and DECISION_LOG.md with the actual commit and workflow run. No LLM/API/A800/vLLM/optimizer/training/policy-performance evaluation without separate authorization.
