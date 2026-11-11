@@ -46,3 +46,8 @@ The transferred code has not yet been run in the new repository. The new CI work
 - D-079 v2 lock: `experiments/pilot_a3b/d079_manifest_lock.json`.
 - Lock CI on the source repository: workflow run [42953293607](https://github.com/yujian777555/kaitibaogao/actions/runs/42953293607).
 - D-079 lock freezes a Train-only manifest; it does not authorize optimizer execution or held-out Test access.
+
+
+## Large raw artifact not transferred
+
+The D-078 `matrix_results.json` is 10,285,231 bytes. The connected GitHub file reader returned no file content for this large blob, so it was deliberately **not** replaced with an empty file in the new repository. Its original source blob SHA is `19aba8cc02a5a10e7e60766ce7c3423e370c51b4`. The human-readable D-078 report and D-079 post-hoc audit reports were transferred. The corresponding reconstruction test is marked skipped when the raw artifact is absent; restore the exact original blob before treating that test as passed.
