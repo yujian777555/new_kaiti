@@ -51,7 +51,7 @@ An eight-generation run alone does not make this a paper-faithful reproduction. 
 
 ## 5. Current authorization boundary
 
-No reproduction has been run. The current D-079 protocol does not authorize A800/ARWM, real LLM API, or formal optimizer execution. Do not launch vLLM, call a paid API, or access held-out Test until the user explicitly approves a separate baseline-reproduction preflight. Foundation-model weights remain frozen; no training is required for the baseline.
+No model reproduction has been run. The user has authorized reading and materializing official legacy Retail Train/Dev/Test task payloads for data preparation; this is complete and documented in `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`. That authorization does not cover held-out policy scoring, A800/vLLM, real LLM API calls, or optimizer execution. Obtain separate approval before any model inference or experiment. Foundation-model weights remain frozen; no training is required for the baseline.
 
 ## 6. References
 
@@ -70,3 +70,10 @@ This document is a research-state snapshot transferred on 2026-11-11 from `yujia
 The initial audit's generation-budget finding remains valid, but the proposed 150-instance tau-bench path is not suitable for a faithful reproduction. The builder takes tasks from Test before Train/Dev and the generic loader randomly repartitions the combined list. The released agent adapter also omits the official user-simulator/rules/wiki interaction. Full findings and the revised protocol are in `08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
 
 **Current status: no baseline run has been performed.** Explicit approval is required before materializing official Dev/Test task payloads, and separate approval is required before model inference or A800/vLLM.
+
+
+## 8. Split-preserving Retail data audit completed
+
+The official legacy Retail task sources and DB/tool files are now vendored under `vendor/tau_bench/`, locked by `data/taubench_legacy/retail/source_lock.json`, and normalized by `scripts/prepare_tau_bench_retail.py`. Train/Dev/Test remain separate (500/20/115 tasks). The source integrity gate passes with documented domain-rejection and duplicate caveats. See `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`.
+
+This does not resolve the full user-simulator/rules/wiki or reward/status-parity differences in the released EvoTool adapter. No model baseline has been run.

@@ -17,13 +17,13 @@ The foundation-model weights are initially frozen. The LLM is accessed through a
 - D-078 was an exploratory 14-arm × 3-seed pilot. It did not establish that the existing SBCG/NSGA-III approach outperforms strong baselines.
 - D-079 v2 is a Train-only diagnostic challenge manifest. Canonical SHA-256: `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`. It is not execution authorization and is not a held-out test set.
 - The provisional method hypothesis is **Fault-Stratified Pareto Archive Evolution (FSPAE)**. It has not yet been implemented or validated as a successful method.
-- Primary evolutionary baseline candidate: **EvoTool (ACL 2026)**. The initial preflight audit found split contamination and benchmark-adapter/metric discrepancies in the released tau-bench demo path. No baseline run is authorized or claimed yet; see `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
+- Primary evolutionary baseline candidate: **EvoTool (ACL 2026)**. The released 150-instance demo path mixes official splits and is prohibited for paper claims. A pinned legacy Retail dataset has now been built from the exact Train/Dev/Test sources (500/20/115); source integrity passes with documented domain-rejection and duplicate caveats. See `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md` and `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`. No model baseline has been run.
 - GEPA is a selection/reflection comparator. DART and Evidence-Guided Recovery are recovery-domain comparators.
 
 ## Research workflow
 
 1. Audit the baseline paper and official code; record implementation discrepancies.
-2. Build a split-preserving, source-pinned baseline data path; do not use the mixed 150-instance demo subset for paper claims.
+2. Preserve and validate the split-pinned legacy tau-bench Retail data; do not use the mixed 150-instance demo subset for paper claims.
 3. Identify a specific mechanism limitation, not merely a different application domain.
 4. Implement the proposed evolutionary mechanism with matched baselines and ablations.
 5. Use Train-only diagnostics for mechanism discovery.
@@ -46,6 +46,8 @@ The foundation-model weights are initially frozen. The LLM is accessed through a
 - `experiments/pilot_a3b/`: transferred Train-only generator, manifest lock, simulator/controller, SBCG code and regression tests.
 - `experiments/pilot_a_recovery/`: transferred simulator contract source used by the A-3b pilot.
 - `experiments/pilot_a3b/results/`: immutable exploratory reports and the D-079 v2 manifest/audit.
+- `vendor/tau_bench/`: source-preserving MIT snapshot of the pinned legacy Retail benchmark files.
+- `data/taubench_legacy/retail/`: source lock, dataset build instructions, and generated split artifact protocol.
 - `DECISION_LOG.md`: dated research decisions and evidence.
 - `SESSION_HANDOFF.md`: canonical current state and next actions.
 - `NEXT_SESSION_PROMPT.md`: compact continuation instructions.

@@ -386,17 +386,18 @@ def build_dataset(output_dir: Path) -> dict:
         if gold_action_audit[key]:
             failures.append(f"gold action audit {key}: {gold_action_audit[key]}")
 
-    blockers = []
+    warnings = []
     if gold_action_audit["domain_error_count"]:
-        blockers.append(
-            f"{gold_action_audit['domain_error_count']} gold-action calls returned domain-level Error results"
+        warnings.append(
+            f"{gold_action_audit['domain_error_count']} gold-action calls returned domain-level Error results; "
+            "preserve these source trajectories and interpret them under the official state-based reward"
         )
 
     source_integrity_gate = "PASS" if not failures else "FAIL"
-    gold_action_gate = "PASS" if not blockers else "BLOCKED"
+    gold_action_gate = "PASS" if not warnings else "PASS_WITH_DOMAIN_REJECTIONS"
     overall_gate = (
         "PASS" if source_integrity_gate == "PASS" and gold_action_gate == "PASS"
-        else "BLOCKED" if source_integrity_gate == "PASS"
+        else "PASS_WITH_CAVEAT" if source_integrity_gate == "PASS"
         else "FAIL"
     )
 
@@ -425,7 +426,7 @@ def build_dataset(output_dir: Path) -> dict:
         "task_user_reference_failures": missing_task_users[:20],
         "task_user_reference_failure_count": len(missing_task_users),
         "gold_action_audit": gold_action_audit,
-        "blockers": blockers,
+        "warnings": warnings,
         "failures": failures,
     }
 
@@ -489,9 +490,11 @@ def build_dataset(output_dir: Path) -> dict:
         f"- Exact task fingerprint groups appearing in multiple splits: {exact_duplicate_groups}",
         f"- Identical instruction groups appearing in multiple splits: {instruction_duplicate_groups}",
         "",
-        "## Failures",
+        "## Warnings",
         "",
     ]
+    lines.extend([f"- {item}" for item in warnings] if warnings else ["- None"])
+    lines += ["", "## Structural failures", ""]
     lines.extend([f"- {item}" for item in failures] if failures else ["- None"])
     lines += [
         "",
@@ -514,6 +517,7 @@ def main() -> int:
         "gate": report["gate"],
         "source_integrity_gate": report["source_integrity_gate"],
         "gold_action_gate": report["gold_action_gate"],
+        "warnings": report["warnings"],
         "total_tasks": report["total_tasks"],
         "splits": {k: v["task_count"] for k, v in report["splits"].items()},
         "gold_actions": report["gold_action_audit"]["total_gold_actions"],
@@ -531,9 +535,9 @@ def main() -> int:
         "output_dir": str(args.output_dir),
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
-    if report["gate"] == "PASS":
+    if report["gate"] in {"PASS", "PASS_WITH_CAVEAT"}:
         return 0
-    return 2 if report["source_integrity_gate"] == "PASS" else 1
+    return 1
 
 
 if __name__ == "__main__":

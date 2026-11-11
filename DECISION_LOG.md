@@ -47,3 +47,16 @@
 - Decision: do not run the demo command or report it as a faithful paper reproduction. Prepare a source-pinned split-preserving baseline protocol. No model inference, A800/vLLM, optimizer run, or held-out outcome evaluation was performed.
 - Explicit approval is required before reading/materializing the official Dev/Test task payloads. Separate approval is required before starting Qwen3-8B vLLM or any real LLM API call.
 - Full details: `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
+
+
+## 2026-11-11 — D-007: Build and audit pinned legacy tau-bench Retail splits
+
+- User authorized reading the official Train/Dev/Test task payloads and building a split-preserving dataset; this authorization did not include model inference or optimizer execution.
+- Pinned upstream source: `sierra-research/tau-bench` @ `59a200c6d575d595120f1cb70fea53cef0632f6b`, MIT.
+- Vendored 35 source files with exact Git Blob SHA matches, including Train 500, Dev 20, Test 115 task records and all three original retail DB files.
+- Parsed 635 tasks and 1,375 Gold Actions; normalized JSONL retains split-local source indices and original outputs/actions. No cross-split exact duplicates or instruction duplicates. One exact within-Test duplicate is retained: `retail-test-0093` and `retail-test-0095`.
+- DB: 1,000 orders, 500 users, 50 products, 591 variants, 2,978 order items. Zero DB/task-user referential failures.
+- Gold Actions: zero unknown tools, signature mismatches, Python exceptions, or deterministic replay mismatches. There are 44 domain-level Error results across 38 tasks (Train 20, Test 24, Dev 0); inspection shows examples of intentional incorrect identity/order/product identifiers and business-rule rejections. Preserve these source trajectories; do not treat every Error string as data corruption.
+- The official legacy reward compares post-action database state and required outputs; it does not directly penalize a returned Error string. The EvoTool adapter marks non-exception Error strings as status=success, which can affect its shaped progress term and must be reconciled.
+- Overall data gate: `PASS_WITH_CAVEAT`. Full audit: `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`.
+- No LLM, A800/vLLM, paid API, optimizer, or policy evaluation was run.
