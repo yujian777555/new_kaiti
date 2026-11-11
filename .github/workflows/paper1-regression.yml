@@ -62,13 +62,19 @@ jobs:
         run: |
           python scripts/audit_evotool_tau_bench_conformance.py --dataset-dir "$RUNNER_TEMP/tau-bench-retail"
           cat "$RUNNER_TEMP/tau-bench-retail/evotool_tau_bench_conformance.md"
-      - name: Run pinned dataset and EvoTool conformance tests
+      - name: Run deterministic T1/T3 treatment audit (Train only)
+        run: |
+          python scripts/audit_evotool_treatments.py --dataset-dir "$RUNNER_TEMP/tau-bench-retail"
+          cat "$RUNNER_TEMP/tau-bench-retail/evotool_treatments_audit.md"
+      - name: Run pinned dataset, conformance, and treatment tests
         env:
           TAU_BENCH_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
+          EVOTOOL_TREATMENT_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
         run: |
           python -m pytest -q \
             tests/test_tau_bench_retail_dataset.py \
-            tests/test_evotool_tau_bench_conformance.py
+            tests/test_evotool_tau_bench_conformance.py \
+            tests/test_evotool_treatments.py
       - name: Upload normalized dataset and integrity report
         if: always()
         uses: actions/upload-artifact@v4

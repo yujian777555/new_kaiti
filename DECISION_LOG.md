@@ -122,3 +122,12 @@ The first Step 3-R1 implementation passed CI on 2026-11-11: run 42992221354, 95 
 - Latest code/report commit e248486d38933e62a51367f66489e18fc22877fb passed CI run 42993445630.
 - Latest branch HEAD 478e8171f54bbf8ca7ad5ea69c2acdfaf7de3845 adds only the treatment design and handoff/prompt updates. Its docs-only CI run is 42994690443.
 - PR #1 remains draft/open; main remains at cf83f08da748f3b7889465c3b19432e6389ca7b7.
+
+
+## D-012 — 2026-11-11: implement T1 status decomposition and T3 official scorer separately
+
+- T1 is implemented as a wrapper outside the vendored EvoTool snapshot. It preserves legacy result fields and adds execution_status, business_outcome, state_effect, raw tool observation and state hashes.
+- T3 is implemented as a separate scorer matching official full-DB hash and response-output normalization semantics. It accepts all response messages and exposes both live-state and replay APIs.
+- Validation is deliberately Train-only: 500 tasks / 768 Gold Action calls. CI compares T1 fields, state transitions, progress and episode reward against T0, and T3 reward against the pinned official Env.calculate_reward.
+- No policy/model/optimizer evaluation is included. T1 is instrumentation, not algorithmic uplift. T2 remains blocked until task-aware outcome labels are validated; T4 remains a separate full-conversation protocol.
+- The implementation must not alter vendor/evotool or vendor/tau_bench source snapshots.

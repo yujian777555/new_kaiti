@@ -106,3 +106,16 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Artifact 13842368239, expires 2026-12-11.
 - Generated Markdown report now exposes dataset integrity, Action History, reset/copy and dispatch probes.
 - Next: use docs/11 treatment protocol as the design basis. Keep T0 legacy unchanged; do not blindly penalize Error returns. No model/API/A800/vLLM/optimizer/training/policy-performance evaluation without separate authorization.
+
+
+## Step 4 — T1/T3 implementation (2026-11-11)
+
+- Branch: audit/step3-independent-review.
+- T1: treatments/evotool_status.py wraps the original executor and adds execution_status, business_outcome, state_effect, raw observation, and before/after state hashes. Original tool/args/output/status fields remain unchanged.
+- T1 factory: make_status_decomposed_env_factory() wraps only the tau-bench executor and leaves other benchmark environments unchanged.
+- T3: treatments/taubench_official_reward.py implements the official full-DB hash and response-output normalization, with live-state and replay-based scorer APIs.
+- Audit: scripts/audit_evotool_treatments.py uses Train only (500 tasks / 768 Gold Action calls), compares T1 with legacy fields/state/progress/reward, and compares T3 with official Env.calculate_reward.
+- Tests: tests/test_evotool_treatments.py.
+- CI workflow now runs the Train-only treatment audit and tests.
+- T1/T3 are implementation/conformance treatments only. No policy execution, model/API/A800/vLLM/optimizer/training or performance evaluation.
+- T2 business-outcome reward shaping remains blocked; T4 full conversation remains separate.

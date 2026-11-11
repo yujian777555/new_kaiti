@@ -132,3 +132,15 @@ A follow-up commit adds the new reset/history/dispatch evidence to the generated
 Latest verified code/report commit e248486d38933e62a51367f66489e18fc22877fb passed CI run 42993445630: 95 passed/1 skipped transferred regression; 12 dataset/conformance tests passed. Exact Action History 635 checked / 0 mismatches; reset/copy isolation PASS; dispatch PASS_WITH_KNOWN_DEVIATIONS. Artifact 13842368239 expires 2026-12-11.
 
 PR #1 remains draft/open on branch audit/step3-independent-review. Main was not modified. See docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md for the next design decision. Preserve the hard authorization boundary: no model/API/A800/vLLM/optimizer/training/policy-performance runs without separate approval.
+
+
+## Step 4 — implement and validate T1/T3 (2026-11-11)
+
+T1/T3 implementation is on branch audit/step3-independent-review:
+
+- treatments/evotool_status.py: wraps the legacy executor; preserves tool/args/output/status; adds execution_status, business_outcome, state_effect, raw observation and state hashes. Factory wraps only tau-bench.
+- treatments/taubench_official_reward.py: official full-DB hash and official response-output normalization; supports live candidate DB and replayed candidate plans.
+- scripts/audit_evotool_treatments.py: deterministic Train-only audit; 500 tasks / 768 Gold Action calls; compare T1 legacy result/state/progress/reward and T3 against official Env.calculate_reward.
+- tests/test_evotool_treatments.py and CI workflow updates.
+
+Review implementation details and CI before any model/optimizer experiment. T1 is instrumentation, not an algorithmic improvement. T2 remains blocked pending task-aware outcome labels. T3 scorer parity does not restore the full conversational protocol. No LLM/API/A800/vLLM/optimizer/training/policy-performance run is authorized.
