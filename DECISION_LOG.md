@@ -114,3 +114,11 @@ The first Step 3-R1 implementation passed CI on 2026-11-11: run 42992221354, 95 
 - Treatment protocol: T0 immutable EvoTool legacy; T1 status decomposition for diagnostics only (execution status, business outcome, state effect) while preserving legacy reward; T2 business-outcome-aware shaping is NOT READY without task-aware labels; T3 official-reward-aligned scorer is a separate evaluator treatment; T4 full conversational tau-bench loop is a separate protocol.
 - Do not call T1 an algorithmic improvement or T2 validated. No model/API/A800/vLLM/optimizer/training/policy-performance run was performed.
 - Full protocol: docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md.
+
+
+### D-011 repository state addendum
+
+- Treatment protocol: docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md.
+- Latest code/report commit e248486d38933e62a51367f66489e18fc22877fb passed CI run 42993445630.
+- Latest branch HEAD 478e8171f54bbf8ca7ad5ea69c2acdfaf7de3845 adds only the treatment design and handoff/prompt updates. Its docs-only CI run is 42994690443.
+- PR #1 remains draft/open; main remains at cf83f08da748f3b7889465c3b19432e6389ca7b7.

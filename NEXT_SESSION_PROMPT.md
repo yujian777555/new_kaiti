@@ -109,19 +109,15 @@ Important: overall `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`, not full parity. Synth
 Step 3-R1 independent review and CI are complete. Next, read docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md and decide whether to implement the diagnostic status-decomposition and official-reward-aligned scorer as separate treatments. Do not turn every Error: return into a failed execution or reward penalty. No LLM, model, A800, API, or optimizer execution without separate approval.
 
 
-## Step 3-R1 independent review — 2026-11-11
+## Step 3-R1 independent review — completed 2026-11-11
 
-The first conformance report established parity for the frozen Gold Action calls, but its Action History check was length-only and it did not directly test reset/copy isolation or actual environment-wrapper dispatch. Continue with branch audit/step3-independent-review and review the Step 3-R1 changes:
+The initial Action History length-only check was replaced by exact ordered action-name/kwargs comparison across all 635 Gold tasks. Official Env.reset() and EvoTool constructor-based DB initialization are compared for reset/copy isolation. Environment-wrapper dispatch probes cover a successful action, a domain-level Error return, unknown tool, and missing required argument. The conformance runner verifies the pinned source commit, 42 official source files, all three normalized split hashes, and no longer suppresses dataset-builder failures.
 
-- Exact ordered Action History comparison for all 635 Gold tasks.
-- Official Env.reset() versus EvoTool constructor-based DB initialization and instance isolation.
-- Actual wrapper dispatch probes: successful action, domain-level Error: return, unknown tool, and missing required argument.
-- Dataset integrity precondition: verify the pinned official source commit, 42 source-file hashes, and all three split JSONL hashes before conformance.
-- CI now fails immediately if dataset preparation exits nonzero.
+Expected unknown-tool and malformed-argument output differences remain documented. The original EvoTool adapter and its status/reward semantics remain unchanged. Distinguish execution_status from business_outcome; do not automatically penalize every Error return. Official 30 conversational turns and EvoTool 6 planner substeps are different units.
 
-Expected unknown-tool and malformed-argument output differences remain documented. Do not change the original EvoTool adapter or its status/reward semantics. In any corrected treatment, distinguish execution_status from business_outcome; do not automatically penalize every Error:. Also note that official 30 conversational turns and EvoTool 6 planner substeps are different units.
+Code/report commit e248486d38933e62a51367f66489e18fc22877fb passed CI run 42993445630 (95 passed/1 skipped transferred regression; 12 dataset/conformance tests). Artifact 13842368239 expires 2026-12-11. Latest branch HEAD 478e8171f54bbf8ca7ad5ea69c2acdfaf7de3845 adds the Step 4 treatment design and handoff only; CI run 42994690443 is running on that docs-only head.
 
-After review, inspect the PR CI and update this prompt, SESSION_HANDOFF.md, and DECISION_LOG.md with the actual commit and workflow run. No LLM/API/A800/vLLM/optimizer/training/policy-performance evaluation without separate authorization.
+Next task: review docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md and decide whether to implement T1 diagnostic status decomposition and T3 official-reward-aligned scorer in separate modules. Keep T0 immutable; T2 business-outcome-aware shaping is blocked pending task-aware labels. No LLM/API/A800/vLLM/optimizer/training/policy-performance evaluation without separate authorization.
 
 
 ## Step 3-R1 initial CI — passed

@@ -99,6 +99,8 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - PR #1: https://github.com/yujian777555/new_kaiti/pull/1 (draft, open).
 - Branch: audit/step3-independent-review.
 - Latest code/report commit: e248486d38933e62a51367f66489e18fc22877fb.
+- Latest branch HEAD: 478e8171f54bbf8ca7ad5ea69c2acdfaf7de3845 (documentation-only Step 4 treatment protocol and handoff update).
+- CI run 42994690443 is running on the documentation-only branch HEAD; code/report commit e248486 passed run 42993445630.
 - CI run 42993445630: SUCCESS; 95 passed/1 skipped transferred regression; 12 dataset/conformance tests passed.
 - Exact Action History: 635 checked, 0 mismatches. DB reset/copy isolation PASS. Dispatch PASS_WITH_KNOWN_DEVIATIONS.
 - Artifact 13842368239, expires 2026-12-11.
