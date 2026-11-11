@@ -2,24 +2,22 @@
 
 This repository is the **sole active workspace** for the first short paper on Agent × Evolutionary Computation.
 
-## Scope
-
-Working title:
+## Working title
 
 **面向状态化工具调用智能体的故障分层 Pareto 档案演化方法**  
 *Fault-Stratified Pareto Archive Evolution for Recovery Policies in Stateful Tool-Using Agents*
 
 Research object: recovery-policy evolution for stateful tool-using LLM agents under ambiguous tool outcomes, partial commits, non-idempotent actions, compensation limits, and cross-tool fault interactions.
 
-The foundation-model weights are initially frozen. The LLM is accessed through an API or an OpenAI-compatible inference endpoint; model training is not a prerequisite for Paper 1.
+The foundation-model weights are initially frozen. The LLM is accessed through an API or OpenAI-compatible inference endpoint; model training is not a prerequisite for Paper 1.
 
-## Current scientific status (2026-11-11)
+## Current scientific status — 2026-11-11
 
 - **No positive algorithmic uplift has been established.**
-- D-078 was an exploratory pilot, not a confirmatory result. It did not establish that the existing SBCG/NSGA-III approach outperforms strong baselines.
-- D-079 v2 is a Train-only diagnostic challenge manifest. Its canonical SHA-256 is `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`. It is not an execution authorization and is not a held-out test set.
+- D-078 was an exploratory 14-arm × 3-seed pilot. It did not establish that the existing SBCG/NSGA-III approach outperforms strong baselines.
+- D-079 v2 is a Train-only diagnostic challenge manifest. Canonical SHA-256: `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`. It is not execution authorization and is not a held-out test set.
 - The provisional method hypothesis is **Fault-Stratified Pareto Archive Evolution (FSPAE)**. It has not yet been implemented or validated as a successful method.
-- Primary evolutionary baseline candidate: **EvoTool (ACL 2026)**. A paper/code generation-budget discrepancy has been documented; reproduction must use and verify the paper-faithful configuration rather than silently accepting code defaults.
+- Primary evolutionary baseline candidate: **EvoTool (ACL 2026)**. Its paper/code generation-budget discrepancy is documented; reproduction must verify the paper-faithful configuration rather than silently accepting code defaults.
 - GEPA is a selection/reflection comparator. DART and Evidence-Guided Recovery are recovery-domain comparators.
 
 ## Research workflow
@@ -30,7 +28,7 @@ The foundation-model weights are initially frozen. The LLM is accessed through a
 4. Implement the proposed evolutionary mechanism with matched baselines and ablations.
 5. Use Train-only diagnostics for mechanism discovery.
 6. Preregister Validation/Test, lock splits and metrics, then evaluate held-out generalization.
-7. Write the paper only after the evidence supports the claims.
+7. Write the paper only after evidence supports the claims.
 
 ## Repository rules
 
@@ -44,11 +42,17 @@ The foundation-model weights are initially frozen. The LLM is accessed through a
 
 ## Structure
 
-- `docs/`: paper framing, literature/baseline audit, method specification, experimental protocol.
-- `experiments/`: code, immutable manifests, raw results, analysis, and reproducibility metadata.
+- `docs/`: paper framing, literature/baseline audit, method specification, experimental protocol, provenance.
+- `experiments/pilot_a3b/`: transferred Train-only generator, manifest lock, simulator/controller, SBCG code and regression tests.
+- `experiments/pilot_a_recovery/`: transferred simulator contract source used by the A-3b pilot.
+- `experiments/pilot_a3b/results/`: immutable exploratory reports and the D-079 v2 manifest/audit.
 - `DECISION_LOG.md`: dated research decisions and evidence.
 - `SESSION_HANDOFF.md`: canonical current state and next actions.
 - `NEXT_SESSION_PROMPT.md`: compact continuation instructions.
+
+## Validation status of the transfer
+
+The source files were transferred from a pinned source commit without modifying their contents. **The copied code has not yet been independently re-run in this new repository.** A new GitHub Actions regression workflow is included to validate the transferred subset. Until it passes, treat the migration as a source-preserving transfer, not a verified runnable release.
 
 ## Provenance
 

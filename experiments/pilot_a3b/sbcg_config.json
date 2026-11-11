@@ -1,0 +1,89 @@
+{
+  "algorithm": "SBCG-NSGA-III",
+  "status": "CORRECTED_CODE_PENDING_CI_AND_FORMAL_APPROVALS_NO_BENCHMARK_RESULTS",
+  "objectives_minimize": [
+    "1 - CondRecSucc",
+    "AvoidableHarm",
+    "UnnecessaryActionCost",
+    "1 - CorrectEscalation",
+    "1 - DamageContainment"
+  ],
+  "hard_constraints_zero_tolerance": [
+    "duplicate",
+    "sla_violation",
+    "invariant_violation"
+  ],
+  "nsga3_reference_directions": {
+    "dimensions": 5,
+    "divisions": 3,
+    "count": 35,
+    "implementation": "canonical NSGA-III: ideal point, first-front ASF extreme points, intercept normalization, perpendicular association, prior-front niche counts"
+  },
+  "counterexample_sampling": {
+    "strata": "task_family x failure_signature x safety_class",
+    "rule": "uniform over observed strata; probability 1/S",
+    "fallback": "standard mutation when no counterexample stratum exists",
+    "gene_targeting": "genes present in the failed decision trace"
+  },
+  "selection_rule": [
+    "hard safety feasibility",
+    "Pareto non-dominance",
+    "maximum family coverage",
+    "maximum worst-family CondRecSucc",
+    "frozen lexicographic objective and fingerprint tie-break"
+  ],
+  "equal_weight_sum_selection_forbidden": true,
+  "shared_initial_pool": {
+    "size": 60,
+    "sensible_random_seed_rule": "Random(seed*7919+29)",
+    "hand_anchor_slot": 0,
+    "all_ea_arms_share_pool_except_no_M3_ablation": true
+  },
+  "population": 48,
+  "generations": 60,
+  "evolution_seeds": [
+    411,
+    522,
+    633
+  ],
+  "ablations": [
+    "no-M1",
+    "no-M2",
+    "no-M3"
+  ],
+  "data_access": {
+    "current_phase": "synthetic fixtures only",
+    "real_train_validation_diagnostics": "HOLD until R4 ACCEPTED + advisor MDE + user approval + pre-flight",
+    "test": "locked; no payload access"
+  },
+  "open_before_any_validation_claim": [
+    "safety non-inferiority margins are not yet justified or frozen",
+    "hypervolume reference point is not yet justified or frozen",
+    "no Train/Validation performance or ablation evidence has been produced"
+  ],
+  "validation_selection": {
+    "optimization_split": "train",
+    "candidate_evaluation_split": "validation",
+    "selection_rule": "feasible Pareto; family coverage; worst-family CondRecSucc; frozen lexicographic tie-break",
+    "validation_enters_fitness_or_offspring": false
+  },
+  "cache_accounting": "reuse each offspring evaluation record during environmental selection; unique_evaluations + cache_hits = evaluation_calls",
+  "exploratory_development_pilot": {
+    "status": "AUTHORIZED_BY_USER_FOR_NONCONFIRMATORY_SYNTHETIC_TRAIN_VALIDATION_SCREENING",
+    "scope": "generated A-3b synthetic Train/Validation scenarios only; no Test outcomes or payload passed to an optimizer/evaluator",
+    "arms": 14,
+    "seeds": [
+      411,
+      522,
+      633
+    ],
+    "population": 8,
+    "generations": 5,
+    "initial_pool_size": 60,
+    "per_evolutionary_arm_train_episode_budget": "8 * (5 + 1) * number_of_Train_scenarios",
+    "validation": "one post-search candidate-selection pass per arm/seed; no feedback into Train evolution",
+    "inference": "descriptive only; selected Validation metrics are selection-biased and are not an unbiased generalization estimate",
+    "llm_api_calls": 0,
+    "test_access": false
+  }
+}

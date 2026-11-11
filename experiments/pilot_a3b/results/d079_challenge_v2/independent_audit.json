@@ -1,0 +1,24 @@
+{
+  "manifest_sha256": "09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca",
+  "generator_version": "d079-train-only-difficulty-strata-v2",
+  "scenario_count": 288,
+  "unique_scenario_ids": 288,
+  "unique_seeds": 288,
+  "registry_clusters": 48,
+  "scenario_cluster_ids": 48,
+  "cluster_join_matches": true,
+  "six_rows_per_cluster": true,
+  "three_rows_per_role": true,
+  "train_only": true,
+  "unknown_count": 0,
+  "label_disagreements": 0,
+  "manifest_gate": {
+    "ok": true,
+    "problems": []
+  },
+  "committed_lock": {
+    "ok": true,
+    "problems": []
+  },
+  "raw_file_sha256": "f2dfc57cc8d2444680e589cd82efad7383bfebc269527709f9ffa18e16ed9d27"
+}

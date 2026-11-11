@@ -1,0 +1,32 @@
+{
+  "run_count": 42,
+  "selected_hand_count": 32,
+  "hand_in_pareto_front_count": 33,
+  "hand_success_by_class": {
+    "R1": {
+      "success": 180,
+      "n": 180,
+      "rate": 1.0
+    },
+    "R2": {
+      "success": 72,
+      "n": 72,
+      "rate": 1.0
+    },
+    "R3": {
+      "success": 0,
+      "n": 36,
+      "rate": 0.0
+    },
+    "R4": {
+      "success": 36,
+      "n": 36,
+      "rate": 1.0
+    }
+  },
+  "successful_primary_rows_with_intended_active_effects": 252,
+  "original_harm_on_those_rows": 756.0,
+  "corrected_harm_on_those_rows": 0,
+  "r3_rows_with_residual_and_zero_minimum_harm": 36,
+  "method": "direct raw-ledger recomputation independent of d079_diagnostics.py aggregation"
+}

@@ -1,0 +1,40 @@
+{
+  "lock_schema_version": 1,
+  "protocol_id": "D-079",
+  "generator_version": "d079-train-only-difficulty-strata-v2",
+  "manifest_sha256": "09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca",
+  "source_commit": "c1246f847e49a2c3808cb961584743fe76c68794",
+  "workflow_run_id": 42952176661,
+  "artifact_id": 13825386911,
+  "artifact_digest": "sha256:a7899392233d664452e1206706360b5fd7f84943f10bce6eb6b52989dafefa8b",
+  "generated_at": "2026-11-11T03:21:31Z",
+  "scenario_count": 288,
+  "cluster_count": 48,
+  "family_count": 8,
+  "stratum_count": 6,
+  "seed_base": 2026111200,
+  "role_counts": {
+    "search": 144,
+    "diagnostic": 144
+  },
+  "label_counts_by_role": {
+    "diagnostic": {
+      "R1": 48,
+      "R2": 48,
+      "R3": 24,
+      "R4": 24
+    },
+    "search": {
+      "R1": 48,
+      "R2": 48,
+      "R3": 24,
+      "R4": 24
+    }
+  },
+  "train_only": true,
+  "validation_included": false,
+  "test_included": false,
+  "test_outcomes_read": false,
+  "cluster_semantics": "task_family_id|difficulty_stratum; evaluation_role is a separate within-cluster dimension",
+  "lock_status": "TRAIN_ONLY_MANIFEST_FROZEN_NOT_EXECUTION_AUTHORIZATION"
+}
