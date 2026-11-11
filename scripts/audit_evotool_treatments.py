@@ -6,9 +6,14 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from scripts.audit_evotool_tau_bench_conformance import (
     _load_evotool_snapshot,
@@ -22,9 +27,6 @@ from scripts.audit_evotool_tau_bench_conformance import (
 from scripts.prepare_tau_bench_retail import install_vendored_runtime
 from treatments.evotool_status import StatusDecomposedExecutor
 from treatments.taubench_official_reward import score_task
-
-ROOT = Path(__file__).resolve().parents[1]
-
 
 def build_treatment_audit(dataset_dir: Path) -> dict[str, Any]:
     integrity = _verify_dataset_integrity(dataset_dir)

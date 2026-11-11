@@ -131,3 +131,10 @@ The first Step 3-R1 implementation passed CI on 2026-11-11: run 42992221354, 95 
 - Validation is deliberately Train-only: 500 tasks / 768 Gold Action calls. CI compares T1 fields, state transitions, progress and episode reward against T0, and T3 reward against the pinned official Env.calculate_reward.
 - No policy/model/optimizer evaluation is included. T1 is instrumentation, not algorithmic uplift. T2 remains blocked until task-aware outcome labels are validated; T4 remains a separate full-conversation protocol.
 - The implementation must not alter vendor/evotool or vendor/tau_bench source snapshots.
+
+
+## D-013 — 2026-11-11: fix treatment-audit script entry-point import
+
+- Initial T1/T3 implementation commit cefef70c42f82223ab1138ace51b3b410019a44d passed dataset preparation and Step 3 conformance, but CI run 43008576540 failed when the treatment audit script was executed directly: ModuleNotFoundError: No module named 'scripts'.
+- Root cause: direct execution sets sys.path[0] to the scripts directory. The script now inserts the repository root before importing shared scripts.
+- No T1/T3 algorithm or scoring semantics changed. Full CI rerun required.

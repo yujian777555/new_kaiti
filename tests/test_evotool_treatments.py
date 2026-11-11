@@ -3,6 +3,11 @@ from copy import deepcopy
 import pytest
 
 from treatments.evotool_status import StatusDecomposedExecutor, make_status_decomposed_env_factory
+from scripts.audit_evotool_tau_bench_conformance import (
+    _load_official_env,
+    _make_official_env,
+)
+from scripts.prepare_tau_bench_retail import install_vendored_runtime
 from treatments.taubench_official_reward import (
     official_state_hash,
     replay_actions,
@@ -268,3 +273,34 @@ def test_t3_official_task_scorer_uses_gold_replay_and_live_candidate_state():
     assert plan_result["reward"] == 1.0
     assert plan_result["gold_action_count"] == 1
     assert plan_result["candidate_action_count"] == 1
+
+
+
+def test_t3_hash_is_identical_to_pinned_official_env_hash():
+    all_tools, load_data = install_vendored_runtime()
+    Env, Action, Task, fake_user, _ = _load_official_env(all_tools)
+    from scripts.audit_evotool_tau_bench_conformance import _make_official_env
+
+    row = {
+        "user_id": "hash-probe-user",
+        "instruction": "deterministic hash probe",
+        "actions": [],
+        "outputs": [],
+    }
+    env = _make_official_env(
+        [row], all_tools, load_data, Env, Action, Task, fake_user
+    )
+    env.reset(task_index=0)
+    assert official_state_hash(env.data) == env.get_data_hash()
+
+    first_tool = next(
+        tool for tool in all_tools
+        if tool.get_info()["function"]["name"] != "transfer_to_human_agents"
+    )
+    tool_name = first_tool.get_info()["function"]["name"]
+    # Use an action with the first tool's required argument schema only when
+    # a no-argument tool is available; otherwise the base-state hash probe above
+    # remains the deterministic reference check.
+    if not first_tool.get_info()["function"].get("parameters", {}).get("required"):
+        env.step(Action(name=tool_name, kwargs={}))
+        assert official_state_hash(env.data) == env.get_data_hash()

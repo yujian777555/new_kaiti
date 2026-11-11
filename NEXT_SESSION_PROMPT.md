@@ -144,3 +144,8 @@ T1/T3 implementation is on branch audit/step3-independent-review:
 - tests/test_evotool_treatments.py and CI workflow updates.
 
 Review implementation details and CI before any model/optimizer experiment. T1 is instrumentation, not an algorithmic improvement. T2 remains blocked pending task-aware outcome labels. T3 scorer parity does not restore the full conversational protocol. No LLM/API/A800/vLLM/optimizer/training/policy-performance run is authorized.
+
+
+### Step 4 CI correction
+
+Run 43008576540: dataset build and Step 3 conformance passed; treatment audit failed at startup with ModuleNotFoundError: No module named 'scripts'. Fix: insert repository root into sys.path in scripts/audit_evotool_treatments.py before shared imports. T3 type imports also corrected. Re-run full CI and inspect treatment audit/test results.

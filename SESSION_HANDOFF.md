@@ -119,3 +119,11 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - CI workflow now runs the Train-only treatment audit and tests.
 - T1/T3 are implementation/conformance treatments only. No policy execution, model/API/A800/vLLM/optimizer/training or performance evaluation.
 - T2 business-outcome reward shaping remains blocked; T4 full conversation remains separate.
+
+
+### Step 4 first CI correction
+
+- Initial implementation commit cefef70c42f82223ab1138ace51b3b410019a44d.
+- CI run 43008576540 passed dataset construction and Step 3 conformance, then failed at direct script startup because the repository root was absent from sys.path.
+- Corrected scripts/audit_evotool_treatments.py to add ROOT before importing scripts.audit_evotool_tau_bench_conformance. T3 also imports Collection for complete runtime type-hint resolution.
+- Re-run CI before accepting the implementation.

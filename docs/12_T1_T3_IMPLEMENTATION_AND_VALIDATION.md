@@ -58,3 +58,8 @@ These are implementation/conformance checks only. They are not policy performanc
 - No model inference, paid API, A800/vLLM startup, optimizer execution, training, or policy-performance evaluation was performed or authorized.
 
 Next: independently review T1/T3 implementation and CI results. Only after that review should any separately authorized model/optimizer experiment be considered.
+
+
+### CI correction — script entry-point import
+
+The first CI attempt (run 43008576540) passed dataset construction and the Step 3 conformance audit, then failed when invoking scripts/audit_evotool_treatments.py directly: Python placed the scripts directory, not the repository root, at sys.path[0]. The audit entry point now inserts the repository root before importing the shared scripts package. This is an execution-path fix, not a change to T1/T3 semantics.

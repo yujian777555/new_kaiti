@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from typing import Any
 
 
