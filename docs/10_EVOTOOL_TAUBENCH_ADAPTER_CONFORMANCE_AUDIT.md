@@ -1,0 +1,61 @@
+# Step 3 — EvoTool × legacy tau-bench Retail conformance result
+
+**Date:** 2026-11-11  
+**CI:** [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687316)  
+**Overall gate:** `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`  
+**Model inference / API / optimizer:** none / 0 / 0.
+
+## Reproducible harness
+
+- Runner: `scripts/audit_evotool_tau_bench_conformance.py`
+- Tests: `tests/test_evotool_tau_bench_conformance.py`
+- Official tau-bench source: `sierra-research/tau-bench` @ `59a200c6d575d595120f1cb70fea53cef0632f6b`.
+- EvoTool source: `SYang2000/ACL_2026_EvoTool` @ `6a82719ea6e22cf23f963078e2527094e50b47f6`.
+- EvoTool source lock: 9 files verified.
+- The harness injects a deterministic fake user transport into the pinned official Env to exercise the real `step()` and `calculate_reward()` methods without an LLM/provider call.
+- Adapted split manifests are generated separately for Train 500, Dev 20, Test 115; 16 tools per split.
+
+## CI results
+
+- Existing transferred regression: 95 passed, 1 skipped.
+- New conformance suite: 8 passed.
+- Official/EvoTool tool implementations compared over 1,375 Gold Action calls:
+  - tool sets equal;
+  - return mismatches: 0;
+  - exception mismatches: 0;
+  - full DB state mismatches: 0;
+  - product mutations: 0;
+  - domain-level Error returns: 44 on both sides.
+- Official reward replay compared on 635 Gold tasks:
+  - official gold reward failures: 0;
+  - EvoTool gold success failures: 0;
+  - official/EvoTool Gold outcome mismatches: 0.
+- The action-history probe confirms official `calculate_reward()` appends replayed Gold Actions after candidate actions and response action(s).
+
+## Important interpretation
+
+**Tool implementation parity and exact-Gold reward parity pass on this pinned dataset. Full interaction-protocol parity does not.**
+
+The zero Gold mismatch result is expected on exact reference trajectories; it does not erase these measured differences:
+
+1. Output semantics probes:
+   - case variation: official reward 1.0, EvoTool false;
+   - comma normalization: official reward 1.0, EvoTool false;
+   - multiple conversation responses: official reward 1.0, EvoTool false because EvoTool checks one final answer string.
+2. EvoTool counts a tool function returning a domain-level `Error:` as `status=success`. On a representative one-step case, progress is 1.0 under current status and 0.5 if business rejection is counted as an error; the 0.3 shaped-reward component differs by 0.15.
+3. Official tau-bench runs a conversational user-simulator/tool loop; EvoTool uses Planner → Selector → Caller → Synthesizer. It does not reset/step the official simulator or inject the retail wiki into the same loop.
+4. Official tool-calling max steps is 30; EvoTool base config max steps is 6.
+5. Official reward hashes the full DB; EvoTool compares orders/users. On all 1,375 pinned Gold Actions no products mutation occurred, so this projection is equivalent for this audited tool set, but not a general guarantee.
+6. Official Env stores a rules list; default ToolCallingAgent uses wiki and tool schemas rather than passing the separate rules list.
+
+## Decision
+
+- Keep the official EvoTool snapshot unchanged as the legacy baseline treatment.
+- Do not label the current adapter a faithful full tau-bench conversational reproduction.
+- Any corrected Error-status/progress treatment or restored full conversation adapter must be a separately named method/arm with an explicit protocol.
+- No inference, optimizer, training, A800/vLLM, paid API, or policy-performance evaluation was run.
+- Next: independent review of the harness and its fake-user semantics; then decide whether to implement separate `evotool_legacy` and `evotool_status_corrected` arms. Do not start model/optimizer runs without separate approval.
+
+## Artifact
+
+The workflow uploads the normalized splits plus `evotool_train.jsonl`, `evotool_dev.jsonl`, `evotool_test.jsonl`, and the machine-readable/Markdown conformance report. Use the artifact from run 42987687316; do not infer local files from its title.

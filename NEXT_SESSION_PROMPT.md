@@ -96,3 +96,14 @@ If a later step needs inference or an experiment, prepare its exact plan, budget
 - Maintain `DECISION_LOG.md`, `SESSION_HANDOFF.md`, and this `NEXT_SESSION_PROMPT.md` at every meaningful milestone.
 - Separate facts, hypotheses, exploratory evidence, confirmatory evidence, and unresolved blockers.
 - Never describe repository maintenance or passing unit tests as a research contribution by themselves.
+
+
+## Step 3 conformance milestone — 2026-11-11
+
+Read `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md`. The deterministic harness is `scripts/audit_evotool_tau_bench_conformance.py`; tests are `tests/test_evotool_tau_bench_conformance.py`.
+
+CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687316) passed: existing tests 95 passed/1 skipped; conformance tests 8 passed. Across 1,375 Gold Actions: tool outputs mismatches 0, exception mismatches 0, full DB state mismatches 0, product mutations 0; domain rejections 44 on both implementations. Across 635 exact Gold tasks: official reward failures 0, EvoTool success failures 0, outcome mismatches 0.
+
+Important: overall `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`, not full parity. Synthetic output probes confirm case, comma-normalization, and multiple-response mismatches. Error-return status changes progress by 0.5 in a representative step (0.15 on the 0.3 shaping term). Official conversational user simulator/wiki loop is absent in EvoTool; official max steps 30 vs EvoTool 6. Full details in docs/10.
+
+Next task: independent review of the harness and fake-user semantics; then design separate legacy and corrected-status treatments. No LLM, model, A800, API, or optimizer execution without separate approval.

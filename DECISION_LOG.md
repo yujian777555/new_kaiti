@@ -71,3 +71,18 @@
 - Artifact: `tau-bench-legacy-retail-805b48ad51122e8bd577a07996c2e84a9dd38989`, ID `13836929695`, expires 2026-12-11.
 - This CI result validates data preparation and regression tests only. It is not model inference, a baseline run, optimizer evidence, or algorithmic uplift.
 - D-006's earlier restriction on reading official Dev/Test payloads was superseded by the user's subsequent explicit authorization for Step 2 data preparation. That authorization did not include model inference, optimizer execution, or policy scoring.
+
+
+## D-009 — 2026-11-11: deterministic official/EvoTool conformance harness
+
+- Added `scripts/audit_evotool_tau_bench_conformance.py` and `tests/test_evotool_tau_bench_conformance.py`.
+- CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687316): success; conformance 8 passed; existing regression 95 passed/1 skipped.
+- Verified 9 pinned EvoTool source files. Adapted split counts Train/Dev/Test = 500/20/115.
+- Compared 1,375 Gold Action calls: return mismatches 0, exception mismatches 0, full DB state mismatches 0, product mutations 0; domain-level Error results 44 on each side.
+- Compared 635 exact Gold tasks: official reward failures 0, EvoTool Gold success failures 0, outcome mismatches 0. This does not prove policy rollout or conversation-protocol parity.
+- Synthetic probes: case-insensitive, comma-normalized, and multiple-response outputs pass official reward but fail EvoTool exact-final-answer check.
+- Error-status probe: returned domain Error is marked `success`; progress 1.0 vs 0.5 if rejection were treated as failed business execution; weighted 0.3 shaping component delta 0.15.
+- Confirmed interaction deviations: no official user simulator loop/wiki in EvoTool; max steps 30 official vs 6 EvoTool; official full-state hash vs EvoTool orders/users projection (no products mutations observed in the pinned 1,375 action calls).
+- Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Keep legacy EvoTool unchanged. Any corrected-status/full-conversation implementation must be a separate treatment.
+- No LLM, model, API, A800/vLLM, optimizer, training, or policy evaluation.
+- Full report: `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md`.

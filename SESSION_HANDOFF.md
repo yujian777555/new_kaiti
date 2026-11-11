@@ -58,3 +58,14 @@ The user authorized reading official Train/Dev/Test task payloads and building t
 - Do not alter pinned upstream tasks, Gold Actions, outputs, DB, or tools to force a passing result.
 - Hard safety constraints remain zero tolerance.
 - Keep the evidence ledger and exact source/result SHAs current.
+
+
+## Step 3 — deterministic conformance harness completed
+
+Report: `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md`.
+
+CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687316) passed: 95 passed/1 skipped existing regression and 8 passed conformance tests. Source-pinned official Env and EvoTool tools compared on all 1,375 Gold Action calls: 0 output mismatches, 0 exception mismatches, 0 full DB state mismatches, 0 product mutations; 44 domain-level rejections on both sides. Gold reward replay: 635 tasks, zero failures and zero outcome mismatches.
+
+Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Output probes confirmed case sensitivity, comma normalization, and multiple-response mismatches. Domain Error return is marked success by EvoTool and affects progress shaping (representative progress 1.0 vs 0.5; shaped component delta 0.15). Official conversational user simulator/wiki loop is absent from EvoTool; official max steps 30 vs EvoTool 6. Thus tool/reward gold parity does not imply full interaction parity.
+
+Next: independent review harness semantics, then define separate legacy and corrected-status treatments. No model/API/A800/optimizer run occurred.
