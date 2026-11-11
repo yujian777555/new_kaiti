@@ -1,56 +1,60 @@
 # Session handoff — 2026-11-11
 
-## Active repository
+## Active repository and verified state
 
-`yujian777555/new_kaiti` — sole active workspace for Paper 1.
-
-Historical source: `yujian777555/kaitibaogao`, branch `pilot-a-stateful-recovery`, pinned HEAD `33672562ebaeb6c3a533e7e0fd975cbac045b5e3`. Do not write to the old repository.
+- Active workspace: `yujian777555/new_kaiti` — sole active repository for Paper 1.
+- Historical source: `yujian777555/kaitibaogao`, branch `pilot-a-stateful-recovery`, pinned HEAD `33672562ebaeb6c3a533e7e0fd975cbac045b5e3`. Do not write to the old repository.
+- Latest data/code commit validated by CI: `805b48ad51122e8bd577a07996c2e84a9dd38989`.
+- CI run [42981617704](https://github.com/yujian777555/new_kaiti/actions/runs/42981617704): success; transferred tests 95 passed / 1 skipped; dataset tests 2 passed; dataset build and artifact upload succeeded.
+- Artifact ID `13836929695`, name `tau-bench-legacy-retail-805b48ad51122e8bd577a07996c2e84a9dd38989`, expires 2026-12-11.
+- Check current `main` HEAD before continuing; a documentation-only handoff commit may be newer than the CI-validated code SHA.
 
 ## Paper 1 direction
 
 Working title: **面向状态化工具调用智能体的故障分层 Pareto 档案演化方法**.
 
-Research object: evolving reusable recovery controllers for stateful tool-using LLM Agents. Primary evolutionary baseline: EvoTool (ACL 2026). GEPA is the selection/reflection comparator; DART and Evidence-Guided Recovery are recovery-domain comparators.
+Research object: evolving reusable recovery controllers for stateful tool-using LLM Agents. Primary evolutionary baseline candidate: EvoTool (ACL 2026). GEPA is the selection/reflection comparator; DART and Evidence-Guided Recovery are recovery-domain comparators.
 
-Provisional method: FSPAE — bounded Pareto archives per task-family × fault-stratum, coverage-deficit parent selection, class-relevant local objectives, and zero-tolerance hard safety constraints. This is not yet implemented or validated.
+Provisional method: FSPAE — bounded Pareto archives per task-family × fault-stratum, coverage-deficit parent selection, class-relevant local objectives, and zero-tolerance hard safety constraints. This remains a hypothesis, not an implemented or validated contribution.
 
 ## Preserved evidence
 
 - D-078: 42 exploratory runs, 14 arms, 3 seeds; no established evolutionary uplift.
-- D-079 v2: 288 Train-only scenarios, 48 clusters, 6 rows/cluster, 3 search + 3 diagnostic; all R1–R4 labels present.
-- Manifest SHA-256: `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`.
-- D-079 lock is a data-integrity lock only, not permission to run the optimizer or access Validation/Test.
-- EvoTool paper specifies G=8/B=3; released default derives 90 generations. Explicit G=8 override works. The demo builder mixes official splits and the adapter omits the full user-simulator loop. See `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
+- D-079 v2: 288 Train-only scenarios, 48 clusters, 6 rows/cluster (3 search + 3 diagnostic); SHA-256 `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`.
+- D-079 lock is data-integrity only; it does not authorize optimizer execution or Validation/Test access.
+- EvoTool paper specifies Qwen3-8B, G=8/B=3; released code defaults to 90 generations. The mixed 150-instance demo builder is not acceptable for paper claims. See `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
 
-## Transfer state
+## Step 2 — official legacy Retail data audit completed
 
-The new repository contains the paper framing, baseline audit, FSPAE hypothesis, D-078/D-079 protocols, D-079 generator/lock/manifest, selected A-3B simulator/controller/EA/SBCG source modules, and selected tests/results. Exact source paths and source commit are recorded in `docs/07_TRANSFER_PROVENANCE.md`.
-
-**Transfer validation:** GitHub Actions run [42965838729](https://github.com/yujian777555/new_kaiti/actions/runs/42965838729) passed: 95 passed, 1 skipped. The D-079 generator regenerated the manifest and matched the committed lock. The only skip is reconstruction from the 10,285,231-byte D-078 raw matrix artifact, not transferred; source SHA is recorded in `docs/07_TRANSFER_PROVENANCE.md`. This is test-suite validation, not an algorithmic uplift result.
-
-## Step 2 — Data audit result
-
-- Pinned legacy tau-bench source: `sierra-research/tau-bench` @ `59a200c6d575d595120f1cb70fea53cef0632f6b`.
+- Pinned upstream: `sierra-research/tau-bench` @ `59a200c6d575d595120f1cb70fea53cef0632f6b` (MIT, historical legacy snapshot).
 - Vendored source files: 35/35 Git Blob SHA exact.
 - Split counts: Train 500, Dev 20, Test 115; total 635 tasks and 1,375 Gold Actions.
-- Database: 1,000 orders, 500 users, 50 products, 591 variants, 2,978 order items; zero referential-integrity failures.
-- Gold Action audit: zero unknown tools, signature mismatches, Python exceptions, or deterministic replay mismatches. There are 44 domain-level Error results across 38 tasks (Train 20, Test 24, Dev 0); these are preserved as original task trajectories, not rewritten.
-- One exact duplicate remains in Test: `retail-test-0093` and `retail-test-0095`. No cross-split duplicates.
+- DB: 1,000 orders, 500 users, 50 products, 591 variants, 2,978 order items; zero referential-integrity failures.
+- Gold Actions: unknown tools 0, signature mismatches 0, Python invocation exceptions 0, deterministic replay mismatches 0.
+- Domain-level `Error:` results: 44 across 38 tasks (Train 20, Dev 0, Test 24). These are preserved original trajectories/business-rule rejections, not automatically corrupt data.
+- One exact duplicate remains in Test: `retail-test-0093` and `retail-test-0095`; no cross-split duplicates.
 - Overall data gate: `PASS_WITH_CAVEAT`. Full report: `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`.
 - Normalized JSONL is generated by `scripts/prepare_tau_bench_retail.py` and uploaded as a CI artifact.
+- Important caveat: the official legacy reward compares replayed DB state and required outputs. EvoTool's adapter marks non-exception `Error:` returns as `status="success"`, which can affect the additional progress-shaping term. This discrepancy is not yet resolved.
+- The released adapter also omits the complete official user-simulator/rules/wiki interaction; it must be restored or the baseline labeled as a reduced adaptation.
 
-## Immediate next steps
+## Immediate next steps — Step 3
 
-1. Implement and test the split-preserving EvoTool data adapter against the original legacy tau-bench tool, DB, and reward semantics.
-2. Explicitly reconcile domain-level Error results with EvoTool's shaped progress term; do not silently count them as successful tool executions.
-3. Restore or clearly disclose the missing user-simulator/rules/wiki interaction before calling the adapted baseline paper-faithful.
-4. Review the paper's exact Train/selection/Test sample protocol against the full 500/20/115 official split sizes; do not invent a 90/30/30 repartition.
-5. Only after adapter and protocol review, request separate approval for Qwen3-8B/A800 inference. No model inference or optimizer run has occurred.
-6. Do not run formal A-3B optimizer or D-079 Validation/Test without separate reviewed authorization.
+1. Build a deterministic conformance harness comparing the pinned official legacy Retail Env, DB reset/copy, tool dispatch, action history, state hash, reward and required-output checks with EvoTool's adapter.
+2. Include successful actions and representative `Error:` returns; separately report official reward and EvoTool progress shaping. Keep the original baseline unchanged; any corrected adapter is a separate treatment.
+3. Audit/restore the official user-simulator/rules/wiki loop from the pinned source, or document the reduced adaptation and do not claim faithful reproduction.
+4. Reconcile Qwen3-8B, G=8/B=3 with released config defaults and the 500/20/115 split. Never use the mixed 150-instance demo builder or invent 90/30/30.
+5. Add tests, produce a parity report, and update this handoff plus `NEXT_SESSION_PROMPT.md` and `DECISION_LOG.md`.
 
-## Hard constraints
+## Hard authorization boundaries
 
+The user authorized reading official Train/Dev/Test task payloads and building the split-preserving dataset only. No model inference, A800/vLLM startup, paid API calls, optimizer execution, training, or policy-performance evaluation has been authorized. Do not access Test for policy scoring or tuning. Deterministic source/unit/conformance tests are allowed.
+
+## Project and evidence constraints
+
+- Do not mix this repository with `openissue`, `agentfotagent`, `EvoPareto-Agent`, `CausalEvo-DSH`, or `GLEPPO`.
 - Do not claim FSPAE works before evidence.
 - Do not use D-079 Train-only data to claim held-out generalization.
-- No unsafe candidate may enter a deployment path; hard constraints remain zero tolerance.
-- No project mixing.
+- Do not alter pinned upstream tasks, Gold Actions, outputs, DB, or tools to force a passing result.
+- Hard safety constraints remain zero tolerance.
+- Keep the evidence ledger and exact source/result SHAs current.

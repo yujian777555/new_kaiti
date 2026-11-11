@@ -1,8 +1,21 @@
-# Next-session prompt — new_kaiti
+# Next-session prompt — Paper 1 / new_kaiti
 
-You are continuing Paper 1 in **yujian777555/new_kaiti only**. Never write new work to `yujian777555/kaitibaogao`; it is now a historical source repository. Do not mix with `openissue`, `agentfotagent`, `EvoPareto-Agent`, `CausalEvo-DSH`, or `GLEPPO`.
+You are continuing Paper 1 in **`yujian777555/new_kaiti` only**. This is the sole active workspace. Never write new work to `yujian777555/kaitibaogao`; it is a historical source repository. Do not mix this project with `openissue`, `agentfotagent`, `EvoPareto-Agent`, `CausalEvo-DSH`, or `GLEPPO`.
 
-Read first:
+## 0. Current verified repository state
+
+- Last experiment/data-audit code commit validated by CI: `805b48ad51122e8bd577a07996c2e84a9dd38989`.
+- CI run: [42981617704](https://github.com/yujian777555/new_kaiti/actions/runs/42981617704), conclusion **success**.
+- Existing transferred simulator/controller regression: **95 passed, 1 skipped**.
+- New tau-bench dataset tests: **2 passed**.
+- Dataset build and artifact upload: successful.
+- Actions artifact: `tau-bench-legacy-retail-805b48ad51122e8bd577a07996c2e84a9dd38989`, artifact ID `13836929695`, expires 2026-12-11.
+- This is data and code-integrity evidence only. It is **not** an algorithmic improvement result, a model baseline, or held-out performance evidence.
+
+At the start of the next session, fetch `main` and verify its current HEAD. Do not assume it is still the SHA above if a newer documentation commit exists.
+
+## 1. Read these files first
+
 1. `SESSION_HANDOFF.md`
 2. `DECISION_LOG.md`
 3. `docs/07_TRANSFER_PROVENANCE.md`
@@ -13,19 +26,73 @@ Read first:
 8. `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`
 9. `data/taubench_legacy/retail/README.md`
 
-Research status:
+## 2. Paper 1 research position
+
+Working title: **面向状态化工具调用智能体的故障分层 Pareto 档案演化方法**.
+
+Research object: evolutionary optimization of reusable recovery controllers for stateful tool-using LLM Agents.
+
+- Primary evolutionary baseline candidate: **EvoTool (ACL 2026)**.
+- GEPA: selection/reflection comparator.
+- DART and Evidence-Guided Recovery: recovery-domain comparators.
+- FSPAE: provisional hypothesis only — bounded Pareto archives per task-family × fault-stratum, coverage-deficit parent selection, class-relevant local objectives, and zero-tolerance hard safety constraints.
+- FSPAE has **not** been implemented/validated as a method and must not be presented as an established contribution.
 - D-078: 42 exploratory runs, 14 arms × 3 seeds; no established EC uplift.
-- D-079 v2: frozen Train-only manifest, 288 scenarios, 48 clusters; SHA-256 `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`. This is not execution permission and does not authorize Validation/Test.
-- FSPAE: provisional hypothesis only.
-- EvoTool: primary evolutionary baseline candidate; paper G=8/B=3, code default 90 generations. The demo data path mixes splits. Pinned legacy Retail data has been built from official Train/Dev/Test (500/20/115); source gate PASS, overall PASS_WITH_CAVEAT. See docs/09. No model baseline yet.
+- D-079 v2: frozen Train-only manifest, 288 scenarios, 48 clusters, 6 rows/cluster (3 search + 3 diagnostic); SHA-256 `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`. The lock is a data-integrity lock, not permission to execute the optimizer or access Validation/Test.
 
-Immediate task:
-1. Do not use the mixed 150-instance tau-bench demo builder for paper claims.
-2. Use the pinned split-preserving normalized JSONL generated from the vendored source. Preserve the exact Train/Dev/Test boundaries.
-3. Reconcile the 44 domain-level Error results with official tau-bench reward semantics; preserve them as source trajectories. Do not silently classify them as corrupt or modify Gold Actions.
-4. Reconcile EvoTool's local adapter marking Error-returning tool calls as status=success and the effect on its progress shaping.
-5. Restore or clearly disclose the official user-simulator/rules/wiki interaction before calling any adapted baseline paper-faithful.
-6. Review the paper's exact sample protocol against official split sizes 500/20/115. No model inference, A800/vLLM, paid API, or optimizer run without separate explicit approval.
-7. Update all research decisions, experiment manifests, and handoffs only in new_kaiti.
+## 3. Completed Step 2 — pinned legacy tau-bench Retail data
 
-Maintain the evidence ledger and update the handoff/prompt after each meaningful milestone. Distinguish source-preserving transfer, successful tests, exploratory results, and confirmatory evidence.
+Upstream source: `sierra-research/tau-bench` @ `59a200c6d575d595120f1cb70fea53cef0632f6b` (MIT). This is a **historical legacy snapshot**, not the latest tau-bench release; upstream warns it is outdated and recommends tau³-bench for new benchmark work.
+
+- Vendored source files: **35/35** Git Blob SHA exact.
+- Original split counts preserved: Train **500**, Dev **20**, Test **115**; total **635 tasks**, **1,375 Gold Actions**.
+- Database: 1,000 orders, 500 users, 50 products, 591 variants, 2,978 order items.
+- DB/task-user referential failures: 0.
+- Gold Action audit: unknown tools 0; signature errors 0; Python invocation exceptions 0; deterministic replay mismatches 0.
+- Domain-level tool results beginning with `Error:`: **44**, across 38 tasks (Train 20, Dev 0, Test 24). These are source trajectories/business-rule rejections, not automatically corrupt records. Preserve them; never rewrite official Gold Actions to make the audit green.
+- One exact within-Test duplicate is retained: `retail-test-0093` and `retail-test-0095`. No cross-split exact duplicates or identical-instruction groups.
+- Data gate: `PASS_WITH_CAVEAT`; source-integrity gate PASS; Gold Action contract passes with domain-rejection diagnostics.
+- The official legacy reward replays Gold Actions and compares resulting DB state plus required output strings; it does not simply fail a task because a tool returned an `Error:` string.
+- Important adapter issue: EvoTool's local adapter marks a tool call as `status="success"` whenever the tool function returns without raising, even if the returned text begins with `Error:`. This may inflate/alter its additional shaped progress term. The official state-based reward and EvoTool progress shaping must be measured and reported separately.
+- Normalized JSONL is generated by `scripts/prepare_tau_bench_retail.py`; Train/Dev/Test remain separate. CI artifact and full report are linked above and documented in `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`.
+
+## 4. Immediate task — Step 3: build the environment/adapter conformance harness
+
+Do **not** jump directly to Qwen3-8B inference or evolutionary runs. First build a small, deterministic, testable conformance harness comparing the pinned official legacy tau-bench Retail implementation with EvoTool's released adapter.
+
+Required work, in order:
+
+1. **Map the actual code paths.** Identify the exact pinned official `Env`, tool dispatch, DB reset/copy, state hashing, reward calculation, required-output checks, user simulator, rules, and wiki behavior. Identify the exact EvoTool adapter and its progress-shaping code. Record file paths, function names, and source SHAs.
+2. **Test task/split loading.** Load the normalized JSONL without merging or shuffling splits. Verify each row against the pinned source record and retain the stable split-local task ID. Train is for evolution; Dev is for selection/validation; Test is held out.
+3. **Test official state/reward parity.** For a deterministic set of representative tasks, compare initial DB state, each action result, action history, final DB state/hash, required-output handling, and official reward. Include successful actions and representative domain-level `Error:` returns.
+4. **Test the Error/status discrepancy explicitly.** Demonstrate how an `Error:` return is represented in the official environment and EvoTool adapter. Quantify its effect on the shaped progress term. Keep the original baseline unchanged; if a corrected adapter is needed, make it a separate named treatment and retain a compatibility test.
+5. **User-simulator parity.** The released adapter appears to omit the complete official user-simulator/rules/wiki interaction. Restore it only from the pinned official source or clearly label the resulting baseline as reduced/offline adaptation. Do not call it a faithful EvoTool reproduction until the required loop is present and verified.
+6. **Protocol reconciliation.** The paper specifies Qwen3-8B, G=8, B=3; released code defaults to 90 generations. Verify exact config semantics and reconcile them with the official split sizes 500/20/115. Do not invent a 90/30/30 split or use the mixed 150-instance demo builder for paper claims.
+7. Add unit tests and a reproducible parity report. Have the report distinguish verified parity, known deviations, unresolved items, and blockers. Update this prompt, `SESSION_HANDOFF.md`, and `DECISION_LOG.md` after the milestone.
+
+## 5. Authorization and research-integrity boundaries
+
+The user authorized reading the official Train/Dev/Test task payloads and building the split-preserving dataset. That authorization is **not** authorization for model inference, paid API calls, vLLM/A800 startup, optimizer execution, or policy-performance evaluation.
+
+Until separate explicit authorization is given:
+
+- No Qwen3-8B/vLLM/A800 inference.
+- No DeepSeek or other paid/remote LLM API calls.
+- No evolutionary optimizer runs or model training.
+- No Test-set policy scoring, tuning, or repeated peeking.
+- No formal A-3B optimizer run or D-079 Validation/Test access.
+- Deterministic source-code/unit/conformance tests and adapter audits are allowed.
+- Do not modify pinned upstream tasks, Gold Actions, outputs, database, or tool code to force a pass.
+- Do not claim algorithmic uplift, generalization, or paper-faithful baseline reproduction without the corresponding evidence.
+
+If a later step needs inference or an experiment, prepare its exact plan, budget, split usage, seeds, metrics, stop conditions, and rollback first, then request separate authorization.
+
+## 6. Repository maintenance rules
+
+- Keep all work in `yujian777555/new_kaiti` only.
+- Never rewrite or force-push shared history. Use a new commit on the intended branch.
+- Before editing: fetch current `main`, inspect status/HEAD, and read the relevant source files.
+- After editing: run focused tests, full relevant CI, inspect logs/artifacts, verify remote HEAD, and record exact SHAs.
+- Maintain `DECISION_LOG.md`, `SESSION_HANDOFF.md`, and this `NEXT_SESSION_PROMPT.md` at every meaningful milestone.
+- Separate facts, hypotheses, exploratory evidence, confirmatory evidence, and unresolved blockers.
+- Never describe repository maintenance or passing unit tests as a research contribution by themselves.

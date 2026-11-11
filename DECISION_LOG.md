@@ -60,3 +60,14 @@
 - The official legacy reward compares post-action database state and required outputs; it does not directly penalize a returned Error string. The EvoTool adapter marks non-exception Error strings as status=success, which can affect its shaped progress term and must be reconciled.
 - Overall data gate: `PASS_WITH_CAVEAT`. Full audit: `docs/09_TAUBENCH_RETAIL_DATA_INTEGRITY_AUDIT.md`.
 - No LLM, A800/vLLM, paid API, optimizer, or policy evaluation was run.
+
+
+### D-007 CI acceptance addendum — 2026-11-11
+
+- CI run [42981617704](https://github.com/yujian777555/new_kaiti/actions/runs/42981617704) completed successfully at code/data commit `805b48ad51122e8bd577a07996c2e84a9dd38989`.
+- Transferred simulator/controller tests: 95 passed, 1 skipped. The skip is the previously documented unavailable D-078 raw matrix artifact reconstruction.
+- New pinned Retail data tests: 2 passed. Split-preserving dataset build and Actions artifact upload also passed.
+- Audit report confirms `PASS_WITH_CAVEAT`, source integrity PASS, Gold Action contract PASS with 44 domain-level rejection diagnostics.
+- Artifact: `tau-bench-legacy-retail-805b48ad51122e8bd577a07996c2e84a9dd38989`, ID `13836929695`, expires 2026-12-11.
+- This CI result validates data preparation and regression tests only. It is not model inference, a baseline run, optimizer evidence, or algorithmic uplift.
+- D-006's earlier restriction on reading official Dev/Test payloads was superseded by the user's subsequent explicit authorization for Step 2 data preparation. That authorization did not include model inference, optimizer execution, or policy scoring.
