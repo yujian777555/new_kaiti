@@ -271,6 +271,9 @@ def audit_gold_actions(all_tasks: dict[str, list[dict]], base_data: dict, all_to
                 replay_mismatches.append({"task_id": task_id})
             tasks_replayed += 1
 
+    domain_errors_by_tool = Counter(item["tool"] for item in domain_errors)
+    domain_errors_by_split = Counter(item["task_id"].split("-")[1] for item in domain_errors)
+    domain_errors_by_message = Counter(item["error"] for item in domain_errors)
     return {
         "tool_names": sorted(tool_map),
         "total_gold_actions": total_actions,
@@ -282,8 +285,12 @@ def audit_gold_actions(all_tasks: dict[str, list[dict]], base_data: dict, all_to
         "signature_error_count": len(signature_errors),
         "invocation_errors": invocation_errors[:20],
         "invocation_error_count": len(invocation_errors),
-        "domain_errors": domain_errors[:20],
+        "domain_errors": domain_errors,
         "domain_error_count": len(domain_errors),
+        "domain_error_task_count": len({item["task_id"] for item in domain_errors}),
+        "domain_error_counts_by_tool": dict(sorted(domain_errors_by_tool.items())),
+        "domain_error_counts_by_split": dict(sorted(domain_errors_by_split.items())),
+        "domain_error_counts_by_message": dict(sorted(domain_errors_by_message.items())),
         "deterministic_replay_mismatches": replay_mismatches[:20],
         "deterministic_replay_mismatch_count": len(replay_mismatches),
     }
@@ -374,18 +381,33 @@ def build_dataset(output_dir: Path) -> dict:
         "unknown_tool_count",
         "signature_error_count",
         "invocation_error_count",
-        "domain_error_count",
         "deterministic_replay_mismatch_count",
     ):
         if gold_action_audit[key]:
             failures.append(f"gold action audit {key}: {gold_action_audit[key]}")
+
+    blockers = []
+    if gold_action_audit["domain_error_count"]:
+        blockers.append(
+            f"{gold_action_audit['domain_error_count']} gold-action calls returned domain-level Error results"
+        )
+
+    source_integrity_gate = "PASS" if not failures else "FAIL"
+    gold_action_gate = "PASS" if not blockers else "BLOCKED"
+    overall_gate = (
+        "PASS" if source_integrity_gate == "PASS" and gold_action_gate == "PASS"
+        else "BLOCKED" if source_integrity_gate == "PASS"
+        else "FAIL"
+    )
 
     exact_duplicate_groups = sum(1 for splits in exact_fingerprints.values() if len(splits) > 1)
     instruction_duplicate_groups = sum(1 for splits in instruction_splits.values() if len(splits) > 1)
 
     report = {
         "schema_version": 1,
-        "gate": "PASS" if not failures else "FAIL",
+        "gate": overall_gate,
+        "source_integrity_gate": source_integrity_gate,
+        "gold_action_gate": gold_action_gate,
         "source": {
             "repository": lock["source_repository"],
             "commit": SOURCE_COMMIT,
@@ -403,6 +425,7 @@ def build_dataset(output_dir: Path) -> dict:
         "task_user_reference_failures": missing_task_users[:20],
         "task_user_reference_failure_count": len(missing_task_users),
         "gold_action_audit": gold_action_audit,
+        "blockers": blockers,
         "failures": failures,
     }
 
@@ -412,7 +435,9 @@ def build_dataset(output_dir: Path) -> dict:
     lines = [
         "# Legacy tau-bench Retail split integrity report",
         "",
-        f"- Gate: **{report['gate']}**",
+        f"- Overall gate: **{report['gate']}**",
+        f"- Source integrity gate: **{report['source_integrity_gate']}**",
+        f"- Gold-action gate: **{report['gold_action_gate']}**",
         f"- Source: {SOURCE_COMMIT}",
         f"- Total tasks: **{report['total_tasks']}**",
         f"- Vendored source files verified: **{len(source_hashes)}**",
@@ -444,7 +469,20 @@ def build_dataset(output_dir: Path) -> dict:
         f"- Signature errors: {gold_action_audit['signature_error_count']}",
         f"- Invocation exceptions: {gold_action_audit['invocation_error_count']}",
         f"- Domain-level Error results: {gold_action_audit['domain_error_count']}",
+        f"- Tasks with domain-level errors: {gold_action_audit['domain_error_task_count']}",
+        f"- Domain errors by split: {gold_action_audit['domain_error_counts_by_split']}",
+        f"- Domain errors by tool: {gold_action_audit['domain_error_counts_by_tool']}",
+        f"- Domain errors by message: {gold_action_audit['domain_error_counts_by_message']}",
         f"- Deterministic replay mismatches: {gold_action_audit['deterministic_replay_mismatch_count']}",
+        "",
+        "## Gold-action error examples",
+        "",
+    ]
+    lines.extend(
+        f"- {item['task_id']} action[{item['action_index']}] {item['tool']}: {item['error']}"
+        for item in gold_action_audit["domain_errors"]
+    )
+    lines += [
         "",
         "## Split overlap diagnostics",
         "",
@@ -474,6 +512,8 @@ def main() -> int:
     report = build_dataset(args.output_dir)
     summary = {
         "gate": report["gate"],
+        "source_integrity_gate": report["source_integrity_gate"],
+        "gold_action_gate": report["gold_action_gate"],
         "total_tasks": report["total_tasks"],
         "splits": {k: v["task_count"] for k, v in report["splits"].items()},
         "gold_actions": report["gold_action_audit"]["total_gold_actions"],
@@ -482,13 +522,18 @@ def main() -> int:
             "signature": report["gold_action_audit"]["signature_error_count"],
             "exceptions": report["gold_action_audit"]["invocation_error_count"],
             "domain_errors": report["gold_action_audit"]["domain_error_count"],
+            "domain_errors_by_split": report["gold_action_audit"]["domain_error_counts_by_split"],
+            "domain_errors_by_tool": report["gold_action_audit"]["domain_error_counts_by_tool"],
+            "domain_errors_by_message": report["gold_action_audit"]["domain_error_counts_by_message"],
             "replay_mismatches": report["gold_action_audit"]["deterministic_replay_mismatch_count"],
         },
         "failures": report["failures"],
         "output_dir": str(args.output_dir),
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
-    return 0 if report["gate"] == "PASS" else 1
+    if report["gate"] == "PASS":
+        return 0
+    return 2 if report["source_integrity_gate"] == "PASS" else 1
 
 
 if __name__ == "__main__":

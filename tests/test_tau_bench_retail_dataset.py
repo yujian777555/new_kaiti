@@ -33,7 +33,9 @@ def test_legacy_tau_bench_retail_splits_are_source_pinned_and_integral(audited_d
         "invocation_errors": gold["invocation_errors"],
         "signature_errors": gold["signature_errors"],
     }
-    assert report["gate"] == "PASS", json.dumps(diagnostics, ensure_ascii=False, indent=2)
+    assert report["source_integrity_gate"] == "PASS", json.dumps(diagnostics, ensure_ascii=False, indent=2)
+    assert report["gold_action_gate"] == "BLOCKED", json.dumps(diagnostics, ensure_ascii=False, indent=2)
+    assert report["gate"] == "BLOCKED", json.dumps(diagnostics, ensure_ascii=False, indent=2)
     assert report["total_tasks"] == 635
     assert {name: item["task_count"] for name, item in report["splits"].items()} == {
         "train": 500,
@@ -46,7 +48,10 @@ def test_legacy_tau_bench_retail_splits_are_source_pinned_and_integral(audited_d
     assert gold["unknown_tool_count"] == 0
     assert gold["signature_error_count"] == 0
     assert gold["invocation_error_count"] == 0
-    assert gold["domain_error_count"] == 0
+    assert gold["domain_error_count"] == 44
+    assert gold["domain_error_task_count"] > 0
+    assert sum(gold["domain_error_counts_by_split"].values()) == 44
+    assert all("insufficient gift card balance" in item["error"].lower() for item in gold["domain_errors"])
     assert gold["deterministic_replay_mismatch_count"] == 0
 
 

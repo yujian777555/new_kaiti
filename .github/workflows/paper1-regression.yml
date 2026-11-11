@@ -38,8 +38,14 @@ jobs:
           gold = report["gold_action_audit"]
           print(json.dumps({
               "gate": report["gate"],
+              "source_integrity_gate": report["source_integrity_gate"],
+              "gold_action_gate": report["gold_action_gate"],
               "splits": {k: v["task_count"] for k, v in report["splits"].items()},
               "domain_error_count": gold["domain_error_count"],
+              "domain_error_task_count": gold["domain_error_task_count"],
+              "domain_error_counts_by_split": gold["domain_error_counts_by_split"],
+              "domain_error_counts_by_tool": gold["domain_error_counts_by_tool"],
+              "domain_error_counts_by_message": gold["domain_error_counts_by_message"],
               "domain_error_examples": gold["domain_errors"],
               "invocation_errors": gold["invocation_errors"],
               "signature_errors": gold["signature_errors"],
