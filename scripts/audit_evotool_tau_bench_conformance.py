@@ -359,7 +359,12 @@ def _make_official_env(rows, all_tools, load_data, Env, Action, Task, fake_user)
 
 
 def _official_score(env, task_index, candidate_actions, response_contents, Action, fake_user):
-    fake_user.responses = list(response_contents) or ["###STOP###"]
+    # response_contents are Agent messages; the fake user must reply with
+    # continuation messages and finally ###STOP###, never echo the Agent text.
+    fake_user.responses = (
+        ["continue"] * (len(response_contents) - 1) + ["###STOP###"]
+        if response_contents else ["###STOP###"]
+    )
     reset = env.reset(task_index=task_index)
     del reset
     response = None
