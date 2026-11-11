@@ -127,3 +127,11 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - CI run 43008576540 passed dataset construction and Step 3 conformance, then failed at direct script startup because the repository root was absent from sys.path.
 - Corrected scripts/audit_evotool_treatments.py to add ROOT before importing scripts.audit_evotool_tau_bench_conformance. T3 also imports Collection for complete runtime type-hint resolution.
 - Re-run CI before accepting the implementation.
+
+
+### T1/T3 audit runtime optimization
+
+- T1 computes state hashes directly before/after each call and only deep-copies for non-JSON fallback.
+- The Train audit reuses executor objects and resets their DB snapshots per task.
+- T3 and official reference scoring reuse the pinned base DB through deep-copy loaders instead of repeated disk loads.
+- No semantics or vendor snapshots changed.

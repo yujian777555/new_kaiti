@@ -63,3 +63,8 @@ Next: independently review T1/T3 implementation and CI results. Only after that 
 ### CI correction — script entry-point import
 
 The first CI attempt (run 43008576540) passed dataset construction and the Step 3 conformance audit, then failed when invoking scripts/audit_evotool_treatments.py directly: Python placed the scripts directory, not the repository root, at sys.path[0]. The audit entry point now inserts the repository root before importing the shared scripts package. This is an execution-path fix, not a change to T1/T3 semantics.
+
+
+### Audit runtime refinement
+
+T1 now hashes the JSON-backed DB before and after execution without deep-copying the entire database on every call; a deep-copy fallback is retained only for non-JSON delegates. The Train audit reuses two executor objects and resets their DB snapshots per task. T3 and the official reference environment reuse the already integrity-checked pinned DB through deep-copy loaders rather than rereading JSON files thousands of times. These are execution-cost optimizations only; score and diagnostic semantics are unchanged.

@@ -54,6 +54,9 @@ def build_treatment_audit(dataset_dir: Path) -> dict[str, Any]:
     # T1: compare a legacy executor and a diagnostic wrapper from identical
     # database snapshots. The wrapper must preserve every legacy result field,
     # state transition, progress value, and episode reward.
+    legacy_env = evotool_env.TauBenchEnv()
+    diagnostic_env = evotool_env.TauBenchEnv()
+
     t1 = {
         "split": "train",
         "task_count": 0,
@@ -69,8 +72,6 @@ def build_treatment_audit(dataset_dir: Path) -> dict[str, Any]:
     }
 
     for row in train_rows:
-        legacy_env = evotool_env.TauBenchEnv()
-        diagnostic_env = evotool_env.TauBenchEnv()
         legacy_env.db = copy.deepcopy(base_data)
         diagnostic_env.db = copy.deepcopy(base_data)
         diagnostic = StatusDecomposedExecutor(
@@ -157,6 +158,8 @@ def build_treatment_audit(dataset_dir: Path) -> dict[str, Any]:
     official_env = _make_official_env(
         train_rows, all_tools, load_data, Env, Action, Task, fake_user
     )
+    official_env.data_load_func = lambda: copy.deepcopy(base_data)
+    t3_db_loader = lambda: copy.deepcopy(base_data)
     t3 = {
         "split": "train",
         "gold_task_count": 0,
@@ -177,7 +180,7 @@ def build_treatment_audit(dataset_dir: Path) -> dict[str, Any]:
             official_env, index, predicted, [""], Action, fake_user
         )
         t3_result = score_task(
-            load_data,
+            t3_db_loader,
             official_tool_map,
             row["actions"],
             predicted,

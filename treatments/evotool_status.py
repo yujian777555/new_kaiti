@@ -93,18 +93,23 @@ class StatusDecomposedExecutor:
 
     def execute(self, tool: str, args: dict | None = None) -> dict:
         args = args or {}
-        before = copy.deepcopy(getattr(self._delegate, "db", None))
+        before = getattr(self._delegate, "db", None)
         before_hash = _state_sha256(before)
+        # JSON-backed Retail state is hashed directly. A snapshot is needed only
+        # for a non-JSON delegate whose state cannot be represented by SHA-256.
+        before_fallback = copy.deepcopy(before) if before_hash is None else None
 
         # Do not catch exceptions here: preserve the delegate's exact behavior.
         legacy_result = self._delegate.execute(tool, args)
-        after = copy.deepcopy(getattr(self._delegate, "db", None))
+        after = getattr(self._delegate, "db", None)
         after_hash = _state_sha256(after)
 
-        if before is None or after is None:
-            state_effect = "unknown"
+        if before_hash is not None and after_hash is not None:
+            state_effect = "changed" if before_hash != after_hash else "unchanged"
+        elif before_fallback is not None and after is not None:
+            state_effect = "changed" if before_fallback != after else "unchanged"
         else:
-            state_effect = "changed" if before != after else "unchanged"
+            state_effect = "unknown"
 
         execution_status = _execution_status(
             tool, legacy_result, self._known_tools
