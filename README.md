@@ -52,7 +52,7 @@ The foundation-model weights are initially frozen. The LLM is accessed through a
 
 ## Validation status of the transfer
 
-The source files were transferred from a pinned source commit without modifying their contents. **The copied code has not yet been independently re-run in this new repository.** A new GitHub Actions regression workflow is included to validate the transferred subset. Until it passes, treat the migration as a source-preserving transfer, not a verified runnable release.
+The source files were transferred from a pinned source commit without modifying their contents. **The copied subset has passed its first new-repository regression run:** GitHub Actions run [42965838729](https://github.com/yujian777555/new_kaiti/actions/runs/42965838729), with 95 passed and 1 skipped. The skip is the D-078 raw matrix reconstruction test because the 10,285,231-byte `matrix_results.json` could not be transferred by the file reader; its source blob SHA is recorded in `docs/07_TRANSFER_PROVENANCE.md`. The D-079 generator/committed-lock regression passed. This validates the transferred test subset, not FSPAE performance.
 
 ## Provenance
 

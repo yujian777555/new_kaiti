@@ -26,15 +26,15 @@ Provisional method: FSPAE — bounded Pareto archives per task-family × fault-s
 
 The new repository contains the paper framing, baseline audit, FSPAE hypothesis, D-078/D-079 protocols, D-079 generator/lock/manifest, selected A-3B simulator/controller/EA/SBCG source modules, and selected tests/results. Exact source paths and source commit are recorded in `docs/07_TRANSFER_PROVENANCE.md`.
 
-**Important:** copied code has not yet been independently executed from this repository. The first task is to run the new CI suite, repair missing dependencies/imports in this repository only, and verify the D-079 manifest regeneration against the frozen hash.
+**Transfer validation:** GitHub Actions run [42965838729](https://github.com/yujian777555/new_kaiti/actions/runs/42965838729) passed: 95 passed, 1 skipped. The D-079 generator regenerated the manifest and matched the committed lock. The only skip is reconstruction from the 10,285,231-byte D-078 raw matrix artifact, not transferred; source SHA is recorded in `docs/07_TRANSFER_PROVENANCE.md`. This is test-suite validation, not an algorithmic uplift result.
 
 ## Immediate next steps
 
-1. Inspect the new repository tree and confirm all transferred files are present.
-2. Run the new regression workflow on the copied subset; fix failures in `new_kaiti` only.
-3. Verify the D-079 generator reproduces the locked SHA exactly.
-4. Then prepare the EvoTool Qwen3-8B tau-Bench reproduction preflight.
-5. Ask for explicit approval before starting A800/vLLM, real LLM API calls, formal A-3B optimizer runs, or any Validation/Test access.
+1. Decide whether to restore the missing 10.3 MB D-078 raw matrix artifact to enable the one skipped historical reconstruction test.
+2. Prepare the EvoTool Qwen3-8B tau-Bench reproduction preflight, including exact model revision, task split, dependencies, and G=8/B=3 configuration.
+3. Ask for explicit approval before starting A800/vLLM or real LLM API calls.
+4. After baseline reproduction, implement FSPAE as an isolated algorithmic change and compare it under matched budgets.
+5. Do not run formal A-3B optimizer, Validation/Test, or external benchmark Test without separate reviewed authorization.
 6. After baseline reproduction, implement FSPAE as an isolated, testable algorithmic change and compare against matched NSGA-II/III, current SBCG, EvoTool-style and GEPA-style controls.
 
 ## Hard constraints

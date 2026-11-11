@@ -17,10 +17,9 @@ Research status:
 - EvoTool: primary evolutionary baseline candidate; paper G=8/B=3, code default 90 generations. Do not claim faithful reproduction unless the explicit paper configuration is used and verified.
 
 Immediate task:
-1. Audit the transferred file tree and run the new CI regression suite.
-2. Fix missing dependencies/imports only in this repository.
-3. Regenerate the D-079 manifest and compare the canonical SHA to the lock.
-4. Prepare EvoTool Qwen3-8B tau-Bench reproduction preflight; do not launch A800/vLLM or paid API without explicit approval.
+1. CI transfer validation has passed: run 42965838729, 95 passed, 1 skipped. The D-079 generator/committed-lock regression passed. The only skip is D-078 raw matrix reconstruction because the 10.3 MB matrix_results.json was not transferred; source SHA is in docs/07_TRANSFER_PROVENANCE.md.
+2. Decide whether the large D-078 artifact should be restored to enable that test.
+3. Prepare EvoTool Qwen3-8B tau-Bench reproduction preflight; do not launch A800/vLLM or paid API without explicit approval.
 5. Do not run formal A-3B optimizer, Validation/Test, or external Test without a separate reviewed authorization.
 
 Maintain the evidence ledger and update the handoff/prompt after each meaningful milestone. Distinguish source-preserving transfer, successful tests, exploratory results, and confirmatory evidence.

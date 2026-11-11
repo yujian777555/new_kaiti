@@ -27,3 +27,12 @@
 - Reproduce EvoTool on a tractable official stateful benchmark slice before adaptation.
 - Paper Appendix A.6 configuration says G=8 and B=3; the released code default derives 90 generations. The reproduction must explicitly set and verify G=8, B=3.
 - Model weights remain frozen; no foundation-model training is required for the baseline.
+
+
+## 2026-11-11 — D-005: Validate the transferred code in new_kaiti
+
+- New repository CI run [42965838729](https://github.com/yujian777555/new_kaiti/actions/runs/42965838729) completed successfully.
+- Regression result: 95 passed, 1 skipped.
+- D-079 generator regeneration and committed manifest-lock verification passed.
+- The single skip is the D-078 raw matrix reconstruction test because the 10,285,231-byte source `matrix_results.json` was not transferred; its original blob SHA is `19aba8cc02a5a10e7e60766ce7c3423e370c51b4`.
+- This is a code-transfer regression result only; it is not evidence that FSPAE improves Agent performance.
