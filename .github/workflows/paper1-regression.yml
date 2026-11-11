@@ -58,10 +58,17 @@ jobs:
               "failures": report["failures"],
           }, ensure_ascii=False, indent=2))
           PY
-      - name: Run pinned legacy tau-bench Retail dataset tests
+      - name: Audit official tau-bench and EvoTool adapter conformance
+        run: |
+          python scripts/audit_evotool_tau_bench_conformance.py --dataset-dir "$RUNNER_TEMP/tau-bench-retail"
+          cat "$RUNNER_TEMP/tau-bench-retail/evotool_tau_bench_conformance.md"
+      - name: Run pinned dataset and EvoTool conformance tests
         env:
           TAU_BENCH_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
-        run: python -m pytest -q tests/test_tau_bench_retail_dataset.py
+        run: |
+          python -m pytest -q \
+            tests/test_tau_bench_retail_dataset.py \
+            tests/test_evotool_tau_bench_conformance.py
       - name: Upload normalized dataset and integrity report
         if: always()
         uses: actions/upload-artifact@v4

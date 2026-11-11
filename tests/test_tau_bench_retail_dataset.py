@@ -42,7 +42,7 @@ def test_legacy_tau_bench_retail_splits_are_source_pinned_and_integral(audited_d
         "dev": 20,
         "test": 115,
     }
-    assert report["source"]["verified_file_count"] == 35
+    assert report["source"]["verified_file_count"] == 42
     assert report["database"]["referential_integrity_failure_count"] == 0
     assert report["task_user_reference_failure_count"] == 0
     assert report["cross_split_exact_duplicate_fingerprint_groups"] == 0

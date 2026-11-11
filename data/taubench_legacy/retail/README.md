@@ -6,7 +6,7 @@ This folder contains the split-preserving source lock for the historical tau-ben
 - Pinned upstream commit: 59a200c6d575d595120f1cb70fea53cef0632f6b
 - License: MIT; see vendor/tau_bench/LICENSE.
 - Exact source files are vendored under vendor/tau_bench/tau_bench/envs/retail/.
-- The source lock records the Git blob SHA for every vendored task, database, and tool file.
+- The source lock records the Git blob SHA for every vendored task, database, tool, user-simulator, and official agent file. The original data/runtime set has 35 files; 7 additional official interaction-source files are retained for the Step 3 conformance audit (42 total).
 - Official split counts: Train 500, Dev 20, Test 115. The parser verifies these counts from the source AST.
 
 ## Split contract
@@ -29,7 +29,7 @@ Run:
 
 The command writes three normalized JSONL files, integrity_report.json, and integrity_report.md. CI uploads the generated files as an Actions artifact.
 
-The audit verifies all 35 vendored source files, safely parses Task/Action literals with Python AST (never executes the task source), checks task/output fields, task counts, split-specific IDs, duplicate diagnostics, database/task references, tool names/signatures, Gold Action execution, and deterministic replay.
+The audit verifies all 42 vendored tau-bench source files, safely parses Task/Action literals with Python AST (never executes the task source), checks task/output fields, task counts, split-specific IDs, duplicate diagnostics, database/task references, tool names/signatures, Gold Action execution, and deterministic replay.
 
 ## Known source-trajectory behavior
 

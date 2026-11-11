@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "benchmark_adapter": "EvoTool ACL 2026 tau-bench Retail offline adapter",
+  "source_repository": "https://github.com/SYang2000/ACL_2026_EvoTool",
+  "source_commit": "6a82719ea6e22cf23f963078e2527094e50b47f6",
+  "source_license": "MIT",
+  "source_warning": "Pinned implementation snapshot for historical reproduction and conformance only. Do not describe its offline Retail adapter as the full conversational tau-bench environment.",
+  "source_files": [
+    {
+      "path": "vendor/evotool/LICENSE",
+      "git_blob_sha": "68a878ef0f72afd1249a6154e8125386ec539bd6"
+    },
+    {
+      "path": "vendor/evotool/configs/base.yaml",
+      "git_blob_sha": "2df96e7ea15486fb3a6539817e1c909c1e9e3c54"
+    },
+    {
+      "path": "vendor/evotool/src/benchmarks.py",
+      "git_blob_sha": "e7b4bc6b167c932c3fc4bec1e729083d962a47e6"
+    },
+    {
+      "path": "vendor/evotool/src/env/registry.py",
+      "git_blob_sha": "a229e8d8f7874430acc503c2ddc147f93534e526"
+    },
+    {
+      "path": "vendor/evotool/src/envs/taubench_env.py",
+      "git_blob_sha": "0c0fd731714084dfa4fef2584070d286320a229f"
+    },
+    {
+      "path": "vendor/evotool/src/envs/taubench_tools.py",
+      "git_blob_sha": "5788e31a585343507741f6ba44961003d824ae80"
+    },
+    {
+      "path": "vendor/evotool/src/evaluators.py",
+      "git_blob_sha": "5fd2f092b251e05d6cd66267051aa07deae5cad3"
+    },
+    {
+      "path": "vendor/evotool/src/metrics.py",
+      "git_blob_sha": "e28bc8fd73107be43f4c83453e677d630f00fa40"
+    },
+    {
+      "path": "vendor/evotool/src/policy/agent.py",
+      "git_blob_sha": "421ac00fc3d7004466f73ed939297a0b27c10837"
+    }
+  ]
+}

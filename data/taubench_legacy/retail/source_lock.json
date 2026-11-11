@@ -25,6 +25,22 @@
       "git_blob_sha": "529f1208b11315675efcb926db35100a360f67d4"
     },
     {
+      "path": "vendor/tau_bench/tau_bench/agents/__init__.py",
+      "git_blob_sha": "fca0cd456af18fe57ff5338962704bdb2eb7b701"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/agents/base.py",
+      "git_blob_sha": "8f269028aea8059b90415adc8ff23185852de070"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/agents/chat_react_agent.py",
+      "git_blob_sha": "f03ce8e2975b5bdc68dbfe16ebf606597b86c39f"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/agents/tool_calling_agent.py",
+      "git_blob_sha": "f8cfdbac52d24d2323e923cdb25e6b667d4db9f8"
+    },
+    {
       "path": "vendor/tau_bench/tau_bench/envs/__init__.py",
       "git_blob_sha": "e20a98f35941732db516bc406d6d283295dd19e8"
     },
@@ -33,48 +49,12 @@
       "git_blob_sha": "2461c3ebaf696757e0ce405bdb20376de88b0143"
     },
     {
-      "path": "vendor/tau_bench/tau_bench/envs/tool.py",
-      "git_blob_sha": "067d8636c68b4e14fbc14c49df1c7b56e96d44c3"
-    },
-    {
-      "path": "vendor/tau_bench/tau_bench/types.py",
-      "git_blob_sha": "66f3b60e7b0cdf573f66b16573057cf3211c241b"
-    },
-    {
       "path": "vendor/tau_bench/tau_bench/envs/retail/__init__.py",
       "git_blob_sha": "4d1560e34146c035f08642036440cc05e6953edd"
     },
     {
-      "path": "vendor/tau_bench/tau_bench/envs/retail/env.py",
-      "git_blob_sha": "fc4874c7ab7b6b23cc35a35388b45d0f1f9c2907"
-    },
-    {
-      "path": "vendor/tau_bench/tau_bench/envs/retail/rules.py",
-      "git_blob_sha": "a61d31054bbba407c7d13e673bac3fa909d0991e"
-    },
-    {
-      "path": "vendor/tau_bench/tau_bench/envs/retail/wiki.md",
-      "git_blob_sha": "2a23f004bbde6a5e3392585d0fedbb4ac2ee0a11"
-    },
-    {
-      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_train.py",
-      "git_blob_sha": "4fe71adafdbae7b6683f9d5beb65275172699bb6"
-    },
-    {
-      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_dev.py",
-      "git_blob_sha": "aa5acf7f771b6e903bf795e436e03ee6ebe2c03d"
-    },
-    {
-      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_test.py",
-      "git_blob_sha": "d0e4936ef9d523c04debf4ecd9f6d92eb39923a0"
-    },
-    {
       "path": "vendor/tau_bench/tau_bench/envs/retail/data/__init__.py",
       "git_blob_sha": "3b1b970374589deb2d32747d2cfaf5a30e2f5710"
-    },
-    {
-      "path": "vendor/tau_bench/tau_bench/envs/retail/data/readme.md",
-      "git_blob_sha": "21b0237ccb09e2bd595077dc64180da01719df6e"
     },
     {
       "path": "vendor/tau_bench/tau_bench/envs/retail/data/orders.json",
@@ -85,8 +65,32 @@
       "git_blob_sha": "dcde9b1beeea329cee6ce28d6b1e414a5284db3a"
     },
     {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/data/readme.md",
+      "git_blob_sha": "21b0237ccb09e2bd595077dc64180da01719df6e"
+    },
+    {
       "path": "vendor/tau_bench/tau_bench/envs/retail/data/users.json",
       "git_blob_sha": "47ce9b4231a2881951a451d9bafc67c0c45f4403"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/env.py",
+      "git_blob_sha": "fc4874c7ab7b6b23cc35a35388b45d0f1f9c2907"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/rules.py",
+      "git_blob_sha": "a61d31054bbba407c7d13e673bac3fa909d0991e"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_dev.py",
+      "git_blob_sha": "aa5acf7f771b6e903bf795e436e03ee6ebe2c03d"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_test.py",
+      "git_blob_sha": "d0e4936ef9d523c04debf4ecd9f6d92eb39923a0"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_train.py",
+      "git_blob_sha": "4fe71adafdbae7b6683f9d5beb65275172699bb6"
     },
     {
       "path": "vendor/tau_bench/tau_bench/envs/retail/tools/__init__.py",
@@ -155,6 +159,30 @@
     {
       "path": "vendor/tau_bench/tau_bench/envs/retail/tools/transfer_to_human_agents.py",
       "git_blob_sha": "84d8d1052ffa3acdbb56717513238b1b2e78262d"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/wiki.md",
+      "git_blob_sha": "2a23f004bbde6a5e3392585d0fedbb4ac2ee0a11"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/wiki.py",
+      "git_blob_sha": "df5e5c3653945f04727f2b4ca207acd09075491e"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/tool.py",
+      "git_blob_sha": "067d8636c68b4e14fbc14c49df1c7b56e96d44c3"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/user.py",
+      "git_blob_sha": "eb9ee841eee4c098353cb0447e4a4bf560d8b5f6"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/run.py",
+      "git_blob_sha": "a513a8233698dc55898681862713cd4ad4a74692"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/types.py",
+      "git_blob_sha": "66f3b60e7b0cdf573f66b16573057cf3211c241b"
     }
   ],
   "task_id_rule": "retail-{split}-{zero_based_source_index:04d}; the index is the official task list index within that split",
