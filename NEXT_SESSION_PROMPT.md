@@ -122,3 +122,10 @@ The first conformance report established parity for the frozen Gold Action calls
 Expected unknown-tool and malformed-argument output differences remain documented. Do not change the original EvoTool adapter or its status/reward semantics. In any corrected treatment, distinguish execution_status from business_outcome; do not automatically penalize every Error:. Also note that official 30 conversational turns and EvoTool 6 planner substeps are different units.
 
 After review, inspect the PR CI and update this prompt, SESSION_HANDOFF.md, and DECISION_LOG.md with the actual commit and workflow run. No LLM/API/A800/vLLM/optimizer/training/policy-performance evaluation without separate authorization.
+
+
+## Step 3-R1 initial CI — passed
+
+PR #1 initial implementation commit 5b85db116e909af9e46024fc9e22e29ec7ab6e9a passed CI run 42992221354: transferred regression 95 passed/1 skipped; dataset and conformance tests 11 passed. Exact Action History checked 635 tasks with 0 mismatches; reset/copy isolation passed; expected dispatch deviations were detected. Artifact 13841803539 expires 2026-12-11.
+
+A follow-up commit adds the new reset/history/dispatch evidence to the generated Markdown report and console summary, and adds a report-rendering regression test. Recheck the latest PR CI after that commit before considering merge.

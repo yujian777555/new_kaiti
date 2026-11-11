@@ -82,3 +82,16 @@ Next: independent review harness semantics, then define separate legacy and corr
 - Keep the original EvoTool status/reward unchanged. Do not classify every returned Error: as failed execution; distinguish execution status from business outcome in any future corrected arm.
 - Official max_num_steps=30 conversational turns and EvoTool max_steps=6 planner substeps are different units and must not be compared as a direct ratio.
 - This milestone remains deterministic source/environment conformance only. No LLM/API/A800/vLLM/optimizer/training/policy-performance evaluation.
+
+
+### Step 3-R1 initial CI result
+
+- PR #1: https://github.com/yujian777555/new_kaiti/pull/1
+- Initial implementation commit: 5b85db116e909af9e46024fc9e22e29ec7ab6e9a
+- CI run 42992221354: SUCCESS.
+- Tests: transferred regression 95 passed / 1 skipped; dataset + conformance 11 passed.
+- Exact Action History: 635 checked / 0 mismatches.
+- Reset/copy isolation: PASS.
+- Dispatch gate: PASS_WITH_KNOWN_DEVIATIONS.
+- Artifact 13841803539, expires 2026-12-11.
+- A follow-up documentation/rendering commit is being added to surface these new probes in the Markdown report and console summary.

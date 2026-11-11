@@ -99,3 +99,8 @@
 - Do not blindly reclassify every Error: result as status=error. Keep legacy EvoTool unchanged. A corrected treatment must distinguish function execution status from business outcome and justify any new shaping metric.
 - Official 30 conversational loop turns and EvoTool 6 planner substeps are different units; do not compare the numeric caps directly.
 - No LLM/API/A800/vLLM/optimizer/training/policy-performance run was authorized or performed.
+
+
+### D-010 verification update
+
+The first Step 3-R1 implementation passed CI on 2026-11-11: run 42992221354, 95 passed/1 skipped transferred regression tests and 11 dataset/conformance tests. Artifact 13841803539 preserves the machine-readable report and normalized splits. Exact Action History matched for all 635 Gold tasks; reset/copy isolation passed; expected dispatch deviations were detected. The follow-up commit improves the human-readable report and adds a report-rendering regression test.

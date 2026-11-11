@@ -160,3 +160,15 @@ def test_environment_dispatch_parity_and_known_error_serialization(conformance_r
     assert malformed["adapter_status"] == "error"
     assert malformed["official_output"].startswith("Error:")
     assert malformed["adapter_output"].startswith("Error:")
+
+
+
+def test_markdown_report_surfaces_step3_r1_evidence(conformance_report, tmp_path):
+    write_report(conformance_report, tmp_path)
+    report_text = (tmp_path / "evotool_tau_bench_conformance.md").read_text(encoding="utf-8")
+    assert "## Dataset integrity precondition" in report_text
+    assert "## Exact Action History" in report_text
+    assert "Ordered sequence mismatches: 0" in report_text
+    assert "## DB reset/copy isolation" in report_text
+    assert "## Environment dispatch semantics" in report_text
+    assert "unknown_tool: output_equal=False" in report_text

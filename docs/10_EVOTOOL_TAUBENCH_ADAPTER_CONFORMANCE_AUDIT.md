@@ -84,3 +84,17 @@ Do not redefine every returned Error: as a failed tool execution. The legacy ada
 ### Step-limit interpretation
 
 The official max_num_steps=30 counts turns in a conversational action loop, including response turns. EvoTool max_steps=6 truncates planner substeps before selector/caller execution. Report the values, but do not describe them as directly comparable step budgets or as a 5x protocol gap.
+
+
+### Step 3-R1 CI verification
+
+- PR: https://github.com/yujian777555/new_kaiti/pull/1
+- Initial Step 3-R1 commit: 5b85db116e909af9e46024fc9e22e29ec7ab6e9a
+- CI run: https://github.com/yujian777555/new_kaiti/actions/runs/42992221354 — SUCCESS.
+- Transferred regression: 95 passed, 1 skipped.
+- Dataset + conformance tests: 11 passed.
+- Overall conformance gate: PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS.
+- Exact Action History: 635/635 checked, 0 ordered-sequence mismatches.
+- Reset/copy isolation: PASS.
+- Dispatch: successful and domain-rejection calls matched in output/state; unknown-tool and missing-argument serialization differences were detected as expected.
+- Artifact ID: 13841803539 (expires 2026-12-11).

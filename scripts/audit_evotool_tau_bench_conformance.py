@@ -59,6 +59,10 @@ def _verify_dataset_integrity(dataset_dir: Path) -> dict:
     if not report_path.is_file():
         raise RuntimeError(f"missing dataset integrity report: {report_path}")
     report = json.loads(report_path.read_text(encoding="utf-8"))
+    if report.get("gate") not in {"PASS", "PASS_WITH_CAVEAT"}:
+        raise RuntimeError("official tau-bench dataset integrity gate did not pass")
+    if report.get("gold_action_gate") not in {"PASS", "PASS_WITH_DOMAIN_REJECTIONS"}:
+        raise RuntimeError("official tau-bench Gold Action gate did not pass")
     if report.get("source_integrity_gate") != "PASS":
         raise RuntimeError("official tau-bench source integrity gate did not pass")
     if report.get("source", {}).get("commit") != EXPECTED_TAU_BENCH_COMMIT:
@@ -889,6 +893,9 @@ def write_report(report: dict, output_dir: Path) -> None:
     )
     tool = report["tool_implementation_parity"]
     reward = report["reward_parity"]
+    reset_probe = report["db_reset_copy_probe"]
+    dispatch_probe = report["dispatch_semantics_probe"]
+    dataset_integrity = report["sources"]["tau_bench_dataset_integrity"]
     lines = [
         "# EvoTool × legacy tau-bench Retail conformance report",
         "",
@@ -914,9 +921,36 @@ def write_report(report: dict, output_dir: Path) -> None:
         f"- EvoTool gold success failures: {len(reward['evotool_gold_success_failures'])}",
         f"- Official/EvoTool gold-result mismatches: {reward['official_vs_evotool_gold_mismatch_count']}",
         "",
-        "## Known semantic deviations",
+        "## Dataset integrity precondition",
+        "",
+        f"- Dataset gate: {dataset_integrity['gate']}",
+        f"- Official source commit: {dataset_integrity['source_commit']}",
+        f"- Official source files verified: {dataset_integrity['verified_file_count']}",
+        f"- Train/Dev/Test normalized JSONL hashes rechecked: {len(dataset_integrity['split_sha256'])}",
+        "",
+        "## Exact Action History",
+        "",
+        f"- Tasks checked: {reward['action_history_checked_task_count']}",
+        f"- Ordered sequence mismatches: {reward['action_history_mismatch_count']}",
+        f"- First-task sequence SHA-256: {reward['action_history_probe']['observed_sequence_sha256']}",
+        "",
+        "## DB reset/copy isolation",
+        "",
+        f"- Gate: {reset_probe['gate']}",
+        f"- Official reset restores base DB: {reset_probe['official_reset_restores_base']}",
+        f"- EvoTool fresh instance restores base DB: {reset_probe['adapter_reconstruction_restores_base']}",
+        f"- Adapter instances isolated: {reset_probe['adapter_instances_are_isolated']}",
+        "",
+        "## Environment dispatch semantics",
+        "",
+        f"- Gate: {report['dispatch_semantics_gate']}",
         "",
     ]
+    for name, probe in dispatch_probe.items():
+        lines.append(
+            f"- {name}: output_equal={probe['output_equal']}, "
+            f"state_equal={probe['state_equal']}, adapter_status={probe['adapter_status']}"
+        )
     lines.extend(f"- {item}" for item in report["known_deviations"])
     lines += ["", "## Output semantics probes", ""]
     for name, probe in report["output_semantics_probes"].items():
@@ -956,6 +990,18 @@ def main():
         "output_mismatches": report["tool_implementation_parity"]["output_mismatch_count"],
         "state_mismatches": report["tool_implementation_parity"]["full_database_state_mismatch_count"],
         "gold_reward_mismatches": report["reward_parity"]["official_vs_evotool_gold_mismatch_count"],
+        "action_history_checked_tasks": report["reward_parity"]["action_history_checked_task_count"],
+        "action_history_mismatches": report["reward_parity"]["action_history_mismatch_count"],
+        "reset_copy_gate": report["db_reset_copy_probe"]["gate"],
+        "dispatch_gate": report["dispatch_semantics_gate"],
+        "dispatch_probes": {
+            name: {
+                "output_equal": probe["output_equal"],
+                "state_equal": probe["state_equal"],
+                "adapter_status": probe["adapter_status"],
+            }
+            for name, probe in report["dispatch_semantics_probe"].items()
+        },
         "output_semantics_probes": report["output_semantics_probes"],
     }, ensure_ascii=False, indent=2))
     return 0 if report["overall_gate"] != "REVIEW_REQUIRED" else 1
