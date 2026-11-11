@@ -149,3 +149,7 @@ Review implementation details and CI before any model/optimizer experiment. T1 i
 ### Step 4 CI correction
 
 Run 43008576540: dataset build and Step 3 conformance passed; treatment audit failed at startup with ModuleNotFoundError: No module named 'scripts'. Fix: insert repository root into sys.path in scripts/audit_evotool_treatments.py before shared imports. T3 type imports also corrected. Re-run full CI and inspect treatment audit/test results.
+
+
+## Step 5 — T1/T3 episode integration
+Review treatments/evotool_episode_integration.py and tests/test_evotool_episode_integration.py. It invokes vendored agent.run_episode() through agent.env_for, attaches T1, independently scores T3, and preserves T0 reward. After CI, proceed to deterministic real-tool episode smoke, then request a small Train-only model-backed pilot with fixed budget; no Dev/Test tuning.

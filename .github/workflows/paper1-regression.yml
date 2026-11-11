@@ -89,7 +89,8 @@ jobs:
           python -m pytest -q \
             tests/test_tau_bench_retail_dataset.py \
             tests/test_evotool_tau_bench_conformance.py \
-            tests/test_evotool_treatments.py
+            tests/test_evotool_treatments.py \
+            tests/test_evotool_episode_integration.py
       - name: Upload normalized dataset and integrity report
         if: always()
         uses: actions/upload-artifact@v4

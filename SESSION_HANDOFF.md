@@ -135,3 +135,11 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - The Train audit reuses executor objects and resets their DB snapshots per task.
 - T3 and official reference scoring reuse the pinned base DB through deep-copy loaders instead of repeated disk loads.
 - No semantics or vendor snapshots changed.
+
+
+## Step 5 — T1/T3 episode integration (2026-11-11)
+- treatments/evotool_episode_integration.py invokes vendored agent.run_episode() through agent.env_for; T1 wraps Tau-bench for the episode and restores the factory in finally.
+- Evicts only the exact policy/instance cache key so a cached T0 episode cannot bypass T1; restores any prior cache entry.
+- T3 independently scores predicted actions and final answer against Gold plan and official tool map.
+- T0 reward/success remain unchanged; smoke test tests/test_evotool_episode_integration.py is included in CI.
+- Deterministic integration only; no LLM/API/GPU/optimizer or held-out scoring.

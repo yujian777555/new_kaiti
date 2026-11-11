@@ -143,3 +143,10 @@ The first Step 3-R1 implementation passed CI on 2026-11-11: run 42992221354, 95 
 ### D-013 performance refinement
 
 T1 state-effect measurement now hashes JSON DB state directly instead of deep-copying the full database for every tool call. The Train audit reuses executor instances; T3 and official reference replay use deep-copy loaders over the already loaded pinned DB. This reduces deterministic audit overhead without changing results or vendor source.
+
+
+## D-014 — 2026-11-11: connect T1/T3 to EvoTool episode seam
+- Added run_treated_episode() invoking vendored agent.run_episode() with T1 injected at agent.env_for.
+- Exact policy/instance cache key is evicted; prior cache and original env factory are restored.
+- T3 independently scores predicted actions and synthesizer answer; T0 reward/success remain unchanged.
+- Deterministic integration smoke test and CI entry added. No model/API/GPU/optimizer run.
