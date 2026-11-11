@@ -20,7 +20,7 @@ Provisional method: FSPAE — bounded Pareto archives per task-family × fault-s
 - D-079 v2: 288 Train-only scenarios, 48 clusters, 6 rows/cluster, 3 search + 3 diagnostic; all R1–R4 labels present.
 - Manifest SHA-256: `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`.
 - D-079 lock is a data-integrity lock only, not permission to run the optimizer or access Validation/Test.
-- EvoTool paper/code mismatch: paper G=8/B=3; released defaults derive 90 generations. Use explicit G=8 and verify run logs.
+- EvoTool paper specifies G=8/B=3; released default derives 90 generations. Explicit G=8 override works, but the demo data builder mixes official splits and the tau-bench adapter omits the official user-simulator loop. See `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
 
 ## Transfer state
 
@@ -30,12 +30,12 @@ The new repository contains the paper framing, baseline audit, FSPAE hypothesis,
 
 ## Immediate next steps
 
-1. Decide whether to restore the missing 10.3 MB D-078 raw matrix artifact to enable the one skipped historical reconstruction test.
-2. Prepare the EvoTool Qwen3-8B tau-Bench reproduction preflight, including exact model revision, task split, dependencies, and G=8/B=3 configuration.
-3. Ask for explicit approval before starting A800/vLLM or real LLM API calls.
-4. After baseline reproduction, implement FSPAE as an isolated algorithmic change and compare it under matched budgets.
-5. Do not run formal A-3B optimizer, Validation/Test, or external benchmark Test without separate reviewed authorization.
-6. After baseline reproduction, implement FSPAE as an isolated, testable algorithmic change and compare against matched NSGA-II/III, current SBCG, EvoTool-style and GEPA-style controls.
+1. Complete the split-preserving EvoTool data-preparation design. Do not use the released 150-instance tau-bench demo builder for paper claims.
+2. Obtain explicit approval before reading/materializing the official Dev/Test task payloads; this is separate from permission to run a model.
+3. After the split/data integrity gate passes, prepare a Qwen3-8B vLLM smoke-test plan. Obtain separate approval before starting A800/vLLM or any real LLM API calls.
+4. Reconcile the released-code tau-bench adapter and reward discrepancies; label any reduced offline adaptation honestly.
+5. Only after the baseline preflight is accepted, run the authorized baseline and then compare FSPAE against matched NSGA-II/III, current SBCG, EvoTool-style and GEPA-style controls.
+6. Do not run formal A-3B optimizer, D-079 Validation/Test, or external benchmark Test without separate reviewed authorization.
 
 ## Hard constraints
 

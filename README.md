@@ -17,13 +17,13 @@ The foundation-model weights are initially frozen. The LLM is accessed through a
 - D-078 was an exploratory 14-arm × 3-seed pilot. It did not establish that the existing SBCG/NSGA-III approach outperforms strong baselines.
 - D-079 v2 is a Train-only diagnostic challenge manifest. Canonical SHA-256: `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`. It is not execution authorization and is not a held-out test set.
 - The provisional method hypothesis is **Fault-Stratified Pareto Archive Evolution (FSPAE)**. It has not yet been implemented or validated as a successful method.
-- Primary evolutionary baseline candidate: **EvoTool (ACL 2026)**. Its paper/code generation-budget discrepancy is documented; reproduction must verify the paper-faithful configuration rather than silently accepting code defaults.
+- Primary evolutionary baseline candidate: **EvoTool (ACL 2026)**. The initial preflight audit found split contamination and benchmark-adapter/metric discrepancies in the released tau-bench demo path. No baseline run is authorized or claimed yet; see `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
 - GEPA is a selection/reflection comparator. DART and Evidence-Guided Recovery are recovery-domain comparators.
 
 ## Research workflow
 
-1. Audit the baseline paper and official code.
-2. Faithfully reproduce a tractable official benchmark slice before adapting the method.
+1. Audit the baseline paper and official code; record implementation discrepancies.
+2. Build a split-preserving, source-pinned baseline data path; do not use the mixed 150-instance demo subset for paper claims.
 3. Identify a specific mechanism limitation, not merely a different application domain.
 4. Implement the proposed evolutionary mechanism with matched baselines and ablations.
 5. Use Train-only diagnostics for mechanism discovery.

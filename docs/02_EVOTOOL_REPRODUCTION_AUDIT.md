@@ -32,14 +32,14 @@ Paper Appendix A.6 reports GPT-4.1 and Qwen3-8B backbones, maximum generation bu
 
 The released `configs/base.yaml` defaults to `n_train=90`, `n_sel=30`, `n_test=30`, `batch_size=3`, and `epochs=3`, which derives 90 generations under `SPEC.md §8`. The README also describes the default as 90 generations. Therefore, **running the default config is not a faithful reproduction of the paper's stated G=8 budget**.
 
-The code exposes `evolve.generations` as an explicit generation-budget override. The paper-faithful candidate command for the Qwen3-8B tau-bench slice is:
+The code exposes `evolve.generations` as an explicit generation-budget override. The generation-budget override command (only after a split-preserving dataset and environment adapter are prepared) is:
 
 ```bash
 python run.py --config configs/evotool.yaml --benchmark taubench \
   --override evolve.generations=8 evolve.batch_size=3 llm.model_name=Qwen3-8B
 ```
 
-Before calling this a reproduction, verify that exactly eight generations executed, the task splits are disjoint, the model and temperature match, and the evaluator is the official tau-bench database-state plus required-output check. The paper reports Qwen3-8B tau-bench Pass@1 of 25.8 average (Retail 35.9, Airline 15.7). A single tau-bench slice is a **partial reproduction**, not a full reproduction of the four-benchmark paper.
+An eight-generation run alone does not make this a paper-faithful reproduction. The released demo builder mixes official task splits, and the released tau-bench adapter is not the full conversational benchmark. See `08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`; do not run the 150-instance demo path or make paper-level claims from it. Before any baseline run, establish split-preserving inputs, reconcile the evaluator, and verify the exact generation count in the run log. The paper reports Qwen3-8B tau-bench Pass@1 of 25.8 average (Retail 35.9, Airline 15.7). A single tau-bench slice is a **partial reproduction**, not a full reproduction of the four-benchmark paper.
 
 ## 4. Reproduction sequence
 
@@ -63,3 +63,10 @@ No reproduction has been run. The current D-079 protocol does not authorize A800
 ## Repository transfer note
 
 This document is a research-state snapshot transferred on 2026-11-11 from `yujian777555/kaitibaogao` branch `pilot-a-stateful-recovery`, source HEAD `33672562ebaeb6c3a533e7e0fd975cbac045b5e3`. Historical commit IDs and CI links are preserved for provenance; all subsequent edits belong in `yujian777555/new_kaiti`.
+
+
+## 7. Critical preflight correction — 2026-11-11
+
+The initial audit's generation-budget finding remains valid, but the proposed 150-instance tau-bench path is not suitable for a faithful reproduction. The builder takes tasks from Test before Train/Dev and the generic loader randomly repartitions the combined list. The released agent adapter also omits the official user-simulator/rules/wiki interaction. Full findings and the revised protocol are in `08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
+
+**Current status: no baseline run has been performed.** Explicit approval is required before materializing official Dev/Test task payloads, and separate approval is required before model inference or A800/vLLM.

@@ -37,7 +37,7 @@ The source tree may contain additional files not yet transferred. Do not assume 
 
 For each copied source file, the Git blob SHA is preserved when the file content is unchanged. The D-079 v2 manifest retains canonical SHA-256 `09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca`.
 
-The transferred code has not yet been run in the new repository. The new CI workflow is the next integrity gate. If an import or test fails, fix the copy in `new_kaiti` and document the deviation; do not silently patch the historical source repository.
+The transferred subset passed the new-repository GitHub Actions regression: run [42965838729](https://github.com/yujian777555/new_kaiti/actions/runs/42965838729), 95 passed and 1 skipped. The skip is the D-078 raw matrix reconstruction test because the 10,285,231-byte source artifact was not transferred. The D-079 generator/committed-lock regression passed. This validates the selected copied test subset, not algorithmic performance or the entire historical repository.
 
 ## Important historical evidence
 

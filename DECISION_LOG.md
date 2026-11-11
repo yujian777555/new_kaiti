@@ -36,3 +36,14 @@
 - D-079 generator regeneration and committed manifest-lock verification passed.
 - The single skip is the D-078 raw matrix reconstruction test because the 10,285,231-byte source `matrix_results.json` was not transferred; its original blob SHA is `19aba8cc02a5a10e7e60766ce7c3423e370c51b4`.
 - This is a code-transfer regression result only; it is not evidence that FSPAE improves Agent performance.
+
+
+## 2026-11-11 — D-006: EvoTool tau-bench preflight is blocked pending split-clean protocol
+
+- Audited EvoTool official code at `6a82719ea6e22cf23f963078e2527094e50b47f6` and legacy tau-bench at `59a200c6d575d595120f1cb70fea53cef0632f6b`.
+- Paper Appendix A.6 specifies Qwen3-8B, G=8, B=3. The released config defaults to 90 generations; explicit `evolve.generations=8` controls this.
+- The released 150-instance tau-bench demo builder takes Test tasks before Train/Dev, then the loader randomly partitions the combined sample 90/30/30. This is not a split-preserving official evaluation protocol.
+- The released tau-bench `run_episode` adapter does not implement the original user-simulator/rules/wiki conversation loop; its local reward also differs in required-output normalization and its search reward adds an undocumented progress term.
+- Decision: do not run the demo command or report it as a faithful paper reproduction. Prepare a source-pinned split-preserving baseline protocol. No model inference, A800/vLLM, optimizer run, or held-out outcome evaluation was performed.
+- Explicit approval is required before reading/materializing the official Dev/Test task payloads. Separate approval is required before starting Qwen3-8B vLLM or any real LLM API call.
+- Full details: `docs/08_EVOTOOL_BASELINE_PREFLIGHT_AUDIT.md`.
