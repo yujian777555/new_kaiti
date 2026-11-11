@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EVOTOOL_ROOT = ROOT / "vendor" / "evotool"
 if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
 
-def _install_agent_import_stubs(actions):
+def _install_agent_import_stubs(actions, required_outputs):
     src_pkg = types.ModuleType("src")
     src_pkg.__path__ = [str(EVOTOOL_ROOT / "src")]
     sys.modules["src"] = src_pkg
@@ -31,7 +31,13 @@ def _install_agent_import_stubs(actions):
     module_stubs.run_planner = lambda _c, _p, _q: list(subgoals)
     module_stubs.run_selector = lambda _c, _p, _q, sub, _s, _t: action_by_subgoal[sub]["name"]
     module_stubs.run_caller = lambda _c, _p, _card, _q, sub, _s: dict(action_by_subgoal[sub]["kwargs"])
-    module_stubs.run_synthesizer = lambda _c, _p, _q, steps: "\n".join(str(x.observation.get("output", "")) for x in steps)
+    module_stubs.run_synthesizer = (
+        lambda _c, _p, _q, steps:
+        "\n".join(
+            [str(x) for x in required_outputs]
+            + [str(step.observation.get("output", "")) for step in steps]
+        )
+    )
     sys.modules["src.policy.modules"] = module_stubs
     importlib.import_module("src.policy").modules = module_stubs
 
@@ -72,7 +78,7 @@ def main():
     row = _choose_train_row(rows, tool_map, base_db)
     actions = list(row["actions"])
     instance = _to_evotool_record(row, _flat_tool_cards(official_tools))
-    _install_agent_import_stubs(actions)
+    _install_agent_import_stubs(actions, instance.get("outputs") or [])
     agent = importlib.import_module("src.policy.agent")
     env = importlib.import_module("src.envs.taubench_env")
     env.load_db = lambda: copy.deepcopy(base_db)
