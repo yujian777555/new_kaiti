@@ -38,13 +38,9 @@ Provisional method: FSPAE — bounded Pareto archives per task-family × fault-s
 - Important caveat: the official legacy reward compares replayed DB state and required outputs. EvoTool's adapter marks non-exception `Error:` returns as `status="success"`, which can affect the additional progress-shaping term. This discrepancy is not yet resolved.
 - The released adapter also omits the complete official user-simulator/rules/wiki interaction; it must be restored or the baseline labeled as a reduced adaptation.
 
-## Immediate next steps — Step 3
+## Step 3 plan — completed
 
-1. Build a deterministic conformance harness comparing the pinned official legacy Retail Env, DB reset/copy, tool dispatch, action history, state hash, reward and required-output checks with EvoTool's adapter.
-2. Include successful actions and representative `Error:` returns; separately report official reward and EvoTool progress shaping. Keep the original baseline unchanged; any corrected adapter is a separate treatment.
-3. Audit/restore the official user-simulator/rules/wiki loop from the pinned source, or document the reduced adaptation and do not claim faithful reproduction.
-4. Reconcile Qwen3-8B, G=8/B=3 with released config defaults and the 500/20/115 split. Never use the mixed 150-instance demo builder or invent 90/30/30.
-5. Add tests, produce a parity report, and update this handoff plus `NEXT_SESSION_PROMPT.md` and `DECISION_LOG.md`.
+The deterministic conformance harness, dataset integrity precondition, exact Action History checks, reset/copy probes, and dispatch probes are complete. See `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md` and the treatment design in `docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md`.
 
 ## Hard authorization boundaries
 
@@ -68,7 +64,7 @@ CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687
 
 Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Output probes confirmed case sensitivity, comma normalization, and multiple-response mismatches. Domain Error return is marked success by EvoTool and affects progress shaping (representative progress 1.0 vs 0.5; shaped component delta 0.15). Official conversational user simulator/wiki loop is absent from EvoTool; official max steps 30 vs EvoTool 6. Thus tool/reward gold parity does not imply full interaction parity.
 
-Next: independent review harness semantics, then define separate legacy and corrected-status treatments. No model/API/A800/optimizer run occurred.
+Independent review is complete. Step 4 now separates the immutable EvoTool legacy baseline, diagnostic status decomposition, reward-scorer parity, and full-conversation protocol. No model/API/A800/optimizer run occurred.
 
 
 ## Step 3-R1 — independent conformance review (2026-11-11)
@@ -95,3 +91,16 @@ Next: independent review harness semantics, then define separate legacy and corr
 - Dispatch gate: PASS_WITH_KNOWN_DEVIATIONS.
 - Artifact 13841803539, expires 2026-12-11.
 - A follow-up documentation/rendering commit is being added to surface these new probes in the Markdown report and console summary.
+
+
+## Step 3-R1 final verified state (2026-11-11)
+
+- Main remains unchanged at base SHA cf83f08da748f3b7889465c3b19432e6389ca7b7.
+- PR #1: https://github.com/yujian777555/new_kaiti/pull/1 (draft, open).
+- Branch: audit/step3-independent-review.
+- Latest code/report commit: e248486d38933e62a51367f66489e18fc22877fb.
+- CI run 42993445630: SUCCESS; 95 passed/1 skipped transferred regression; 12 dataset/conformance tests passed.
+- Exact Action History: 635 checked, 0 mismatches. DB reset/copy isolation PASS. Dispatch PASS_WITH_KNOWN_DEVIATIONS.
+- Artifact 13842368239, expires 2026-12-11.
+- Generated Markdown report now exposes dataset integrity, Action History, reset/copy and dispatch probes.
+- Next: use docs/11 treatment protocol as the design basis. Keep T0 legacy unchanged; do not blindly penalize Error returns. No model/API/A800/vLLM/optimizer/training/policy-performance evaluation without separate authorization.

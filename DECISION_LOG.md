@@ -104,3 +104,13 @@
 ### D-010 verification update
 
 The first Step 3-R1 implementation passed CI on 2026-11-11: run 42992221354, 95 passed/1 skipped transferred regression tests and 11 dataset/conformance tests. Artifact 13841803539 preserves the machine-readable report and normalized splits. Exact Action History matched for all 635 Gold tasks; reset/copy isolation passed; expected dispatch deviations were detected. The follow-up commit improves the human-readable report and adds a report-rendering regression test.
+
+
+## D-011 — 2026-11-11: separate execution status from business outcome
+
+- Step 3-R1 passed CI run 42993445630 on code/report commit e248486d38933e62a51367f66489e18fc22877fb: 95 passed/1 skipped transferred regression tests and 12 dataset/conformance tests.
+- The final report includes exact Action History (635 checked, 0 mismatches), reset/copy isolation PASS, and dispatch PASS_WITH_KNOWN_DEVIATIONS. Artifact 13842368239 expires 2026-12-11.
+- A representative Gold Action returns a business-level rejection ("insufficient gift card balance") but is still a valid Gold trajectory under the official state-based reward. Therefore, changing every returned Error string to execution failure is invalid.
+- Treatment protocol: T0 immutable EvoTool legacy; T1 status decomposition for diagnostics only (execution status, business outcome, state effect) while preserving legacy reward; T2 business-outcome-aware shaping is NOT READY without task-aware labels; T3 official-reward-aligned scorer is a separate evaluator treatment; T4 full conversational tau-bench loop is a separate protocol.
+- Do not call T1 an algorithmic improvement or T2 validated. No model/API/A800/vLLM/optimizer/training/policy-performance run was performed.
+- Full protocol: docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md.

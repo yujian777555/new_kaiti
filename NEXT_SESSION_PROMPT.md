@@ -106,7 +106,7 @@ CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687
 
 Important: overall `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`, not full parity. Synthetic output probes confirm case, comma-normalization, and multiple-response mismatches. Error-return status changes progress by 0.5 in a representative step (0.15 on the 0.3 shaping term). Official conversational user simulator/wiki loop is absent in EvoTool; official max steps 30 vs EvoTool 6. Full details in docs/10.
 
-Next task: independent review of the harness and fake-user semantics; then design separate legacy and corrected-status treatments. No LLM, model, A800, API, or optimizer execution without separate approval.
+Step 3-R1 independent review and CI are complete. Next, read docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md and decide whether to implement the diagnostic status-decomposition and official-reward-aligned scorer as separate treatments. Do not turn every Error: return into a failed execution or reward penalty. No LLM, model, A800, API, or optimizer execution without separate approval.
 
 
 ## Step 3-R1 independent review — 2026-11-11
@@ -129,3 +129,10 @@ After review, inspect the PR CI and update this prompt, SESSION_HANDOFF.md, and 
 PR #1 initial implementation commit 5b85db116e909af9e46024fc9e22e29ec7ab6e9a passed CI run 42992221354: transferred regression 95 passed/1 skipped; dataset and conformance tests 11 passed. Exact Action History checked 635 tasks with 0 mismatches; reset/copy isolation passed; expected dispatch deviations were detected. Artifact 13841803539 expires 2026-12-11.
 
 A follow-up commit adds the new reset/history/dispatch evidence to the generated Markdown report and console summary, and adds a report-rendering regression test. Recheck the latest PR CI after that commit before considering merge.
+
+
+## Step 3-R1 final CI — 2026-11-11
+
+Latest verified code/report commit e248486d38933e62a51367f66489e18fc22877fb passed CI run 42993445630: 95 passed/1 skipped transferred regression; 12 dataset/conformance tests passed. Exact Action History 635 checked / 0 mismatches; reset/copy isolation PASS; dispatch PASS_WITH_KNOWN_DEVIATIONS. Artifact 13842368239 expires 2026-12-11.
+
+PR #1 remains draft/open on branch audit/step3-independent-review. Main was not modified. See docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md for the next design decision. Preserve the hard authorization boundary: no model/API/A800/vLLM/optimizer/training/policy-performance runs without separate approval.

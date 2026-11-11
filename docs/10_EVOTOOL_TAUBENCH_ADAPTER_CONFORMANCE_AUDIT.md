@@ -56,11 +56,11 @@ The zero Gold mismatch result is expected on exact reference trajectories; it do
 - Do not label the current adapter a faithful full tau-bench conversational reproduction.
 - Any corrected Error-status/progress treatment or restored full conversation adapter must be a separately named method/arm with an explicit protocol.
 - No inference, optimizer, training, A800/vLLM, paid API, or policy-performance evaluation was run.
-- Next: independent review of the harness and its fake-user semantics; then decide whether to implement separate `evotool_legacy` and `evotool_status_corrected` arms. Do not start model/optimizer runs without separate approval.
+- Next: review the separate treatment protocol in `docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md`. Keep the original legacy treatment immutable; do not create a scalar Error-penalty arm without task-aware outcome labels. Do not start model/optimizer runs without separate approval.
 
 ## Artifact
 
-The workflow uploads the normalized splits plus `evotool_train.jsonl`, `evotool_dev.jsonl`, `evotool_test.jsonl`, and the machine-readable/Markdown conformance report. Use the artifact from run 42987687316; do not infer local files from its title.
+The workflow uploads the normalized splits plus `evotool_train.jsonl`, `evotool_dev.jsonl`, `evotool_test.jsonl`, and the machine-readable/Markdown conformance report. Latest verified artifact: [run 42993445630, artifact 13842368239](https://github.com/yujian777555/new_kaiti/actions/runs/42993445630). It expires 2026-12-11; do not infer local files from its title.
 
 
 ## Independent review — Step 3-R1
@@ -98,3 +98,17 @@ The official max_num_steps=30 counts turns in a conversational action loop, incl
 - Reset/copy isolation: PASS.
 - Dispatch: successful and domain-rejection calls matched in output/state; unknown-tool and missing-argument serialization differences were detected as expected.
 - Artifact ID: 13841803539 (expires 2026-12-11).
+
+
+### Step 3-R1 final CI verification
+
+- Latest code/report commit: e248486d38933e62a51367f66489e18fc22877fb.
+- CI run: https://github.com/yujian777555/new_kaiti/actions/runs/42993445630 — SUCCESS.
+- Transferred regression: 95 passed, 1 skipped.
+- Dataset + conformance tests: 12 passed.
+- Console and Markdown reports both expose dataset integrity, exact Action History, reset/copy, and dispatch probes.
+- Overall gate: PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS.
+- Exact Action History: 635 checked, 0 mismatches.
+- Reset/copy isolation: PASS.
+- Dispatch gate: PASS_WITH_KNOWN_DEVIATIONS.
+- Artifact ID: 13842368239 (expires 2026-12-11).
