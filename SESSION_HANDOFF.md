@@ -143,3 +143,14 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - T3 independently scores predicted actions and final answer against Gold plan and official tool map.
 - T0 reward/success remain unchanged; smoke test tests/test_evotool_episode_integration.py is included in CI.
 - Deterministic integration only; no LLM/API/GPU/optimizer or held-out scoring.
+
+
+## Step 6 — deterministic real-tool episode smoke and paper narrative audit (2026-11-11)
+
+- Added scripts/run_evotool_real_tool_episode_smoke.py.
+- Uses a pinned Train task, pinned EvoTool run_episode entry point, TauBenchEnv and Retail tools; planner/selector/caller/synthesizer are deterministic stubs.
+- T1 is injected into the real episode; T0 legacy evaluator/reward and T3 official-aligned scorer are checked against the exact Gold action sequence.
+- CI writes evotool_real_episode_smoke.json into the dataset artifact. This is a deterministic tool/episode integration smoke, not LLM evaluation or full conversational tau-bench parity.
+- Added docs/14_PAPER_NARRATIVE_AUDIT.md: phrase-by-phrase audit of existing paper-facing docs, exact v2 D-079 numbers, and FSPAE mechanism diagnosis.
+- Current D-079 v2 artifact (Manifest SHA 09df6bab...) supersedes the older report SHA cafdc52e... for the current result table.
+- Mechanism diagnosis: all candidates are evaluated on all 48 clusters, but archive cardinality is used as a proxy for "coverage deficit"; target cluster only conditions parent A while mutation guidance is global. Next candidate revision: target-conditioned variation. No confirmatory claim from reusing D-079 diagnostic.

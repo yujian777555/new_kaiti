@@ -81,6 +81,11 @@ jobs:
         run: |
           python scripts/audit_evotool_treatments.py --dataset-dir "$RUNNER_TEMP/tau-bench-retail"
           cat "$RUNNER_TEMP/tau-bench-retail/evotool_treatments_audit.md"
+      - name: Run deterministic real-tool EvoTool episode smoke (Train only)
+        run: |
+          python scripts/run_evotool_real_tool_episode_smoke.py \
+            --dataset-dir "$RUNNER_TEMP/tau-bench-retail" \
+            --output "$RUNNER_TEMP/tau-bench-retail/evotool_real_episode_smoke.json"
       - name: Run pinned dataset, conformance, and treatment tests
         env:
           TAU_BENCH_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail

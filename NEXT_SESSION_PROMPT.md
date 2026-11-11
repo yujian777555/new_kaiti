@@ -153,3 +153,12 @@ Run 43008576540: dataset build and Step 3 conformance passed; treatment audit fa
 
 ## Step 5 — T1/T3 episode integration
 Review treatments/evotool_episode_integration.py and tests/test_evotool_episode_integration.py. It invokes vendored agent.run_episode() through agent.env_for, attaches T1, independently scores T3, and preserves T0 reward. After CI, proceed to deterministic real-tool episode smoke, then request a small Train-only model-backed pilot with fixed budget; no Dev/Test tuning.
+
+
+## Step 6 — real-tool smoke and paper narrative
+
+Run CI and inspect evotool_real_episode_smoke.json. Confirm exact Train task, action count, T0 success/reward, T1 diagnostics, T3 reward, and cache cleanup. The runner uses pinned agent.run_episode/TauBenchEnv/tools with deterministic module stubs; do not describe it as LLM/full conversational tau-bench evaluation.
+
+Read docs/14_PAPER_NARRATIVE_AUDIT.md before drafting. It audits defensive wording in docs/01, 03, 05, 06, 11, 12 and D-079 v2 artifact. Keep governance language in internal docs; manuscript prose should lead with problem, bounded gap, concrete method, and strongest verified result. Do not misstate D-079 v2 results or claim FSPAE uplift.
+
+Next algorithm hypothesis: replace archive-size "coverage deficit" with calibrated stratum performance deficit and make counterexample selection/mutation locus target-conditioned. First implement dataflow tests and a Train/search-only mechanism diagnostic; do not reuse the D-079 diagnostic role as confirmatory evidence.

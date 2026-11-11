@@ -150,3 +150,13 @@ T1 state-effect measurement now hashes JSON DB state directly instead of deep-co
 - Exact policy/instance cache key is evicted; prior cache and original env factory are restored.
 - T3 independently scores predicted actions and synthesizer answer; T0 reward/success remain unchanged.
 - Deterministic integration smoke test and CI entry added. No model/API/GPU/optimizer run.
+
+
+## D-015 — 2026-11-11: deterministic real-tool episode smoke and narrative audit
+
+- Added a CI-run deterministic smoke through pinned EvoTool run_episode, real TauBenchEnv, real pinned Retail tool functions, and a selected exact Train Gold task.
+- Planner/selector/caller/synthesizer are deterministic stubs; no LLM, API, GPU, optimizer, or held-out policy scoring is used.
+- Smoke asserts T1 observations on real tool calls, T0 legacy success/reward, independent T3 reward, and episode-cache cleanup.
+- Added docs/14_PAPER_NARRATIVE_AUDIT.md with phrase-level rewrites for existing paper-facing docs and a code/result-grounded diagnosis of FSPAE target selection.
+- FSPAE revision hypothesis: archive size measures retained Pareto diversity, not evaluation coverage; the target only conditions parent A while counterexample mutation is global. Test target-conditioned variation before another algorithm claim.
+- D-079 v2 CI artifact with Manifest SHA 09df6bab... is the current result source; the older cafdc52e... report must not be combined with it.
