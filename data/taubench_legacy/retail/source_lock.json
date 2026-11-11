@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "benchmark": "tau-bench legacy retail",
+  "source_repository": "https://github.com/sierra-research/tau-bench",
+  "source_commit": "59a200c6d575d595120f1cb70fea53cef0632f6b",
+  "source_license": "MIT",
+  "source_warning": "The pinned legacy repository README warns that its tasks are outdated. This snapshot is retained for historical reproduction, not as the latest tau-bench benchmark.",
+  "expected_task_counts": {
+    "train": 500,
+    "dev": 20,
+    "test": 115
+  },
+  "split_sources": {
+    "train": "vendor/tau_bench/tau_bench/envs/retail/tasks_train.py",
+    "dev": "vendor/tau_bench/tau_bench/envs/retail/tasks_dev.py",
+    "test": "vendor/tau_bench/tau_bench/envs/retail/tasks_test.py"
+  },
+  "source_files": [
+    {
+      "path": "vendor/tau_bench/LICENSE",
+      "git_blob_sha": "f9898aaf4584ef45227d66baa8902053b9e39d04"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/__init__.py",
+      "git_blob_sha": "529f1208b11315675efcb926db35100a360f67d4"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/__init__.py",
+      "git_blob_sha": "e20a98f35941732db516bc406d6d283295dd19e8"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/base.py",
+      "git_blob_sha": "2461c3ebaf696757e0ce405bdb20376de88b0143"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/tool.py",
+      "git_blob_sha": "067d8636c68b4e14fbc14c49df1c7b56e96d44c3"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/types.py",
+      "git_blob_sha": "66f3b60e7b0cdf573f66b16573057cf3211c241b"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/__init__.py",
+      "git_blob_sha": "4d1560e34146c035f08642036440cc05e6953edd"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/env.py",
+      "git_blob_sha": "fc4874c7ab7b6b23cc35a35388b45d0f1f9c2907"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/rules.py",
+      "git_blob_sha": "a61d31054bbba407c7d13e673bac3fa909d0991e"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/wiki.md",
+      "git_blob_sha": "2a23f004bbde6a5e3392585d0fedbb4ac2ee0a11"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_train.py",
+      "git_blob_sha": "4fe71adafdbae7b6683f9d5beb65275172699bb6"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_dev.py",
+      "git_blob_sha": "aa5acf7f771b6e903bf795e436e03ee6ebe2c03d"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tasks_test.py",
+      "git_blob_sha": "d0e4936ef9d523c04debf4ecd9f6d92eb39923a0"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/data/__init__.py",
+      "git_blob_sha": "3b1b970374589deb2d32747d2cfaf5a30e2f5710"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/data/readme.md",
+      "git_blob_sha": "21b0237ccb09e2bd595077dc64180da01719df6e"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/data/orders.json",
+      "git_blob_sha": "77e34535e4cde09c21be706452947d267e74448f"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/data/products.json",
+      "git_blob_sha": "dcde9b1beeea329cee6ce28d6b1e414a5284db3a"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/data/users.json",
+      "git_blob_sha": "47ce9b4231a2881951a451d9bafc67c0c45f4403"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/__init__.py",
+      "git_blob_sha": "d146e5f0d05f5ee9aa680bb7318bbd39d7ed522d"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/calculate.py",
+      "git_blob_sha": "7efe98dae6e81d1ca9c7b1b35173735df2f8e199"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/cancel_pending_order.py",
+      "git_blob_sha": "efec9ed731dba1defe965979b79014a862458dc0"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/exchange_delivered_order_items.py",
+      "git_blob_sha": "0924719643635166f61c8c130ce78bf41390abf5"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/find_user_id_by_email.py",
+      "git_blob_sha": "1715831cb0c24ba406732411dcc8ff1a8e5e612b"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/find_user_id_by_name_zip.py",
+      "git_blob_sha": "01bfeae05af078758dc2974f31a79ccdd3d6e172"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/get_order_details.py",
+      "git_blob_sha": "f1597decc302f88d3dfb59cd6817efa4d56d45eb"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/get_product_details.py",
+      "git_blob_sha": "6d5e3b1a8035d95e3495086100caab1de5329ff7"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/get_user_details.py",
+      "git_blob_sha": "f9a31d2a2642a4842af7e1d2c3dc7cbbc088c0f7"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/list_all_product_types.py",
+      "git_blob_sha": "18c002711d050e3f3f4b2724a3de94c44b34bc62"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/modify_pending_order_address.py",
+      "git_blob_sha": "80870fb0cfcc279243d8ef2ffbd52e3c16ad2e69"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/modify_pending_order_items.py",
+      "git_blob_sha": "725dff3e78724ad6f6076b7a69e10301f6b51704"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/modify_pending_order_payment.py",
+      "git_blob_sha": "e497dbed7ad3b059abd64b3ea5ffe5b6ddaa84a3"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/modify_user_address.py",
+      "git_blob_sha": "5605e20d365f53cfec2ea8aba267b46e6e34f2ed"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/return_delivered_order_items.py",
+      "git_blob_sha": "d13d199f6ebeea6a4c151813b0bc91eb76b02298"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/think.py",
+      "git_blob_sha": "585cababfa623b62faff3efcf76f49e496824463"
+    },
+    {
+      "path": "vendor/tau_bench/tau_bench/envs/retail/tools/transfer_to_human_agents.py",
+      "git_blob_sha": "84d8d1052ffa3acdbb56717513238b1b2e78262d"
+    }
+  ],
+  "task_id_rule": "retail-{split}-{zero_based_source_index:04d}; the index is the official task list index within that split",
+  "normalized_record_fields": [
+    "benchmark",
+    "domain",
+    "split",
+    "task_index",
+    "task_id",
+    "source_commit",
+    "annotator",
+    "user_id",
+    "instruction",
+    "actions",
+    "outputs"
+  ]
+}

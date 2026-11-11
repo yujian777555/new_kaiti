@@ -28,3 +28,16 @@ jobs:
             test_sbcg.py \
             test_sbcg_runner.py \
             test_task_semantics.py
+      - name: Run pinned legacy tau-bench Retail dataset tests
+        run: python -m pytest -q tests/test_tau_bench_retail_dataset.py
+      - name: Build split-preserving legacy tau-bench Retail dataset
+        run: |
+          python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail"
+          cat "$RUNNER_TEMP/tau-bench-retail/integrity_report.md"
+      - name: Upload normalized dataset and integrity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tau-bench-legacy-retail-${{ github.sha }}
+          path: ${{ runner.temp }}/tau-bench-retail/
+          if-no-files-found: error
+          retention-days: 30
