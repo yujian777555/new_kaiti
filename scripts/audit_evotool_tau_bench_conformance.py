@@ -18,7 +18,11 @@ import types
 from pathlib import Path
 from typing import Any
 
-from scripts.prepare_tau_bench_retail import ROOT, install_vendored_runtime
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.prepare_tau_bench_retail import install_vendored_runtime
 
 TAU_ROOT = ROOT / "vendor" / "tau_bench"
 TAU_DATA = TAU_ROOT / "tau_bench" / "envs" / "retail" / "data"
