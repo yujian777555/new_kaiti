@@ -1,6 +1,6 @@
 # FSPAE-R2 Train-only development protocol
 
-Protocol ID: D-079-R2-DEV
+Protocol ID: D-079-R2.1-FACTORIAL-DEV
 Code branch: audit/step3-independent-review
 Optimization manifest: D-079 v2, SHA-256 09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca
 Scope: synthetic Train/search optimization; previously inspected Train/diagnostic role used for development feedback only.
@@ -30,6 +30,7 @@ FSPAE-R1 uses archive cardinality as part of target selection and applies counte
 | fspae_r2 | performance deficit | local pair | exact target cluster |
 | fspae_r2_global_mut | performance deficit | local pair | global stratified |
 | fspae_r2_uniform | uniform | local pair | exact target cluster |
+| fspae_r2_uniform_global_mut | uniform | local pair | global stratified |
 | fspae_r2_legacy_scheduler | legacy deficit | local pair | exact target cluster |
 
 ## Frozen run settings
@@ -57,8 +58,13 @@ The D-079 diagnostic role has already been inspected in the R1 experiment and is
 4. No-target counterexample cases must use explicit standard-mutation fallback.
 5. Per-arm episode accounting must not exceed the frozen budget.
 6. Hard-safety violations remain zero for any candidate admitted to a local archive.
-7. Compare R2 against matched NSGA-III, SBCG-NSGA-III, R1 FSPAE, global-mutation ablation, uniform-target ablation, and legacy-scheduler ablation.
+7. Complete the 2×2 target scheduler × mutation-source factorial, including the previously missing uniform-target/global-mutation cell. Compare all four cells per seed and by paired cluster contrasts.
 
 ## Advancement rule
 
 Only if the mechanism gates pass and the class-conditional development metrics show a consistent improvement should a new, independently seeded Train-only challenge be generated and locked before the next diagnostic. This development report is not confirmatory evidence and does not authorize Validation/Test access.
+
+
+## R2.1 factorial completion
+
+The initial R2 experiment tested three of four combinations of target scheduler (performance deficit / uniform) and counterexample mutation source (exact target cluster / global stratified). R2.1 adds the missing uniform-target + global-stratified-mutation cell. Local parent-pair selection, archive capacity, population, generations, search budget, initial pools, and global survivor selection remain unchanged. This is a development-only completion on the previously inspected diagnostic role; it cannot support confirmatory claims. The next fresh challenge must be generated and locked before a one-shot independent diagnostic.

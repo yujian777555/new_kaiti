@@ -175,3 +175,8 @@ After CI completes, inspect the d079-fspae-r2-development artifact. Verify:
 6. class-conditional metrics and paired cluster contrasts versus matched NSGA-III, SBCG-NSGA-III, R1 FSPAE and ablations.
 
 This reuses the already inspected D-079 diagnostic role and is development evidence only. Do not call it held-out or confirmatory. If the mechanism gates and development metrics justify continuation, generate a new seed-base challenge, validate it, commit a new manifest lock, and only then run its diagnostic once. Do not access Validation/Test.
+
+
+## Step 8 — FSPAE-R2.1 factorial completion
+
+Inspect the latest CI artifact `d079-fspae-r2-development`. The new arm `fspae_r2_uniform_global_mut` completes the 2×2 target scheduler × mutation-source design. Compare per-seed and paired cluster results against the other three local-parent factorial cells; inspect hard-safety gates and mechanism audit. This reuses the already inspected D-079 diagnostic and is development evidence only. After selecting a candidate configuration, generate a fresh independent Train-only challenge with a new seed base, commit its manifest/lock and run one diagnostic. Keep Validation/Test inaccessible.

@@ -162,7 +162,8 @@ def _run_evolutionary_arm(method, pool, search, diagnostic, verdicts, seed, budg
         )
     elif method in (
         "fspae", "fspae_uniform", "fspae_r2",
-        "fspae_r2_global_mut", "fspae_r2_uniform", "fspae_r2_legacy_scheduler",
+        "fspae_r2_global_mut", "fspae_r2_uniform", "fspae_r2_uniform_global_mut",
+        "fspae_r2_legacy_scheduler",
     ):
         settings = {
             "fspae": ("deficit", "local_a_global_b", "global"),
@@ -170,6 +171,7 @@ def _run_evolutionary_arm(method, pool, search, diagnostic, verdicts, seed, budg
             "fspae_r2": ("performance_deficit", "local_pair", "target_cluster"),
             "fspae_r2_global_mut": ("performance_deficit", "local_pair", "global"),
             "fspae_r2_uniform": ("uniform", "local_pair", "target_cluster"),
+            "fspae_r2_uniform_global_mut": ("uniform", "local_pair", "global"),
             "fspae_r2_legacy_scheduler": ("legacy_deficit", "local_pair", "target_cluster"),
         }
         target_mode, parent_mode, variation_mode = settings[method]

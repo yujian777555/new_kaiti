@@ -166,3 +166,10 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Added run_fspae_r2_development.py with 8 matched arms × 3 seeds, 6,912 Train/search episodes per arm/seed.
 - Important: D-079 diagnostic role was already inspected in R1. R2 uses it for development feedback only; it is not fresh held-out evidence. No Validation/Test, LLM/API/GPU/A800 or model training.
 - CI must run unit tests plus the R2 development experiment; inspect artifact d079-fspae-r2-development before deciding whether to generate a fresh independently seeded challenge.
+
+
+## Step 8 — FSPAE-R2.1 factorial completion (2026-11-11)
+
+- R2 development results showed uniform-target (macro 0.1667) and global-mutation (macro 0.1389) each exceeded the combined performance-deficit + exact-target arm (0.0556) on the reused development diagnostic.
+- The 2×2 scheduler × mutation experiment lacked the uniform-target + global-mutation cell. Added `fspae_r2_uniform_global_mut` to complete the factorial without changing local parent selection, NSGA-III survival, hard constraints, budget, seeds, or scenario manifest.
+- This is still development-only on the already inspected D-079 diagnostic. If a combination is selected, generate a new independent Train-only challenge manifest, validate and lock it, and evaluate its diagnostic once. Do not access Validation/Test.

@@ -33,6 +33,7 @@ ARMS = (
     "fspae_r2",
     "fspae_r2_global_mut",
     "fspae_r2_uniform",
+    "fspae_r2_uniform_global_mut",
     "fspae_r2_legacy_scheduler",
 )
 COMPARATORS = {
@@ -41,6 +42,7 @@ COMPARATORS = {
     "fspae_r1": "fspae",
     "r2_global_mutation_ablation": "fspae_r2_global_mut",
     "r2_uniform_target_ablation": "fspae_r2_uniform",
+    "r2_uniform_global_mutation_factorial_cell": "fspae_r2_uniform_global_mut",
     "r2_legacy_scheduler_ablation": "fspae_r2_legacy_scheduler",
 }
 FIELDS = (
@@ -206,7 +208,7 @@ def run_development_experiment():
 
     return {
         "schema_version": 1,
-        "experiment": "D079_FSPAE_R2_DEVELOPMENT_DIAGNOSTIC",
+        "experiment": "D079_FSPAE_R2_1_FACTORIAL_DEVELOPMENT_DIAGNOSTIC",
         "status": "EXECUTED_DEVELOPMENT_ONLY_DIAGNOSTIC_REUSED",
         "manifest": {
             "generator_version": manifest["generator_version"],
@@ -275,7 +277,7 @@ def write_outputs(result, output_dir):
         encoding="utf-8",
     )
     lines = [
-        "# D-079 FSPAE-R2 development experiment",
+        "# D-079 FSPAE-R2.1 factorial development experiment",
         "",
         f"- Status: **{result['status']}**",
         f"- Manifest SHA-256: {result['manifest']['manifest_sha256']}",
@@ -348,6 +350,10 @@ def write_outputs(result, output_dir):
             f"{item['cross_target_mutation_count']} | {item['no_target_counterexample_fallbacks']} |"
         )
     lines.extend([
+        "",
+        "## 2×2 scheduler × mutation factorial",
+        "",
+        "The four local-parent cells are performance-deficit/exact-target, performance-deficit/global, uniform/exact-target, and uniform/global. Compare the missing uniform/global cell with the three existing cells using the same paired diagnostic rows and per-seed summaries.",
         "",
         "## Advancement rule",
         "",
