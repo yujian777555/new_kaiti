@@ -28,13 +28,30 @@ jobs:
             test_sbcg.py \
             test_sbcg_runner.py \
             test_task_semantics.py
-      - name: Run pinned legacy tau-bench Retail dataset tests
-        run: python -m pytest -q tests/test_tau_bench_retail_dataset.py
       - name: Build split-preserving legacy tau-bench Retail dataset
         run: |
-          python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail"
-          cat "$RUNNER_TEMP/tau-bench-retail/integrity_report.md"
+          python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail" || true
+          python - <<'PY'
+          import json, os
+          path = os.path.join(os.environ["RUNNER_TEMP"], "tau-bench-retail", "integrity_report.json")
+          report = json.load(open(path, encoding="utf-8"))
+          gold = report["gold_action_audit"]
+          print(json.dumps({
+              "gate": report["gate"],
+              "splits": {k: v["task_count"] for k, v in report["splits"].items()},
+              "domain_error_count": gold["domain_error_count"],
+              "domain_error_examples": gold["domain_errors"],
+              "invocation_errors": gold["invocation_errors"],
+              "signature_errors": gold["signature_errors"],
+              "failures": report["failures"],
+          }, ensure_ascii=False, indent=2))
+          PY
+      - name: Run pinned legacy tau-bench Retail dataset tests
+        env:
+          TAU_BENCH_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
+        run: python -m pytest -q tests/test_tau_bench_retail_dataset.py
       - name: Upload normalized dataset and integrity report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tau-bench-legacy-retail-${{ github.sha }}
