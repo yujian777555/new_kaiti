@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from d079_challenge_generator import build_challenge_manifest
+from d079_challenge_generator import build_challenge_manifest, validate_manifest_lock
 from d079_manifest_lock import (
     build_manifest_lock,
     verify_manifest_lock,
@@ -67,6 +67,15 @@ class ManifestLockTests(unittest.TestCase):
         tampered = dict(self.lock)
         tampered["seed_base"] += 1
         self.assertFalse(verify_manifest_lock(self.manifest, tampered)["ok"])
+
+    def test_regenerated_manifest_matches_committed_d079_v2_lock(self):
+        manifest = build_challenge_manifest()
+        result = validate_manifest_lock(manifest)
+        self.assertTrue(result["ok"], "; ".join(result["problems"]))
+        self.assertEqual(
+            manifest["manifest_sha256"],
+            "09df6babbb6e3222ea57a7f354654636ac2437b7011dbe3f1ac738df894a0bca",
+        )
 
     def test_unknown_or_count_tampering_is_rejected_before_lock(self):
         tampered = json.loads(json.dumps(self.manifest))

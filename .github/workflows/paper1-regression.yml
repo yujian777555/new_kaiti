@@ -24,10 +24,25 @@ jobs:
             test_d079_diagnostics.py \
             test_d079_manifest_lock.py \
             test_formal_scenario_generator.py \
+            test_fspae_runner.py \
             test_recoverability.py \
             test_sbcg.py \
             test_sbcg_runner.py \
             test_task_semantics.py
+      - name: Run D-079 Train-only FSPAE exploratory pilot
+        working-directory: experiments/pilot_a3b
+        timeout-minutes: 20
+        run: |
+          python run_fspae_pilot.py --output-dir "$RUNNER_TEMP/d079-fspae"
+          cat "$RUNNER_TEMP/d079-fspae/d079_fspae_pilot.md"
+      - name: Upload D-079 Train-only FSPAE results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d079-fspae-train-only-${{ github.sha }}
+          path: ${{ runner.temp }}/d079-fspae/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Build split-preserving legacy tau-bench Retail dataset
         run: |
           python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail"
