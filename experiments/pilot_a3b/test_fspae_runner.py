@@ -122,6 +122,59 @@ def test_deficit_scheduler_targets_empty_stratum_before_full_archive():
     ) == "f2|D5"
 
 
+def test_performance_deficit_uses_archive_performance_not_archive_size():
+    pool = make_shared_initial_pool(44, size=12, include_hand=False)
+    for index, candidate in enumerate(pool[:6]):
+        candidate.genes_list()[0].action = ACT_VERIFY if index % 2 == 0 else ACT_ESCALATE
+    strong_full = StratumParetoArchive("f1|D1", "R1", capacity=4)
+    weak_sparse = StratumParetoArchive("f2|D5", "R3", capacity=4)
+    strong_vectors = [
+        (0.00, 0.50, 4.0),
+        (0.10, 0.40, 3.0),
+        (0.20, 0.30, 2.0),
+        (0.30, 0.20, 1.0),
+    ]
+    for candidate, objectives in zip(pool[:4], strong_vectors):
+        record = fake_evaluate(candidate, [SCENARIOS[0]], VERDICTS)
+        strong_full.update(record, objectives, random.Random(1))
+    weak_record = fake_evaluate(pool[5], [SCENARIOS[1]], VERDICTS)
+    weak_sparse.update(weak_record, (0.90, 0.80, 2.0), random.Random(1))
+    assert len(strong_full.records) == 4
+    assert len(weak_sparse.records) == 1
+    assert _target_cluster(
+        {"f1|D1": strong_full, "f2|D5": weak_sparse},
+        random.Random(7), "performance_deficit",
+    ) == "f2|D5"
+
+
+def test_r2_parent_pair_and_counterexample_mutation_are_target_conditioned():
+    pool = make_shared_initial_pool(41, size=12, include_hand=False)
+    for index, candidate in enumerate(pool[:4]):
+        candidate.genes_list()[0].action = ACT_VERIFY if index % 2 == 0 else ACT_ESCALATE
+    kwargs = {
+        "initial_pool": pool, "scenarios": SCENARIOS, "verdicts": VERDICTS,
+        "pop_size": 4, "generations": 2,
+        "eval_budget": 4 * 3 * len(SCENARIOS), "seed": 17,
+        "archive_capacity": 3, "target_mode": "performance_deficit",
+        "parent_mode": "local_pair", "variation_mode": "target_cluster",
+    }
+    with patch("fspae_runner.evaluate_sbcg_candidate", side_effect=fake_evaluate):
+        result = run_fspae_evolution(**kwargs)
+    assert result["algorithm"] == "FSPAE-R2"
+    assert result["config"]["performance_deficit"]["archive_cardinality_used"] is False
+    assert result["mutation_audit"]
+    for audit in result["mutation_audit"]:
+        assert audit["parent_a_source"] == "target_archive"
+        assert audit["parent_b_source"] == "target_archive"
+        assert audit["target_cluster"] in {"f1|D1", "f2|D5"}
+        if audit["selected_cluster"] is not None:
+            assert audit["selected_cluster"] == audit["target_cluster"]
+            assert audit["target_match"] is True
+        else:
+            assert audit["target_match"] is False
+            assert audit["fallback"] == "standard_mutation_no_target_counterexamples"
+
+
 def test_fspae_loop_is_reproducible_and_budget_accounting_is_exact():
     pool = make_shared_initial_pool(41, size=12, include_hand=False)
     kwargs = {

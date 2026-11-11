@@ -190,22 +190,46 @@ def _local_rows_by_cluster(record, scenario_to_cluster):
     return grouped
 
 
+def _cluster_performance_deficit(archive):
+    """Dimensionless local deficit: recovery loss (0.8) plus capped harm (0.2).
+
+    Archive cardinality is deliberately excluded: it measures retained Pareto
+    diversity, not evaluation exposure or controller performance.
+    """
+    if not archive.records:
+        return 1.0
+    scores = []
+    for item in archive.records:
+        loss = max(0.0, min(1.0, float(item.objectives[0])))
+        harm = max(0.0, min(1.0, float(item.objectives[1])))
+        scores.append(0.8 * loss + 0.2 * harm)
+    return min(scores)
+
+
 def _target_cluster(archives, rng, mode):
     cluster_ids = sorted(archives)
     if not cluster_ids:
         raise ValueError("FSPAE requires at least one fault stratum")
     if mode == "uniform":
         return rng.choice(cluster_ids)
-    if mode != "deficit":
-        raise ValueError("target_mode must be deficit or uniform")
-    scored = []
-    for cluster_id in cluster_ids:
-        archive = archives[cluster_id]
-        deficit = 1.0 - min(1.0, len(archive.records) / archive.capacity)
-        best = archive.best_objectives()
-        best_loss = float(best[0]) if best is not None else 1.0
-        best_harm = float(best[1]) if best is not None else 1.0
-        scored.append((deficit + 0.5 * best_loss + 0.1 * best_harm, cluster_id))
+    if mode in {"deficit", "legacy_deficit"}:
+        scored = []
+        for cluster_id in cluster_ids:
+            archive = archives[cluster_id]
+            archive_deficit = 1.0 - min(1.0, len(archive.records) / archive.capacity)
+            best = archive.best_objectives()
+            best_loss = float(best[0]) if best is not None else 1.0
+            best_harm = float(best[1]) if best is not None else 1.0
+            scored.append((archive_deficit + 0.5 * best_loss + 0.1 * best_harm, cluster_id))
+    elif mode == "performance_deficit":
+        scored = [
+            (_cluster_performance_deficit(archives[cluster_id]), cluster_id)
+            for cluster_id in cluster_ids
+        ]
+    else:
+        raise ValueError(
+            "target_mode must be deficit, legacy_deficit, performance_deficit, or uniform"
+        )
     scored.sort(key=lambda item: (-item[0], item[1]))
     shortlist_size = max(1, math.ceil(len(scored) * 0.2))
     return rng.choice([cluster_id for _score, cluster_id in scored[:shortlist_size]])
@@ -244,6 +268,7 @@ def run_fspae_evolution(
     initial_pool, scenarios, verdicts, *,
     pop_size=8, generations=5, eval_budget, seed,
     archive_capacity=4, target_mode="deficit",
+    parent_mode="local_a_global_b", variation_mode="global",
 ):
     """Run FSPAE on Train/search only; return a deduplicated feasible archive union."""
     validate_evolution_scenarios(scenarios)
@@ -251,8 +276,12 @@ def run_fspae_evolution(
         raise ValueError("FSPAE fitness accepts search-role scenarios only")
     if pop_size < 1 or generations < 0 or archive_capacity < 1:
         raise ValueError("invalid FSPAE population, generation, or archive capacity")
-    if target_mode not in {"deficit", "uniform"}:
-        raise ValueError("target_mode must be deficit or uniform")
+    if target_mode not in {"deficit", "legacy_deficit", "performance_deficit", "uniform"}:
+        raise ValueError("invalid FSPAE target mode")
+    if parent_mode not in {"local_a_global_b", "local_pair"}:
+        raise ValueError("parent_mode must be local_a_global_b or local_pair")
+    if variation_mode not in {"global", "target_cluster"}:
+        raise ValueError("variation_mode must be global or target_cluster")
     if eval_budget < pop_size * len(scenarios):
         raise ValueError("evaluation budget is insufficient for the initial population")
     if len(initial_pool) < pop_size:
@@ -329,7 +358,12 @@ def run_fspae_evolution(
         if episodes >= eval_budget:
             break
         counterexamples.clear()
-        counterexamples.aggregate([record.metrics for record in records], scenario_families)
+        counterexamples.aggregate(
+            [record.metrics for record in records], scenario_families,
+            scenario_clusters=(
+                scenario_to_cluster if variation_mode == "target_cluster" else None
+            ),
+        )
         strata_history.append({
             "generation": generation + 1,
             "strata": counterexamples.stratum_statistics(),
@@ -347,16 +381,40 @@ def run_fspae_evolution(
             target = _target_cluster(archives, rng, target_mode)
             target_counts[target] += 1
             archives[target].target_selections += 1
-            parent_a = archives[target].select_parent(rng)
+            target_archive = archives[target]
+            parent_a = target_archive.select_parent(rng)
+            parent_a_source = "target_archive" if parent_a is not None else "global_population"
             if parent_a is None:
                 parent_a = population[_population_tournament(records, ranks, crowding, rng)]
-            parent_b = population[_population_tournament(records, ranks, crowding, rng)]
+            if parent_mode == "local_pair" and target_archive.records:
+                parent_b = target_archive.select_parent(rng)
+                parent_b_source = "target_archive"
+            else:
+                parent_b = population[_population_tournament(records, ranks, crowding, rng)]
+                parent_b_source = "global_population"
+            parent_a_fingerprint = fsm_fingerprint(parent_a)
+            parent_b_fingerprint = fsm_fingerprint(parent_b)
             child = crossover(parent_a, parent_b, rng)
-            audit = None
-            if counterexamples.stratum_statistics():
+            if variation_mode == "target_cluster":
+                child, audit = counterexamples.mutate_with_record(
+                    child, rng, target_cluster=target,
+                )
+            elif counterexamples.stratum_statistics():
                 child, audit = counterexamples.mutate_with_record(child, rng)
             else:
                 child = mutate(child, rng)
+                audit = {
+                    "stratum": None, "gene_key": None, "gene_hit": False,
+                    "cause": None, "target_cluster": target,
+                    "selected_cluster": None, "target_match": False,
+                    "fallback": "standard_mutation_empty_pool",
+                }
+            audit.update({
+                "parent_a_source": parent_a_source,
+                "parent_b_source": parent_b_source,
+                "parent_a_fingerprint": parent_a_fingerprint,
+                "parent_b_fingerprint": parent_b_fingerprint,
+            })
             child = repair_fsm(child)
             validation = validate_genome(child.genes_list(), child.default_action, child.default_wait)
             valid_genome = not validation.genome_invalid and validation.rule_invalid == 0
@@ -382,20 +440,22 @@ def run_fspae_evolution(
             for archive in archives.values() for item in archive.records
         }
         for audit, record, valid_genome in pending:
-            if audit is not None and audit.get("stratum") is not None:
-                new_valid = (
-                    valid_genome and record.feasible
-                    and record.fingerprint not in seen
-                    and record.fingerprint in archived_fingerprints
-                )
+            has_counterexample = audit.get("stratum") is not None
+            new_valid = bool(
+                has_counterexample and valid_genome and record.feasible
+                and record.fingerprint not in seen
+                and record.fingerprint in archived_fingerprints
+            )
+            if has_counterexample:
                 counterexamples.record_repair_outcome(
                     audit["stratum"], valid=valid_genome, new_valid=new_valid
                 )
-                mutation_audit.append({
-                    **audit, "fingerprint": record.fingerprint,
-                    "repair_attempted": True, "valid_genome": valid_genome,
-                    "new_valid_individual": new_valid,
-                })
+            mutation_audit.append({
+                **audit, "fingerprint": record.fingerprint,
+                "repair_attempted": has_counterexample,
+                "valid_genome": valid_genome,
+                "new_valid_individual": new_valid,
+            })
             seen.add(record.fingerprint)
 
         history.append({
@@ -413,16 +473,49 @@ def run_fspae_evolution(
     if episodes > eval_budget:
         raise AssertionError("FSPAE exceeded its Train episode budget")
     return {
-        "algorithm": "FSPAE" if target_mode == "deficit" else "FSPAE-uniform-target",
+        "algorithm": (
+            "FSPAE-R2" if (
+                target_mode == "performance_deficit"
+                and parent_mode == "local_pair"
+                and variation_mode == "target_cluster"
+            ) else (
+                "FSPAE-R2-global-mutation-ablation" if (
+                    target_mode == "performance_deficit"
+                    and parent_mode == "local_pair"
+                    and variation_mode == "global"
+                ) else (
+                    "FSPAE-R2-uniform-target-ablation" if (
+                        target_mode == "uniform"
+                        and parent_mode == "local_pair"
+                        and variation_mode == "target_cluster"
+                    ) else (
+                        "FSPAE-R2-legacy-scheduler-ablation" if (
+                            target_mode == "legacy_deficit"
+                            and parent_mode == "local_pair"
+                            and variation_mode == "target_cluster"
+                        ) else (
+                            "FSPAE-uniform-target" if target_mode == "uniform" else "FSPAE"
+                        )
+                    )
+                )
+            )
+        ),
         "config": {
             "pop_size": pop_size, "generations": generations,
             "archive_capacity_per_stratum": archive_capacity,
             "target_mode": target_mode,
+            "parent_mode": parent_mode,
+            "variation_mode": variation_mode,
+            "performance_deficit": {
+                "formula": "min_archive(0.8 * clip(1 - class_success, 0, 1) + 0.2 * clip(avoidable_harm, 0, 1))",
+                "archive_cardinality_used": False,
+            } if target_mode == "performance_deficit" else None,
             "local_objectives": ["1 - class_success", "avoidable_harm", "class_relevant_recovery_action_cost"],
             "global_hard_constraints": ["duplicate", "sla_violation", "invariant_violation"],
             "local_reference_direction_count": len(local_directions),
             "global_survivor_optimizer": "NSGA-III",
             "counterexample_guidance": True,
+            "target_cluster_mutation_is_fail_closed": variation_mode == "target_cluster",
         },
         "seed": seed, "eval_budget": eval_budget, "episodes": episodes,
         "unique_evaluations": unique_evaluations, "cache_hits": cache_hits,

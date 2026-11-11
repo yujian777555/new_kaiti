@@ -160,11 +160,24 @@ def _run_evolutionary_arm(method, pool, search, diagnostic, verdicts, seed, budg
             use_stratified_counterexamples=True, use_elite_archive=True,
             remove_hand_from_pool=False, optimizer="nsga3",
         )
-    elif method in ("fspae", "fspae_uniform"):
+    elif method in (
+        "fspae", "fspae_uniform", "fspae_r2",
+        "fspae_r2_global_mut", "fspae_r2_uniform", "fspae_r2_legacy_scheduler",
+    ):
+        settings = {
+            "fspae": ("deficit", "local_a_global_b", "global"),
+            "fspae_uniform": ("uniform", "local_a_global_b", "global"),
+            "fspae_r2": ("performance_deficit", "local_pair", "target_cluster"),
+            "fspae_r2_global_mut": ("performance_deficit", "local_pair", "global"),
+            "fspae_r2_uniform": ("uniform", "local_pair", "target_cluster"),
+            "fspae_r2_legacy_scheduler": ("legacy_deficit", "local_pair", "target_cluster"),
+        }
+        target_mode, parent_mode, variation_mode = settings[method]
         out = run_fspae_evolution(
             pool, search, verdicts, pop_size=POP_SIZE, generations=GENERATIONS,
             eval_budget=budget, seed=seed, archive_capacity=ARCHIVE_CAPACITY,
-            target_mode="deficit" if method == "fspae" else "uniform",
+            target_mode=target_mode, parent_mode=parent_mode,
+            variation_mode=variation_mode,
         )
     else:
         raise ValueError("unknown evolutionary arm: " + method)
@@ -191,6 +204,8 @@ def _run_evolutionary_arm(method, pool, search, diagnostic, verdicts, seed, budg
             "selection_status": selection["status"],
             "archive_stats": out.get("archive_stats", []),
             "target_selection_counts": out.get("target_selection_counts", {}),
+            "algorithm_config": out.get("config", {}),
+            "mutation_audit": out.get("mutation_audit", []),
         },
         "diagnostic": _summarize_rows(diagnostic_rows),
         "diagnostic_rows": diagnostic_rows,

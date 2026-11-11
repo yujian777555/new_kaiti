@@ -160,3 +160,13 @@ T1 state-effect measurement now hashes JSON DB state directly instead of deep-co
 - Added docs/14_PAPER_NARRATIVE_AUDIT.md with phrase-level rewrites for existing paper-facing docs and a code/result-grounded diagnosis of FSPAE target selection.
 - FSPAE revision hypothesis: archive size measures retained Pareto diversity, not evaluation coverage; the target only conditions parent A while counterexample mutation is global. Test target-conditioned variation before another algorithm claim.
 - D-079 v2 CI artifact with Manifest SHA 09df6bab... is the current result source; the older cafdc52e... report must not be combined with it.
+
+
+## D-016 — 2026-11-11: FSPAE-R2 target-conditioned variation
+
+- Replaced the R1 archive-cardinality target heuristic with an explicit performance-deficit scheduler for the R2 arm.
+- R2 selects both parents from the target cluster's feasible Pareto archive when available and conditions counterexample-guided mutation on the exact target cluster.
+- A target with no counterexample falls back to standard mutation; cross-cluster counterexample borrowing is disallowed.
+- Added ablations for global mutation, uniform target selection and the legacy scheduler; matched NSGA-III, SBCG-NSGA-III and R1 FSPAE remain in the same-seed, same-budget comparison.
+- New development runner uses 8 arms × 3 seeds, 6,912 search episodes per arm/seed.
+- D-079 diagnostic was previously inspected; this experiment is development-only. No Validation/Test or LLM/API/GPU/A800/model-training access.

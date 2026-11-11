@@ -162,3 +162,16 @@ Run CI and inspect evotool_real_episode_smoke.json. Confirm exact Train task, ac
 Read docs/14_PAPER_NARRATIVE_AUDIT.md before drafting. It audits defensive wording in docs/01, 03, 05, 06, 11, 12 and D-079 v2 artifact. Keep governance language in internal docs; manuscript prose should lead with problem, bounded gap, concrete method, and strongest verified result. Do not misstate D-079 v2 results or claim FSPAE uplift.
 
 Next algorithm hypothesis: replace archive-size "coverage deficit" with calibrated stratum performance deficit and make counterexample selection/mutation locus target-conditioned. First implement dataflow tests and a Train/search-only mechanism diagnostic; do not reuse the D-079 diagnostic role as confirmatory evidence.
+
+
+## Step 7 — FSPAE-R2 experiment
+
+After CI completes, inspect the d079-fspae-r2-development artifact. Verify:
+1. all 8 arms × 3 seeds ran at the same 6,912 episode budget;
+2. target-conditioned arms have zero cross-target mutation events;
+3. local parent-pair counts match target archive availability;
+4. no-target counterexamples use the recorded standard-mutation fallback;
+5. hard safety remains zero for all admitted evolutionary candidates;
+6. class-conditional metrics and paired cluster contrasts versus matched NSGA-III, SBCG-NSGA-III, R1 FSPAE and ablations.
+
+This reuses the already inspected D-079 diagnostic role and is development evidence only. Do not call it held-out or confirmatory. If the mechanism gates and development metrics justify continuation, generate a new seed-base challenge, validate it, commit a new manifest lock, and only then run its diagnostic once. Do not access Validation/Test.

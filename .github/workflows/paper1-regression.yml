@@ -43,6 +43,21 @@ jobs:
           path: ${{ runner.temp }}/d079-fspae/
           if-no-files-found: warn
           retention-days: 30
+      - name: Run FSPAE-R2 target-conditioned development experiment
+        working-directory: experiments/pilot_a3b
+        timeout-minutes: 20
+        run: |
+          python run_fspae_r2_development.py --output-dir "$RUNNER_TEMP/d079-fspae-r2"
+          cat "$RUNNER_TEMP/d079-fspae-r2/d079_fspae_r2_development.md"
+      - name: Upload FSPAE-R2 development results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d079-fspae-r2-development-${{ github.sha }}
+          path: ${{ runner.temp }}/d079-fspae-r2/
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Build split-preserving legacy tau-bench Retail dataset
         run: |
           python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail"

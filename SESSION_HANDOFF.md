@@ -154,3 +154,15 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Added docs/14_PAPER_NARRATIVE_AUDIT.md: phrase-by-phrase audit of existing paper-facing docs, exact v2 D-079 numbers, and FSPAE mechanism diagnosis.
 - Current D-079 v2 artifact (Manifest SHA 09df6bab...) supersedes the older report SHA cafdc52e... for the current result table.
 - Mechanism diagnosis: all candidates are evaluated on all 48 clusters, but archive cardinality is used as a proxy for "coverage deficit"; target cluster only conditions parent A while mutation guidance is global. Next candidate revision: target-conditioned variation. No confirmatory claim from reusing D-079 diagnostic.
+
+
+## Step 7 — FSPAE-R2 target-conditioned development experiment (2026-11-11)
+
+- FSPAE-R1 code review isolated two mechanisms: archive cardinality was used as a proxy for performance/coverage deficit; target selection affected Parent A only while counterexample mutation was global.
+- R2 changes target priority to a local performance deficit (0.8 recovery loss + 0.2 capped avoidable harm), samples both parents from the target cluster's feasible local archive, and samples counterexamples only from that exact family × fault-stratum cluster.
+- If the target cluster has no counterexample, R2 uses standard mutation and records the fallback; it never silently borrows another cluster's counterexample.
+- Global NSGA-III survivor selection and zero-tolerance hard constraints are unchanged.
+- Added mechanism tests for performance-based target selection, local parent pairing, exact-cluster mutation, and fail-closed fallback.
+- Added run_fspae_r2_development.py with 8 matched arms × 3 seeds, 6,912 Train/search episodes per arm/seed.
+- Important: D-079 diagnostic role was already inspected in R1. R2 uses it for development feedback only; it is not fresh held-out evidence. No Validation/Test, LLM/API/GPU/A800 or model training.
+- CI must run unit tests plus the R2 development experiment; inspect artifact d079-fspae-r2-development before deciding whether to generate a fresh independently seeded challenge.

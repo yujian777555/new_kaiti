@@ -216,6 +216,9 @@ class StratifiedCounterexamplePool:
 
     @staticmethod
     def _key_text(key):
+        if len(key) == 4:
+            family, cluster_id, signature, safety_class = key
+            return repr((family, cluster_id, signature, safety_class))
         family, signature, safety_class = key
         return repr((family, signature, safety_class))
 
@@ -224,7 +227,10 @@ class StratifiedCounterexamplePool:
         self._audit.clear()
         self._key_lookup.clear()
 
-    def aggregate(self, results, scenario_families):
+    def aggregate(self, results, scenario_families, scenario_clusters=None):
+        """Aggregate failures; optional cluster metadata enables exact target conditioning."""
+        if scenario_clusters is not None and not isinstance(scenario_clusters, dict):
+            raise TypeError("scenario_clusters must be a scenario_id-to-cluster mapping")
         for result in results:
             for row in result["rows"]:
                 if row["class_success"] in (1, None) or not row.get("decision_trace"):
@@ -233,7 +239,18 @@ class StratifiedCounterexamplePool:
                 if sid not in scenario_families:
                     raise ValueError(f"missing task-family metadata for {sid}")
                 signature = CounterexamplePool._signature(row)
-                key = (scenario_families[sid], signature, row.get("label", "UNKNOWN"))
+                if scenario_clusters is None:
+                    key = (scenario_families[sid], signature, row.get("label", "UNKNOWN"))
+                else:
+                    if sid not in scenario_clusters:
+                        raise ValueError(f"missing fault-cluster metadata for {sid}")
+                    cluster_id = scenario_clusters[sid]
+                    if not cluster_id:
+                        raise ValueError(f"empty fault-cluster metadata for {sid}")
+                    key = (
+                        scenario_families[sid], cluster_id, signature,
+                        row.get("label", "UNKNOWN"),
+                    )
                 entry = self._strata.setdefault(key, {"examples": 0, "genes": Counter()})
                 entry["examples"] += 1
                 for obs, attempts, stack, _action in row["decision_trace"]:
@@ -252,11 +269,13 @@ class StratifiedCounterexamplePool:
             entry = self._strata[key]
             audit = self._audit.get(key, {})
             attempts = audit.get("repair_attempts", 0)
+            signature = key[-2]
             output.append({
                 "key": self._key_text(key),
                 "family": key[0],
-                "failure_signature": repr(key[1]),
-                "safety_class": key[2],
+                "cluster_id": key[1] if len(key) == 4 else None,
+                "failure_signature": repr(signature),
+                "safety_class": key[-1],
                 "examples": entry["examples"],
                 "sampling_probability": 1.0 / count if count else 0.0,
                 "sampled": audit.get("sampled", 0),
@@ -268,16 +287,33 @@ class StratifiedCounterexamplePool:
             })
         return output
 
-    def mutate_with_record(self, fsm, rng: random.Random):
+    def mutate_with_record(self, fsm, rng: random.Random, *, target_cluster=None):
+        """Mutate from an exact target cluster when requested; never cross-target silently."""
         child = fsm.clone()
         if not self._strata:
             return mutate(child, rng), {
                 "stratum": None, "gene_key": None, "gene_hit": False,
-                "cause": None, "fallback": "standard_mutation_empty_pool",
+                "cause": None, "target_cluster": target_cluster,
+                "selected_cluster": None, "target_match": False,
+                "fallback": "standard_mutation_empty_pool",
             }
-        key = sorted(self._strata, key=self._key_text)[rng.randrange(len(self._strata))]
+        keys = sorted(self._strata, key=self._key_text)
+        if target_cluster is not None:
+            matching = [
+                key for key in keys
+                if len(key) == 4 and key[1] == target_cluster
+            ]
+            if not matching:
+                return mutate(child, rng), {
+                    "stratum": None, "gene_key": None, "gene_hit": False,
+                    "cause": None, "target_cluster": target_cluster,
+                    "selected_cluster": None, "target_match": False,
+                    "fallback": "standard_mutation_no_target_counterexamples",
+                }
+            keys = matching
+        key = keys[rng.randrange(len(keys))]
         text = self._key_text(key)
-        cause = key[1][0]
+        cause = key[-2][0]
         implicated = self._strata[key]["genes"]
         candidates = [gene_key for gene_key in implicated if gene_key in child.genes]
         gene_hit = bool(candidates)
@@ -292,11 +328,18 @@ class StratifiedCounterexamplePool:
         audit = self._audit[key]
         audit["sampled"] += 1
         audit["gene_hits"] += int(gene_hit)
+        selected_cluster = key[1] if len(key) == 4 else None
         return child, {
             "stratum": text,
             "gene_key": gene_key,
             "gene_hit": gene_hit,
             "cause": cause,
+            "target_cluster": target_cluster,
+            "selected_cluster": selected_cluster,
+            "target_match": (
+                target_cluster is None
+                or (selected_cluster is not None and selected_cluster == target_cluster)
+            ),
             "fallback": None if gene_hit else "random_gene_outside_implicated_set",
         }
 
