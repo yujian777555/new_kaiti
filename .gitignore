@@ -1,0 +1,7 @@
+# Test / run artifacts
+experiments/pilot_a3b/confusion_report.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
