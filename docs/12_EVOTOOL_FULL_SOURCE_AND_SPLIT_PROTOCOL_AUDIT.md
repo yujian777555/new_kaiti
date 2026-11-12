@@ -116,9 +116,15 @@ Before any model execution, implement and test a runner that:
 
 The current authorization remains deterministic source, unit, and conformance work only. No Qwen3 inference, vLLM/A800 startup, paid API calls, evolutionary optimizer run, training, or Test policy scoring has been performed or is authorized by this audit.
 
-## 8. Next milestone
+## 8. Split-preserving loader implementation
 
-Build the split-preserving loader and safe runner preflight, pin the complete EvoTool source required by the runner, and add tests for:
+The split-preserving loader is now implemented in `scripts/paper1_tau_bench_splits.py`. It reads Train/Dev independently, maps official tool schemas and Gold Actions to the EvoTool instance shape, has an explicit Test loader requiring both policy-freeze and separate authorization flags, and mirrors the pinned first-epoch G=8/B=3 batch order. Tests are in `tests/test_paper1_tau_bench_splits.py`.
+
+The complete pinned upstream Python/config/source snapshot is vendored under `vendor/evotool/full_source/` and verified by `vendor/evotool/FULL_SOURCE_LOCK.json` plus `scripts/verify_evotool_full_source.py`. The upstream demo data and local DB copies remain excluded; the future runner must inject the separately pinned official tau-bench DB.
+
+## 9. Next milestone
+
+Build the safe runner preflight and add tests for:
 - exact 500/20/115 split preservation;
 - 8 batches × 3 distinct Train IDs per seed;
 - Dev-only population and final-policy selection;

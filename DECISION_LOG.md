@@ -124,3 +124,12 @@
 - No inference, API, optimizer, training, or Test policy scoring was performed.
 - Next: build/test the split-preserving loader and safe runner preflight; pin the complete EvoTool source needed for it.
 
+
+
+## D-013 — 2026-11-12: split-preserving adapter and full EvoTool source lock
+
+- Pinned the full upstream EvoTool Python source, run entrypoint, configs, requirements, README, SPEC, and MIT license at `6a82719ea6e22cf23f963078e2527094e50b47f6`, under `vendor/evotool/full_source/`; the 34-file Git-blob lock is `vendor/evotool/FULL_SOURCE_LOCK.json`.
+- Upstream demo data and local `taubench_data` copies are intentionally excluded. The Paper 1 runner must use the separately pinned official tau-bench DB loader.
+- Added `scripts/paper1_tau_bench_splits.py`: split-preserving Train/Dev loader, explicitly gated Test loader, official tool schema mapping, EvoTool instance mapping, and deterministic G=8/B=3 first-epoch batch planner.
+- Added tests for 500/20 preservation, no Test file read by Train/Dev loader, explicit Test authorization, tool schema parity, and 8 batches × 3 unique Train IDs.
+- This is a data/protocol preflight only; no optimizer or model was run.

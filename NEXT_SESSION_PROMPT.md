@@ -155,3 +155,14 @@ Read `docs/12_EVOTOOL_FULL_SOURCE_AND_SPLIT_PROTOCOL_AUDIT.md`.
 
 Pin full EvoTool source; implement/test split-preserving loader and safe runner preflight (500/20/115, 8×3 Train batches, Dev-only selection, no Test peeking, DB-loader parity). No Qwen3 inference, paid API, A800/vLLM, optimizer, training, or Test policy scoring without separate explicit approval.
 
+
+
+## Step 6 — full source lock and split-preserving loader
+
+- Complete upstream EvoTool source is pinned at `6a82719ea6e22cf23f963078e2527094e50b47f6`, 34 files under `vendor/evotool/full_source/`; verify with `scripts/verify_evotool_full_source.py`.
+- Split-aware adapter is `scripts/paper1_tau_bench_splits.py`; tests are `tests/test_paper1_tau_bench_splits.py`.
+- Train/Dev are loaded separately; Test requires both `policy_frozen=True` and `explicit_authorization=True`.
+- G=8/B=3 preflight plan is 8 batches × 3 distinct Train IDs (24 per seed) from the 500 Train pool.
+- Upstream data and local DB files are excluded from the full source vendor; the safe runner must inject the official pinned tau-bench DB.
+- Next: build/test a safe runner that passes `test=None`, disables periodic Test logging, selects on Dev only, and proves no Test read before policy freeze; add DB-loader parity tests. Resolve max_steps=6 vs official 30 and the user-simulator protocol before any authorized run.
+- No model/API/A800/vLLM/optimizer/training/Test policy scoring without separate explicit approval.

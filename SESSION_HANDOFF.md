@@ -123,3 +123,16 @@ CI: latest completed conformance run `43191651704` passed on commit `754bdd5e554
 
 Pin the full upstream EvoTool source and implement the split-preserving loader plus safe runner preflight. Add deterministic tests for 500/20/115 preservation, 8×3 Train batches, Dev-only selection, no Test read during evolution, and DB-loader parity. Do not start Qwen3 inference, paid API calls, A800/vLLM, optimizer execution, training, or Test policy scoring without separate explicit authorization.
 
+
+
+## Step 6 — pinned full EvoTool source and split-preserving loader (2026-11-12)
+
+- Full upstream source pinned at `6a82719ea6e22cf23f963078e2527094e50b47f6`, 34 files under `vendor/evotool/full_source/`; lock: `vendor/evotool/FULL_SOURCE_LOCK.json`; verifier: `scripts/verify_evotool_full_source.py`.
+- The upstream demo dataset and local `taubench_data` DB copies are excluded intentionally; use the separately pinned official tau-bench DB loader in the future runner.
+- Split-preserving loader: `scripts/paper1_tau_bench_splits.py`. It reads Train/Dev independently, maps official schemas/Gold Actions to EvoTool instance format, gates Test loading behind policy freeze plus explicit authorization, and creates the exact first-epoch G=8/B=3 batch plan.
+- Tests: `tests/test_paper1_tau_bench_splits.py`; full-source lock test: `tests/test_evotool_full_source_lock.py`.
+- CI is pending for this milestone.
+
+## Next immediate task
+
+Build a safe Paper 1 runner preflight that injects the pinned official DB loader, passes `test=None` and `log_test_eval=False` into evolution, selects on Dev only, and cannot load Test before policy freeze and separate authorization. Add tests for no Test peeking and DB initial-state hash parity. Then reconcile max_steps=6 vs official 30 and the offline adapter vs official user-simulator protocol. No LLM/API/A800/vLLM/optimizer/training/Test policy scoring without separate explicit authorization.
