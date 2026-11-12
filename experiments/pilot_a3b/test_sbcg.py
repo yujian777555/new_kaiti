@@ -120,6 +120,50 @@ class StratifiedCounterexampleTests(unittest.TestCase):
         self.assertTrue(audit["gene_hit"])
         self.assertEqual(audit["gene_key"], (OBS_PERMISSION, 0, False))
 
+
+    def test_target_conditioned_mutation_never_uses_another_cluster(self):
+        pool = StratifiedCounterexamplePool()
+        rows = [
+            self._row("f1|D1|0", "R3", "sla", ACT_ESCALATE),
+            self._row("f1|D5|0", "R3", "sla", ACT_ESCALATE),
+        ]
+        pool.aggregate(
+            [{"rows": rows}],
+            {row["scenario_id"]: "f1" for row in rows},
+            scenario_clusters={
+                "f1|D1|0": "f1|D1",
+                "f1|D5|0": "f1|D5",
+            },
+        )
+        self.assertEqual(
+            {item["cluster_id"] for item in pool.stratum_statistics()},
+            {"f1|D1", "f1|D5"},
+        )
+        _child, audit = pool.mutate_with_record(
+            hand_fsm(), random.Random(9), target_cluster="f1|D5"
+        )
+        self.assertEqual(audit["selected_cluster"], "f1|D5")
+        self.assertEqual(audit["target_cluster"], "f1|D5")
+        self.assertTrue(audit["target_match"])
+
+    def test_target_conditioned_mutation_falls_back_without_cross_cluster_sampling(self):
+        pool = StratifiedCounterexamplePool()
+        row = self._row("f1|D1|0", "R3", "sla", ACT_ESCALATE)
+        pool.aggregate(
+            [{"rows": [row]}],
+            {row["scenario_id"]: "f1"},
+            scenario_clusters={row["scenario_id"]: "f1|D1"},
+        )
+        _child, audit = pool.mutate_with_record(
+            hand_fsm(), random.Random(9), target_cluster="f1|D5"
+        )
+        self.assertIsNone(audit["selected_cluster"])
+        self.assertEqual(audit["target_cluster"], "f1|D5")
+        self.assertFalse(audit["target_match"])
+        self.assertEqual(
+            audit["fallback"], "standard_mutation_no_target_counterexamples"
+        )
+
     def test_repair_and_new_valid_individual_counts_are_recorded(self):
         pool = self._pool()
         key = pool.stratum_statistics()[0]["key"]

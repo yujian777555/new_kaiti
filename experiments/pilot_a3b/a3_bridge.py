@@ -47,13 +47,16 @@ OBS_PARTIAL = "PARTIAL"
 OBS_RATE_LIMIT = "RATE_LIMIT"
 OBS_SCHEMA = "SCHEMA"
 OBS_PERMISSION = "PERMISSION"
-OBS_WAITED = "WAITED"
+OBS_WAITED = "WAITED"  # legacy context-blind observation
+OBS_WAITED_AMBIGUOUS = "WAITED_AMBIGUOUS"
+OBS_WAITED_CLEAR = "WAITED_CLEAR"
 OBS_COMPENSATED = "COMPENSATED"
 OBS_COMP_FAILED = "COMP_FAILED"
 OBS_DUPLICATE = "DUPLICATE"
 OBS_NOOP = "NOOP"
 OBS_ALL = (OBS_START, OBS_TIMEOUT, OBS_PARTIAL, OBS_RATE_LIMIT, OBS_SCHEMA,
            OBS_PERMISSION, OBS_COMMITTED, OBS_NOT_COMMITTED, OBS_WAITED,
+           OBS_WAITED_AMBIGUOUS, OBS_WAITED_CLEAR,
            OBS_COMPENSATED, OBS_COMP_FAILED, OBS_DUPLICATE, OBS_NOOP)
 
 MAX_DECISIONS = 24  # per-episode controller decision budget
@@ -198,16 +201,27 @@ def hand_fsm():
             genes.append(Gene(OBS_START, att, stack, ACT_RETRY, 2))
             genes.append(Gene(OBS_TIMEOUT, att, stack, ACT_WAIT, 4))   # wait out SLA then verify
             genes.append(Gene(OBS_WAITED, att, stack, ACT_VERIFY, 2))
+            genes.append(Gene(OBS_WAITED_AMBIGUOUS, att, stack, ACT_VERIFY, 2))
+            genes.append(Gene(OBS_WAITED_CLEAR, att, stack, ACT_RETRY, 2))
             genes.append(Gene(OBS_NOT_COMMITTED, att, stack, ACT_RETRY, 2))
             genes.append(Gene(OBS_DUPLICATE, att, stack, ACT_ESCALATE, 2))
             genes.append(Gene(OBS_PARTIAL, att, stack, ACT_COMPENSATE, 2))
             genes.append(Gene(OBS_RATE_LIMIT, att, stack, ACT_WAIT, 3))
             genes.append(Gene(OBS_SCHEMA, att, stack, ACT_REPAIR, 2))
-            genes.append(Gene(OBS_PERMISSION, att, stack, ACT_ESCALATE, 2))
+            genes.append(Gene(
+                OBS_PERMISSION, att, stack,
+                ACT_ROLLBACK if stack else ACT_ESCALATE, 2,
+            ))
             genes.append(Gene(OBS_COMMITTED, att, stack, ACT_STOP, 2))
-            genes.append(Gene(OBS_COMPENSATED, att, True, ACT_ROLLBACK, 2))
+            # Compensation of the current partial step preserves the already
+            # committed prefix; retry the current step instead of rolling the
+            # prefix back and then illegally continuing downstream.
+            genes.append(Gene(OBS_COMPENSATED, att, True, ACT_RETRY, 2))
             genes.append(Gene(OBS_COMPENSATED, att, False, ACT_RETRY, 2))
-            genes.append(Gene(OBS_COMP_FAILED, att, stack, ACT_ESCALATE, 2))
+            genes.append(Gene(
+                OBS_COMP_FAILED, att, stack,
+                ACT_ROLLBACK if stack else ACT_ESCALATE, 2,
+            ))
             genes.append(Gene(OBS_NOOP, att, stack, ACT_VERIFY, 2))
     return StatefulFSM(genes, (ACT_ESCALATE, 2))
 
@@ -230,6 +244,9 @@ _REPAIR_MAP = {
     (OBS_PERMISSION, ACT_COMPENSATE): ACT_ESCALATE,
     (OBS_PERMISSION, ACT_ROLLBACK): ACT_ESCALATE,
     (OBS_PERMISSION, ACT_REPAIR): ACT_ESCALATE,
+    (OBS_WAITED_AMBIGUOUS, ACT_RETRY): ACT_VERIFY,
+    (OBS_WAITED_AMBIGUOUS, ACT_REPAIR): ACT_VERIFY,
+    (OBS_COMP_FAILED, ACT_ROLLBACK): ACT_ESCALATE,
     (OBS_SCHEMA, ACT_RETRY): ACT_REPAIR,
     (OBS_SCHEMA, ACT_WAIT): ACT_REPAIR,
     (OBS_SCHEMA, ACT_VERIFY): ACT_REPAIR,
@@ -245,7 +262,16 @@ _REPAIR_MAP = {
 def repair_fsm(fsm: StatefulFSM) -> StatefulFSM:
     g2 = fsm.clone()
     for gene in g2.genes_list():
-        fix = _REPAIR_MAP.get((gene.error, gene.action))
+        # A permission denial blocks the current step, but a committed prefix
+        # may still be safely compensated. Preserve ROLLBACK only when the
+        # public compensation stack is non-empty; all other permission-state
+        # actions remain fail-closed and become explicit escalation.
+        prefix_rollback = (
+            gene.error in (OBS_PERMISSION, OBS_COMP_FAILED)
+            and gene.stack
+            and gene.action == ACT_ROLLBACK
+        )
+        fix = None if prefix_rollback else _REPAIR_MAP.get((gene.error, gene.action))
         if fix is not None:
             gene.action = fix
         if gene.action == ACT_REPAIR and gene.error != OBS_SCHEMA:
@@ -390,7 +416,13 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
                 tool.wait()
             state.sla_waits += wait_n
             state.attempts += 1
-            state.last_obs = OBS_WAITED
+            # WAITED is not a sufficient state: after an ambiguous timeout the
+            # next safe action is VERIFY, whereas after a rate limit it is RETRY.
+            # Ambiguity is public controller state derived from the observed
+            # TIMEOUT, not hidden simulator state.
+            state.last_obs = (
+                OBS_WAITED_AMBIGUOUS if state.ambiguous else OBS_WAITED_CLEAR
+            )
             continue
 
         if action in (ACT_RETRY, ACT_REPAIR):
@@ -433,7 +465,12 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
             continue
 
         if action == ACT_ROLLBACK:
-            # explicit reverse-order compensation of confirmed prior steps
+            # Explicit reverse-order compensation of confirmed prior steps.
+            # When rollback follows PERMISSION, the denial remains the current
+            # blocking observation: after clearing the prefix the controller
+            # must escalate, not retry the denied operation. For other rollback
+            # contexts retain the COMPENSATED observation used by R2 recovery.
+            rollback_blocking_failure = state.last_obs in (OBS_PERMISSION, OBS_COMP_FAILED)
             order = 0
             for j in reversed(list(state.comp_stack)):
                 order += 1
@@ -443,7 +480,7 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
                     state.confirmed[j] = False
             state.comp_stack = []
             state.attempts += 1
-            state.last_obs = OBS_COMPENSATED
+            state.last_obs = state.last_obs if rollback_blocking_failure else OBS_COMPENSATED
             continue
 
         # unknown action: treat as no-op observation

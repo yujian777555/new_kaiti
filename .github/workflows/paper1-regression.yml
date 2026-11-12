@@ -24,13 +24,16 @@ jobs:
             test_d079_diagnostics.py \
             test_d079_manifest_lock.py \
             test_formal_scenario_generator.py \
+            test_fspae_runner.py \
             test_recoverability.py \
             test_sbcg.py \
             test_sbcg_runner.py \
             test_task_semantics.py
+      # D-079 remains a deterministic regression suite. Its exploratory optimizer
+      # runs are intentionally not repeated on every PR after saturation was established.
       - name: Build split-preserving legacy tau-bench Retail dataset
         run: |
-          python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail" || true
+          python scripts/prepare_tau_bench_retail.py --output-dir "$RUNNER_TEMP/tau-bench-retail"
           python - <<'PY'
           import json, os
           path = os.path.join(os.environ["RUNNER_TEMP"], "tau-bench-retail", "integrity_report.json")
@@ -58,17 +61,46 @@ jobs:
               "failures": report["failures"],
           }, ensure_ascii=False, indent=2))
           PY
+      - name: Build D-080 Train-only real-tool fault manifest
+        run: |
+          python scripts/build_d080_fault_manifest.py \
+            --dataset-dir "$RUNNER_TEMP/tau-bench-retail" \
+            --output-dir "$RUNNER_TEMP/d080-fault-manifest"
       - name: Audit official tau-bench and EvoTool adapter conformance
         run: |
           python scripts/audit_evotool_tau_bench_conformance.py --dataset-dir "$RUNNER_TEMP/tau-bench-retail"
           cat "$RUNNER_TEMP/tau-bench-retail/evotool_tau_bench_conformance.md"
-      - name: Run pinned dataset and EvoTool conformance tests
+      - name: Run deterministic T1/T3 treatment audit (Train only)
+        run: |
+          python scripts/audit_evotool_treatments.py --dataset-dir "$RUNNER_TEMP/tau-bench-retail"
+          cat "$RUNNER_TEMP/tau-bench-retail/evotool_treatments_audit.md"
+      - name: Run deterministic real-tool EvoTool episode smoke (Train only)
+        run: |
+          python scripts/run_evotool_real_tool_episode_smoke.py \
+            --dataset-dir "$RUNNER_TEMP/tau-bench-retail" \
+            --output "$RUNNER_TEMP/tau-bench-retail/evotool_real_episode_smoke.json"
+      - name: Run pinned dataset, conformance, and D-080 tests
         env:
           TAU_BENCH_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
+          EVOTOOL_TREATMENT_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
+          D080_DATASET_DIR: ${{ runner.temp }}/tau-bench-retail
         run: |
           python -m pytest -q \
             tests/test_tau_bench_retail_dataset.py \
-            tests/test_evotool_tau_bench_conformance.py
+            tests/test_evotool_tau_bench_conformance.py \
+            tests/test_evotool_treatments.py \
+            tests/test_evotool_episode_integration.py \
+            tests/test_d080_fault_injection.py \
+            tests/test_d080_fault_episode_integration.py \
+            tests/test_d080_fault_manifest.py
+      - name: Upload D-080 Train-only fault manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d080-fault-manifest-train-only-${{ github.sha }}
+          path: ${{ runner.temp }}/d080-fault-manifest/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Upload normalized dataset and integrity report
         if: always()
         uses: actions/upload-artifact@v4

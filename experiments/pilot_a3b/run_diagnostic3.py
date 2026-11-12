@@ -87,7 +87,10 @@ def sensible_random_fsm(rng):
     fsm = ab.random_fsm(rng)
     skeleton = {
         ab.OBS_START: ab.ACT_RETRY, ab.OBS_TIMEOUT: ab.ACT_WAIT,
-        ab.OBS_WAITED: ab.ACT_VERIFY, ab.OBS_NOT_COMMITTED: ab.ACT_RETRY,
+        ab.OBS_WAITED: ab.ACT_VERIFY,
+        ab.OBS_WAITED_AMBIGUOUS: ab.ACT_VERIFY,
+        ab.OBS_WAITED_CLEAR: ab.ACT_RETRY,
+        ab.OBS_NOT_COMMITTED: ab.ACT_RETRY,
         ab.OBS_RATE_LIMIT: ab.ACT_WAIT, ab.OBS_SCHEMA: ab.ACT_REPAIR,
         ab.OBS_PERMISSION: ab.ACT_ESCALATE, ab.OBS_PARTIAL: ab.ACT_COMPENSATE,
     }

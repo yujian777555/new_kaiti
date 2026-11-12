@@ -86,3 +86,109 @@
 - Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Keep legacy EvoTool unchanged. Any corrected-status/full-conversation implementation must be a separate treatment.
 - No LLM, model, API, A800/vLLM, optimizer, training, or policy evaluation.
 - Full report: `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md`.
+
+
+
+## D-010 — 2026-11-11: strengthen independent conformance evidence before baseline execution
+
+- Independent review of Step 3 found that the initial Action History assertion checked only the number of records, not the ordered action/kwargs sequence. It also found no direct comparison of official Env.reset() with EvoTool fresh-instance DB isolation, and no environment-wrapper dispatch probes.
+- Step 3-R1 adds exact Action History comparison for all 635 Gold tasks, reset/copy isolation checks, and actual environment dispatch probes for a successful action, a domain-level rejection, an unknown tool, and a missing required argument.
+- The conformance runner now requires a passing integrity_report.json, the exact pinned tau-bench source commit, 42 verified source files, and matching SHA-256 hashes for Train/Dev/Test normalized JSONL before it reports parity.
+- The CI dataset-builder command no longer uses || true.
+- Expected wrapper deviations are explicit: unknown-tool messages and malformed-argument exception serialization differ between official Env and EvoTool. These are protocol findings, not a reason to mutate the legacy snapshot.
+- Do not blindly reclassify every Error: result as status=error. Keep legacy EvoTool unchanged. A corrected treatment must distinguish function execution status from business outcome and justify any new shaping metric.
+- Official 30 conversational loop turns and EvoTool 6 planner substeps are different units; do not compare the numeric caps directly.
+- No LLM/API/A800/vLLM/optimizer/training/policy-performance run was authorized or performed.
+
+
+### D-010 verification update
+
+The first Step 3-R1 implementation passed CI on 2026-11-11: run 42992221354, 95 passed/1 skipped transferred regression tests and 11 dataset/conformance tests. Artifact 13841803539 preserves the machine-readable report and normalized splits. Exact Action History matched for all 635 Gold tasks; reset/copy isolation passed; expected dispatch deviations were detected. The follow-up commit improves the human-readable report and adds a report-rendering regression test.
+
+
+## D-011 — 2026-11-11: separate execution status from business outcome
+
+- Step 3-R1 passed CI run 42993445630 on code/report commit e248486d38933e62a51367f66489e18fc22877fb: 95 passed/1 skipped transferred regression tests and 12 dataset/conformance tests.
+- The final report includes exact Action History (635 checked, 0 mismatches), reset/copy isolation PASS, and dispatch PASS_WITH_KNOWN_DEVIATIONS. Artifact 13842368239 expires 2026-12-11.
+- A representative Gold Action returns a business-level rejection ("insufficient gift card balance") but is still a valid Gold trajectory under the official state-based reward. Therefore, changing every returned Error string to execution failure is invalid.
+- Treatment protocol: T0 immutable EvoTool legacy; T1 status decomposition for diagnostics only (execution status, business outcome, state effect) while preserving legacy reward; T2 business-outcome-aware shaping is NOT READY without task-aware labels; T3 official-reward-aligned scorer is a separate evaluator treatment; T4 full conversational tau-bench loop is a separate protocol.
+- Do not call T1 an algorithmic improvement or T2 validated. No model/API/A800/vLLM/optimizer/training/policy-performance run was performed.
+- Full protocol: docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md.
+
+
+### D-011 repository state addendum
+
+- Treatment protocol: docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md.
+- Latest code/report commit e248486d38933e62a51367f66489e18fc22877fb passed CI run 42993445630.
+- Latest branch HEAD 478e8171f54bbf8ca7ad5ea69c2acdfaf7de3845 adds only the treatment design and handoff/prompt updates. Its docs-only CI run is 42994690443.
+- PR #1 remains draft/open; main remains at cf83f08da748f3b7889465c3b19432e6389ca7b7.
+
+
+## D-012 — 2026-11-11: implement T1 status decomposition and T3 official scorer separately
+
+- T1 is implemented as a wrapper outside the vendored EvoTool snapshot. It preserves legacy result fields and adds execution_status, business_outcome, state_effect, raw tool observation and state hashes.
+- T3 is implemented as a separate scorer matching official full-DB hash and response-output normalization semantics. It accepts all response messages and exposes both live-state and replay APIs.
+- Validation is deliberately Train-only: 500 tasks / 768 Gold Action calls. CI compares T1 fields, state transitions, progress and episode reward against T0, and T3 reward against the pinned official Env.calculate_reward.
+- No policy/model/optimizer evaluation is included. T1 is instrumentation, not algorithmic uplift. T2 remains blocked until task-aware outcome labels are validated; T4 remains a separate full-conversation protocol.
+- The implementation must not alter vendor/evotool or vendor/tau_bench source snapshots.
+
+
+## D-013 — 2026-11-11: fix treatment-audit script entry-point import
+
+- Initial T1/T3 implementation commit cefef70c42f82223ab1138ace51b3b410019a44d passed dataset preparation and Step 3 conformance, but CI run 43008576540 failed when the treatment audit script was executed directly: ModuleNotFoundError: No module named 'scripts'.
+- Root cause: direct execution sets sys.path[0] to the scripts directory. The script now inserts the repository root before importing shared scripts.
+- No T1/T3 algorithm or scoring semantics changed. Full CI rerun required.
+
+
+### D-013 performance refinement
+
+T1 state-effect measurement now hashes JSON DB state directly instead of deep-copying the full database for every tool call. The Train audit reuses executor instances; T3 and official reference replay use deep-copy loaders over the already loaded pinned DB. This reduces deterministic audit overhead without changing results or vendor source.
+
+
+## D-014 — 2026-11-11: connect T1/T3 to EvoTool episode seam
+- Added run_treated_episode() invoking vendored agent.run_episode() with T1 injected at agent.env_for.
+- Exact policy/instance cache key is evicted; prior cache and original env factory are restored.
+- T3 independently scores predicted actions and synthesizer answer; T0 reward/success remain unchanged.
+- Deterministic integration smoke test and CI entry added. No model/API/GPU/optimizer run.
+
+
+## D-015 — 2026-11-11: deterministic real-tool episode smoke and narrative audit
+
+- Added a CI-run deterministic smoke through pinned EvoTool run_episode, real TauBenchEnv, real pinned Retail tool functions, and a selected exact Train Gold task.
+- Planner/selector/caller/synthesizer are deterministic stubs; no LLM, API, GPU, optimizer, or held-out policy scoring is used.
+- Smoke asserts T1 observations on real tool calls, T0 legacy success/reward, independent T3 reward, and episode-cache cleanup.
+- Added docs/14_PAPER_NARRATIVE_AUDIT.md with phrase-level rewrites for existing paper-facing docs and a code/result-grounded diagnosis of FSPAE target selection.
+- FSPAE revision hypothesis: archive size measures retained Pareto diversity, not evaluation coverage; the target only conditions parent A while counterexample mutation is global. Test target-conditioned variation before another algorithm claim.
+- D-079 v2 CI artifact with Manifest SHA 09df6bab... is the current result source; the older cafdc52e... report must not be combined with it.
+
+
+## D-016 — 2026-11-11: FSPAE-R2 target-conditioned variation
+
+- Replaced the R1 archive-cardinality target heuristic with an explicit performance-deficit scheduler for the R2 arm.
+- R2 selects both parents from the target cluster's feasible Pareto archive when available and conditions counterexample-guided mutation on the exact target cluster.
+- A target with no counterexample falls back to standard mutation; cross-cluster counterexample borrowing is disallowed.
+- Added ablations for global mutation, uniform target selection and the legacy scheduler; matched NSGA-III, SBCG-NSGA-III and R1 FSPAE remain in the same-seed, same-budget comparison.
+- New development runner uses 8 arms × 3 seeds, 6,912 search episodes per arm/seed.
+- D-079 diagnostic was previously inspected; this experiment is development-only. No Validation/Test or LLM/API/GPU/A800/model-training access.
+
+
+## D-017 — 2026-11-12: pivot from saturated D-079 to D-080 real-tool semantics
+
+- D-079 is frozen as a regression suite: corrected hand FSM saturates all class-success endpoints and reaches the natural decision lower bound. FSPAE-R3-Block passed its mechanism audit but failed against matched NSGA-III (macro 0.4167 vs 0.5810; R4 containment 0.3333 vs 1.0; mean decisions 7.236 vs 4.37).
+- Stop adding D-079 ablations. D-080 separates the LLM's planning/ordinary tool choice from an EC-optimized recovery layer.
+- Stage A adds deterministic tool-boundary fault injection around unchanged pinned Retail callables. Initial real-tool probe uses `cancel_pending_order` to distinguish pre-execution timeout from post-commit timeout and verify that blind retry cannot duplicate refund history.
+- CI validation pending. This is simulator semantics evidence only; no LLM/API/A800/optimizer/Dev/Test run.
+
+
+### D-017 implementation refinement — 2026-11-12
+
+- D-080 Stage A now contrasts two actual pinned write tools: non-repeatable cancellation/refund and idempotent address assignment. The same post-commit timeout cannot safely imply the same retry action for both.
+- Removed automatic D-079 exploratory optimizer executions from PR CI after D-079 was frozen as a regression suite. Existing D-079 tests remain mandatory; historical artifacts preserve the exploratory results.
+
+
+### D-017 Stage A acceptance and Stage B implementation — 2026-11-12
+
+- Stage A CI run 43151788172 passed, including two real pinned Retail write-tool semantics: non-repeatable cancellation/refund and idempotent address assignment.
+- Stage B implements a 48-task disjoint Train-only fault manifest across six state-changing tools, with balanced fault modes and no Gold arguments in event payloads.
+- The fault-aware executor uses per-tool call ordinals; live-state scoring is separate from EvoTool's replay-based score.
+- Stage B remains pending CI. No LLM/API/A800/optimizer/Dev/Test performance run.

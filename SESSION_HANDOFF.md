@@ -38,13 +38,9 @@ Provisional method: FSPAE — bounded Pareto archives per task-family × fault-s
 - Important caveat: the official legacy reward compares replayed DB state and required outputs. EvoTool's adapter marks non-exception `Error:` returns as `status="success"`, which can affect the additional progress-shaping term. This discrepancy is not yet resolved.
 - The released adapter also omits the complete official user-simulator/rules/wiki interaction; it must be restored or the baseline labeled as a reduced adaptation.
 
-## Immediate next steps — Step 3
+## Step 3 plan — completed
 
-1. Build a deterministic conformance harness comparing the pinned official legacy Retail Env, DB reset/copy, tool dispatch, action history, state hash, reward and required-output checks with EvoTool's adapter.
-2. Include successful actions and representative `Error:` returns; separately report official reward and EvoTool progress shaping. Keep the original baseline unchanged; any corrected adapter is a separate treatment.
-3. Audit/restore the official user-simulator/rules/wiki loop from the pinned source, or document the reduced adaptation and do not claim faithful reproduction.
-4. Reconcile Qwen3-8B, G=8/B=3 with released config defaults and the 500/20/115 split. Never use the mixed 150-instance demo builder or invent 90/30/30.
-5. Add tests, produce a parity report, and update this handoff plus `NEXT_SESSION_PROMPT.md` and `DECISION_LOG.md`.
+The deterministic conformance harness, dataset integrity precondition, exact Action History checks, reset/copy probes, and dispatch probes are complete. See `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md` and the treatment design in `docs/11_EVOTOOL_STATUS_AND_REWARD_TREATMENT_PROTOCOL.md`.
 
 ## Hard authorization boundaries
 
@@ -68,4 +64,178 @@ CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687
 
 Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Output probes confirmed case sensitivity, comma normalization, and multiple-response mismatches. Domain Error return is marked success by EvoTool and affects progress shaping (representative progress 1.0 vs 0.5; shaped component delta 0.15). Official conversational user simulator/wiki loop is absent from EvoTool; official max steps 30 vs EvoTool 6. Thus tool/reward gold parity does not imply full interaction parity.
 
-Next: independent review harness semantics, then define separate legacy and corrected-status treatments. No model/API/A800/optimizer run occurred.
+Independent review is complete. Step 4 now separates the immutable EvoTool legacy baseline, diagnostic status decomposition, reward-scorer parity, and full-conversation protocol. No model/API/A800/optimizer run occurred.
+
+
+## Step 3-R1 — independent conformance review (2026-11-11)
+
+- Branch: audit/step3-independent-review (created from main cf83f08da748f3b7889465c3b19432e6389ca7b7).
+- The initial Step 3 report's Action History check compared only lengths. Step 3-R1 upgrades this to exact ordered action-name/kwargs equality for all 635 Gold tasks.
+- Added direct reset/copy isolation checks: official Env.reset() and independent EvoTool TauBenchEnv() instances are compared against the pinned DB.
+- Added environment-wrapper dispatch probes for a successful Train Gold Action, a Train/Gold domain rejection, unknown tool, and missing required argument. Unknown-tool and malformed-argument serialization differences are recorded as known deviations.
+- Conformance now verifies the preceding dataset integrity report, pinned source commit, 42 source-file checks, and SHA-256 hashes for Train/Dev/Test JSONL before running.
+- CI dataset preparation no longer masks the command's exit code with || true.
+- Keep the original EvoTool status/reward unchanged. Do not classify every returned Error: as failed execution; distinguish execution status from business outcome in any future corrected arm.
+- Official max_num_steps=30 conversational turns and EvoTool max_steps=6 planner substeps are different units and must not be compared as a direct ratio.
+- This milestone remains deterministic source/environment conformance only. No LLM/API/A800/vLLM/optimizer/training/policy-performance evaluation.
+
+
+### Step 3-R1 initial CI result
+
+- PR #1: https://github.com/yujian777555/new_kaiti/pull/1
+- Initial implementation commit: 5b85db116e909af9e46024fc9e22e29ec7ab6e9a
+- CI run 42992221354: SUCCESS.
+- Tests: transferred regression 95 passed / 1 skipped; dataset + conformance 11 passed.
+- Exact Action History: 635 checked / 0 mismatches.
+- Reset/copy isolation: PASS.
+- Dispatch gate: PASS_WITH_KNOWN_DEVIATIONS.
+- Artifact 13841803539, expires 2026-12-11.
+- A follow-up documentation/rendering commit is being added to surface these new probes in the Markdown report and console summary.
+
+
+## Step 3-R1 final verified state (2026-11-11)
+
+- Main remains unchanged at base SHA cf83f08da748f3b7889465c3b19432e6389ca7b7.
+- PR #1: https://github.com/yujian777555/new_kaiti/pull/1 (draft, open).
+- Branch: audit/step3-independent-review.
+- Latest code/report commit: e248486d38933e62a51367f66489e18fc22877fb.
+- Latest branch HEAD: 478e8171f54bbf8ca7ad5ea69c2acdfaf7de3845 (documentation-only Step 4 treatment protocol and handoff update).
+- CI run 42994690443 is running on the documentation-only branch HEAD; code/report commit e248486 passed run 42993445630.
+- CI run 42993445630: SUCCESS; 95 passed/1 skipped transferred regression; 12 dataset/conformance tests passed.
+- Exact Action History: 635 checked, 0 mismatches. DB reset/copy isolation PASS. Dispatch PASS_WITH_KNOWN_DEVIATIONS.
+- Artifact 13842368239, expires 2026-12-11.
+- Generated Markdown report now exposes dataset integrity, Action History, reset/copy and dispatch probes.
+- Next: use docs/11 treatment protocol as the design basis. Keep T0 legacy unchanged; do not blindly penalize Error returns. No model/API/A800/vLLM/optimizer/training/policy-performance evaluation without separate authorization.
+
+
+## Step 4 — T1/T3 implementation (2026-11-11)
+
+- Branch: audit/step3-independent-review.
+- T1: treatments/evotool_status.py wraps the original executor and adds execution_status, business_outcome, state_effect, raw observation, and before/after state hashes. Original tool/args/output/status fields remain unchanged.
+- T1 factory: make_status_decomposed_env_factory() wraps only the tau-bench executor and leaves other benchmark environments unchanged.
+- T3: treatments/taubench_official_reward.py implements the official full-DB hash and response-output normalization, with live-state and replay-based scorer APIs.
+- Audit: scripts/audit_evotool_treatments.py uses Train only (500 tasks / 768 Gold Action calls), compares T1 with legacy fields/state/progress/reward, and compares T3 with official Env.calculate_reward.
+- Tests: tests/test_evotool_treatments.py.
+- CI workflow now runs the Train-only treatment audit and tests.
+- T1/T3 are implementation/conformance treatments only. No policy execution, model/API/A800/vLLM/optimizer/training or performance evaluation.
+- T2 business-outcome reward shaping remains blocked; T4 full conversation remains separate.
+
+
+### Step 4 first CI correction
+
+- Initial implementation commit cefef70c42f82223ab1138ace51b3b410019a44d.
+- CI run 43008576540 passed dataset construction and Step 3 conformance, then failed at direct script startup because the repository root was absent from sys.path.
+- Corrected scripts/audit_evotool_treatments.py to add ROOT before importing scripts.audit_evotool_tau_bench_conformance. T3 also imports Collection for complete runtime type-hint resolution.
+- Re-run CI before accepting the implementation.
+
+
+### T1/T3 audit runtime optimization
+
+- T1 computes state hashes directly before/after each call and only deep-copies for non-JSON fallback.
+- The Train audit reuses executor objects and resets their DB snapshots per task.
+- T3 and official reference scoring reuse the pinned base DB through deep-copy loaders instead of repeated disk loads.
+- No semantics or vendor snapshots changed.
+
+
+## Step 5 — T1/T3 episode integration (2026-11-11)
+- treatments/evotool_episode_integration.py invokes vendored agent.run_episode() through agent.env_for; T1 wraps Tau-bench for the episode and restores the factory in finally.
+- Evicts only the exact policy/instance cache key so a cached T0 episode cannot bypass T1; restores any prior cache entry.
+- T3 independently scores predicted actions and final answer against Gold plan and official tool map.
+- T0 reward/success remain unchanged; smoke test tests/test_evotool_episode_integration.py is included in CI.
+- Deterministic integration only; no LLM/API/GPU/optimizer or held-out scoring.
+
+
+## Step 6 — deterministic real-tool episode smoke and paper narrative audit (2026-11-11)
+
+- Added scripts/run_evotool_real_tool_episode_smoke.py.
+- Uses a pinned Train task, pinned EvoTool run_episode entry point, TauBenchEnv and Retail tools; planner/selector/caller/synthesizer are deterministic stubs.
+- T1 is injected into the real episode; T0 legacy evaluator/reward and T3 official-aligned scorer are checked against the exact Gold action sequence.
+- CI writes evotool_real_episode_smoke.json into the dataset artifact. This is a deterministic tool/episode integration smoke, not LLM evaluation or full conversational tau-bench parity.
+- Added docs/14_PAPER_NARRATIVE_AUDIT.md: phrase-by-phrase audit of existing paper-facing docs, exact v2 D-079 numbers, and FSPAE mechanism diagnosis.
+- Current D-079 v2 artifact (Manifest SHA 09df6bab...) supersedes the older report SHA cafdc52e... for the current result table.
+- Mechanism diagnosis: all candidates are evaluated on all 48 clusters, but archive cardinality is used as a proxy for "coverage deficit"; target cluster only conditions parent A while mutation guidance is global. Next candidate revision: target-conditioned variation. No confirmatory claim from reusing D-079 diagnostic.
+
+
+## Step 7 — FSPAE-R2 target-conditioned development experiment (2026-11-11)
+
+- FSPAE-R1 code review isolated two mechanisms: archive cardinality was used as a proxy for performance/coverage deficit; target selection affected Parent A only while counterexample mutation was global.
+- R2 changes target priority to a local performance deficit (0.8 recovery loss + 0.2 capped avoidable harm), samples both parents from the target cluster's feasible local archive, and samples counterexamples only from that exact family × fault-stratum cluster.
+- If the target cluster has no counterexample, R2 uses standard mutation and records the fallback; it never silently borrows another cluster's counterexample.
+- Global NSGA-III survivor selection and zero-tolerance hard constraints are unchanged.
+- Added mechanism tests for performance-based target selection, local parent pairing, exact-cluster mutation, and fail-closed fallback.
+- Added run_fspae_r2_development.py with 8 matched arms × 3 seeds, 6,912 Train/search episodes per arm/seed.
+- Important: D-079 diagnostic role was already inspected in R1. R2 uses it for development feedback only; it is not fresh held-out evidence. No Validation/Test, LLM/API/GPU/A800 or model training.
+- CI must run unit tests plus the R2 development experiment; inspect artifact d079-fspae-r2-development before deciding whether to generate a fresh independently seeded challenge.
+
+
+## Step 8 — FSPAE-R2.1 factorial completion (2026-11-11)
+
+- R2 development results showed uniform-target (macro 0.1667) and global-mutation (macro 0.1389) each exceeded the combined performance-deficit + exact-target arm (0.0556) on the reused development diagnostic.
+- The 2×2 scheduler × mutation experiment lacked the uniform-target + global-mutation cell. Added `fspae_r2_uniform_global_mut` to complete the factorial without changing local parent selection, NSGA-III survival, hard constraints, budget, seeds, or scenario manifest.
+- This is still development-only on the already inspected D-079 diagnostic. If a combination is selected, generate a new independent Train-only challenge manifest, validate and lock it, and evaluate its diagnostic once. Do not access Validation/Test.
+
+
+## Step 9 — R3 reachability blocker found and corrected (2026-11-12)
+
+- R2.1 raw diagnostic rows showed all 9 evolutionary arms had R3 success 0/72 and explicitly escalated immediately, leaving one active committed-prefix effect.
+- Root cause: `repair_fsm()` rewrote every `OBS_PERMISSION` `ROLLBACK` action to `ESCALATE`, despite the R3 label proof requiring compensation of a fully compensatable committed prefix before escalation. This made the R3 zero-residual path unreachable to offspring.
+- Corrective change: preserve `ROLLBACK` only for `OBS_PERMISSION` with `stack=True`; after rollback keep `OBS_PERMISSION` as the current blocking observation, so `stack=False` forces explicit escalation. Non-rollback permission actions remain fail-closed.
+- Added simulator integration test using a locked D-079 diagnostic R3 scenario. Required trace: permission/stack true → rollback → permission/stack false → escalate; expected R3 success=1, active effects=0, avoidable harm=0.
+- Re-run only development diagnostics first. The old D-079 diagnostic remains previously inspected and is not held-out/confirmatory. If R3 becomes learnable and candidate results improve, create a new independent Train-only challenge manifest and lock before a one-shot diagnostic. Keep Validation/Test inaccessible.
+
+- Follow-up audit found the independent `contract_validator.py` also rejected permission-state ROLLBACK unconditionally. It is corrected to allow ROLLBACK only when `stack=True`, and reject it when `stack=False`. The R3 integration test now requires the repaired genome to pass this independent validator before execution.
+
+- Corrected the fixed hand baseline as a reference policy: `OBS_COMPENSATED + stack=True` now retries the compensated current step while preserving prior commits; `OBS_PERMISSION + stack=True` rolls back the prefix before escalation. Added integration tests for R2 partial-commit recovery and R3/R4 permission recovery, including independent-validator acceptance and rejection cases.
+
+- Added the analogous R4 path: after current-step partial compensation fails, roll back the compensatable prefix while preserving `COMP_FAILED`, then escalate. The independent validator accepts this only with `stack=True`; tests reject empty-stack rollback.
+
+
+## Step 10 — R2.3 context-conditioned recovery state (2026-11-12)
+
+- D-079 R2.2 established that the corrected hand FSM reaches 100% on all 144 reused diagnostic scenarios with zero avoidable harm and zero hard-safety violations. It is a saturated sanity benchmark for success, not a suitable target for success-rate gains.
+- The hand policy still made an unnecessary VERIFY after rate-limit WAIT because OBS_WAITED conflated ambiguous TIMEOUT and non-ambiguous RATE_LIMIT. The public controller state already tracks ambiguity.
+- R2.3 splits the observation into WAITED_AMBIGUOUS and WAITED_CLEAR; ambiguous waits require VERIFY, clear waits allow RETRY. The strong hand policy uses these semantics. The new test verifies D2 timeout and D4 three-fault interaction behavior, including reducing D4 to five decisions.
+- R2.3 is development-only on the reused D-079 manifest. Evaluate success, decision count, hard-safety gates, per-seed stability, and comparison to matched NSGA-III/SBCG. Do not claim held-out improvement. If the representation change is promising, generate a fresh locked challenge with variable visibility/retry contexts before one-shot validation.
+
+
+## Step 11 — D-079 saturation and FSPAE-R3 block-variation pilot (2026-11-12)
+
+- R2.3 CI passed the simulator regression tests. The corrected hand controller achieved macro success 1.0, R1/R2 1.0, R3 1.0, R4 1.0, zero avoidable harm, and zero duplicate/SLA/invariant violations on the reused 144-scenario diagnostic set. Mean decision count was 2.833; this meets the natural action lower bound for the six D-079 fault strata (3, 2, 2, 5, 2, 3 decisions respectively). D-079 is saturated for success and decision count; do not use it to claim further success-rate gains.
+- R2.3 evolutionary arms remained below the hand reference. Matched NSGA-III was the strongest evolutionary arm (macro 0.581), while FSPAE-R2 local-pair variants remained weak and unstable. D1 and D4 were persistent evolutionary failure strata. No algorithmic improvement is established.
+- Mechanism diagnosis: local-pair selection plus whole-genome crossover can overwrite behavior learned for non-target fault strata. A new FSPAE-R3-Block operator is now implemented: global-population anchor + local Pareto donor + exact target-cluster gene-block inheritance + target-cluster counterexample mutation. Non-target genes are audited for exact preservation.
+- New files/changes: FSPAE_R3_BLOCK_PROTOCOL.md, fspae_runner.py, sbcg.py, run_fspae_pilot.py, run_fspae_r2_development.py, and test_fspae_runner.py. The R3 arm is added to the D-079 development experiment. CI must verify tests and full run before interpreting results.
+- Next: inspect CI artifact for FSPAE-R3-Block, mechanism audit, per-seed results, and paired contrasts. If the block operator does not improve over matched NSGA-III, stop this FSPAE branch rather than adding more ablations. If it does, create a fresh D-080 challenge with variable visibility/retry context and lock it before one-shot diagnostic. Validation/Test remain inaccessible.
+
+
+## Step 12 — R3-Block result and D-080 pivot (2026-11-12)
+
+- Latest R3-Block CI run: simulator tests passed; the D-079 development experiment and artifact completed. The broader workflow was still in the tau-bench/EvoTool conformance audit when this handoff was updated; do not report the entire workflow as green until its final conclusion is confirmed.
+- R3-Block mechanism audit passed: 120 global anchors, 120 block copies with non-target preservation, 120 in-block mutations, 432 copied genes. No cross-target mutation was recorded.
+- R3-Block performance gate failed: macro class success 0.4167 vs matched NSGA-III 0.5810; R4 containment 0.3333 vs 1.0000; mean decisions 7.236 vs 4.37. It beat FSPAE-R2 but did not beat the strongest evolutionary baseline. Stop current D-079 FSPAE ablations; do not advance to validation.
+- D-079 is saturated by the hand controller (100% all class endpoints, zero avoidable harm/hard violations, mean 2.833 decisions at the per-stratum lower bound). Freeze it as a regression suite.
+- Added D-080 design candidate: use pinned tau-bench Retail tasks with seeded fault injection at real tool boundaries; LLM handles planning/tool selection, EC evolves a separate recovery layer. Current smoke uses deterministic stubs and is not a real LLM result. Implement a small deterministic fault-injection slice and run the hand-policy saturation gate before any evolutionary experiment. Validation/Test remain inaccessible.
+
+
+## Step 13 — D-080 Stage A deterministic tool-boundary fault injection (2026-11-12)
+
+- Added `treatments/fault_injection.py`: deterministic, task/tool/call/seed-bound fault events; no sleeps, network, model calls, optimizer, or vendor-source changes.
+- Supported initial modes: timeout before execution, rate limit before execution, schema rejection before execution, and timeout after a real state-changing tool call.
+- Added tests against the pinned official Retail `cancel_pending_order` tool: pre-execution timeout leaves state unchanged; post-commit timeout preserves the committed cancellation/refund; a blind retry is rejected and does not append another refund; rate-limit/schema rejection do not invoke the tool.
+- Added protocol `experiments/pilot_a3b/D080_FAULT_INJECTION_PROTOCOL.md`. CI must pass before accepting Stage A.
+- Scope is one real tool's semantics only. It does not establish generic idempotency, compensation behavior, or algorithmic improvement. Next add a second semantically distinct write tool and task-linked Train-only fault manifest, then run the hand-policy saturation gate. No LLM/A800/API/optimizer/Dev/Test.
+
+
+### D-080 Stage A extension — idempotency contrast
+
+- Added a second pinned write-tool probe: `modify_pending_order_address`. A post-commit timeout followed by the same assignment must converge to the identical full DB hash.
+- This contrasts with `cancel_pending_order`, whose second call is rejected after the first commit and must not append a second refund.
+- CI workflow no longer reruns the saturated D-079 exploratory optimizer on every PR; D-079 simulator/controller tests remain in the regression suite. This reduces irrelevant compute while preserving regression coverage.
+
+
+## Step 14 — D-080 Stage A acceptance and Stage B build (2026-11-12)
+
+- CI run 43151788172 passed on commit a0cd42a: existing simulator regression, pinned Retail dataset build, EvoTool/Tau-bench conformance, T1/T3 audit, deterministic real-tool smoke, and Stage A fault tests.
+- Stage A establishes two distinct post-commit semantics: cancel_pending_order is a non-repeatable cancellation/refund transition; modify_pending_order_address is an idempotent assignment.
+- Stage B adds a 48-task disjoint Train-only manifest across six state-changing Retail tools, balanced at 2 examples per fault mode per tool. Manifest events contain no Gold arguments and are bound to the Train JSONL source hash.
+- Added per-tool call ordinals and a fault-aware executor. Added an episode runner that scores actual live DB state rather than confusing it with EvoTool's replay-based reward.
+- CI validation pending for Stage B. No LLM/API/A800/optimizer/Dev/Test.
