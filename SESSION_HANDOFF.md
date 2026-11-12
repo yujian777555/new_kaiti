@@ -69,3 +69,21 @@ CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687
 Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Output probes confirmed case sensitivity, comma normalization, and multiple-response mismatches. Domain Error return is marked success by EvoTool and affects progress shaping (representative progress 1.0 vs 0.5; shaped component delta 0.15). Official conversational user simulator/wiki loop is absent from EvoTool; official max steps 30 vs EvoTool 6. Thus tool/reward gold parity does not imply full interaction parity.
 
 Next: independent review harness semantics, then define separate legacy and corrected-status treatments. No model/API/A800/optimizer run occurred.
+
+## Step 4 — independent review and status-treatment design (2026-11-12)
+
+Review: `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
+
+- The fake user is a scripted transport/termination shim, not a customer simulator. It returns a fixed initial observation and scripted `continue`/`###STOP###` responses; it does not call LiteLLM, condition replies on the task, or echo Agent messages.
+- The harness exercises the pinned official `Env.reset`, `Env.step`, `Env.calculate_reward`, respond-action termination, terminal-tool termination, and output reward checks. It does not run the official `ToolCallingAgent.solve` or real LLM user simulator.
+- The 1,375-call tool parity result covers exact Gold Action arguments, not exhaustive arbitrary tool inputs. The protocol flags include source-text checks and are not a dynamic proof.
+- Status semantics: EvoTool `success` means normal function return. 44 such `Error:` outputs appear in 38 official Gold tasks; all 635 exact Gold tasks pass official reward replay. Keep legacy behavior as the primary baseline; evaluate return-error-aware semantics only as a separate ablation.
+- New audit computes paired legacy vs return-error-aware progress over all Gold traces. New tests cover fake-user reset/step/STOP and terminal-tool behavior.
+- `EVOTOOL_RETURN_ERROR_AWARE` reclassifies only normal returned `Error:` text as `returned_error`; exceptions remain `error`. Tool output, DB state, binary task reward, progress formula, and reward weights remain unchanged.
+- The full EvoTool optimizer source is not currently vendored; pin the complete upstream source before any optimizer execution. Isolate episode caches across treatment arms.
+- CI for this milestone is pending; update this handoff with the resulting run and commit SHA after acceptance.
+
+## Next immediate task
+
+Complete the deterministic status replay and fake-user tests in CI, then pin/audit the complete EvoTool optimizer source and reconcile `G=8, B=3` with the 500/20/115 split. Do not start model inference, API calls, A800/vLLM, optimizer execution, training, or Test policy scoring without separate explicit authorization.
+

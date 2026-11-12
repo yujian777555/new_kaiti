@@ -86,3 +86,17 @@
 - Gate: `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`. Keep legacy EvoTool unchanged. Any corrected-status/full-conversation implementation must be a separate treatment.
 - No LLM, model, API, A800/vLLM, optimizer, training, or policy evaluation.
 - Full report: `docs/10_EVOTOOL_TAUBENCH_ADAPTER_CONFORMANCE_AUDIT.md`.
+
+## D-010 — 2026-11-12: independent harness review and status-treatment separation
+
+- Independent review: `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
+- The deterministic fake user is a scripted transport/termination shim, not a customer simulator. It bypasses LLMUserSimulationEnv generation, discards the reset observation in Gold replay, and supplies scripted continuation/stop messages. The pinned official Env reset/step/reward plumbing is exercised; full conversational Agent parity is not.
+- Official Env source identities: `base.py` `2461c3ebaf696757e0ce405bdb20376de88b0143`; Retail Env `fc4874c7ab7b6b23cc35a35388b45d0f1f9c2907`; ToolCallingAgent `f8cfdbac52d24d2323e923cdb25e6b667d4db9f8`; user simulator `eb9ee841eee4c098353cb0447e4a4bf560d8b5f6`.
+- EvoTool status path: `TauBenchEnv.execute` assigns `success` when the tool function returns normally; `metrics.progress` counts only `status=="success"`; `run_episode` weights binary success/progress 0.7/0.3. The status field is not included in the current Selector/Synthesizer prompt text, so a status-only treatment isolates the shaping/selection signal.
+- Important interpretation: 44 normal-return `Error:` outputs occur in 38 Gold tasks (Train 20, Dev 0, Test 24), yet all 635 Gold trajectories pass the official reward replay. The legacy status is call-execution semantics, not necessarily a bug. Treat the alternative as `EVOTOOL_RETURN_ERROR_AWARE`, a sensitivity ablation, not an official correction.
+- Arm L preserves the pinned EvoTool adapter. Arm R changes only normal returned `Error:` status to `returned_error`; tool output, DB transition, binary evaluator, progress formula, and reward weights stay fixed. Exceptions remain `error`; optional `route_episode` must count `returned_error` too.
+- Upstream global `_EPISODE_CACHE` is keyed by policy hash and instance ID only. Run arms in separate processes or include treatment ID in cache keys to prevent cross-arm cache contamination.
+- The current repository vendors only the nine-file EvoTool adapter/config lock, not the full optimizer source. Complete upstream source pinning is a blocker before an optimizer reproduction.
+- New deterministic tests/replay quantify fake-user and status semantics. This is source/conformance evidence only, not a policy-performance or EC-uplift result.
+- No LLM/API/A800/vLLM/optimizer/training/Test policy scoring was performed.
+

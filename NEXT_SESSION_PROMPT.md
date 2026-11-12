@@ -107,3 +107,21 @@ CI [42987687316](https://github.com/yujian777555/new_kaiti/actions/runs/42987687
 Important: overall `PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS`, not full parity. Synthetic output probes confirm case, comma-normalization, and multiple-response mismatches. Error-return status changes progress by 0.5 in a representative step (0.15 on the 0.3 shaping term). Official conversational user simulator/wiki loop is absent in EvoTool; official max steps 30 vs EvoTool 6. Full details in docs/10.
 
 Next task: independent review of the harness and fake-user semantics; then design separate legacy and corrected-status treatments. No LLM, model, A800, API, or optimizer execution without separate approval.
+
+## Step 4 — independent review and status-treatment design (2026-11-12)
+
+Read `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
+
+- Current verified repository HEAD before this milestone: `cf83f08da748f3b7889465c3b19432e6389ca7b7`. Fetch `main` again at the start of the next session; do not assume this remains current.
+- The fake user is a deterministic scripted transport/termination shim, not a task-conditioned customer simulator. The official Env reset/step/reward path is exercised, but the official ToolCallingAgent and LLMUserSimulationEnv are not run.
+- 1,375 direct tool comparisons cover exact Gold Action arguments only; they are not exhaustive arbitrary-input dispatch tests.
+- The 44 returned `Error:` strings in 38 Gold tasks are part of source trajectories, and all 635 Gold trajectories pass official reward replay. Do not label the legacy `status=success` behavior a proven bug.
+- Compare two separate treatments: `EVOTOOL_LEGACY` (unchanged) and `EVOTOOL_RETURN_ERROR_AWARE` (only normal returned `Error:` text becomes `returned_error`). This is a status-semantics ablation, not an official correction. Keep exceptions as `error`, outputs/DB transitions/binary evaluator/reward weights unchanged.
+- The status field is not rendered into the current Selector/Synthesizer prompt content; it changes progress shaping and selection. Upstream `_EPISODE_CACHE` is global and omits treatment ID, so use separate processes or isolate cache keys.
+- The full EvoTool optimizer source is not vendored. Pin the complete upstream source before any optimizer run.
+- New direct fake-user tests and all-Gold status sensitivity replay are included in the current code changes; CI acceptance is pending.
+
+## Next task
+
+Finish CI acceptance, then audit/pin the full EvoTool source and reconcile the exact `G=8, B=3` sampling protocol with official Train 500 / Dev 20 / Test 115. No Qwen3 inference, paid API, A800/vLLM, optimizer, training, or Test policy scoring without separate explicit approval.
+

@@ -5,9 +5,13 @@ import os
 import pytest
 
 from scripts.audit_evotool_tau_bench_conformance import (
+    _DeterministicUser,
+    _load_official_env,
+    _make_official_env,
     build_conformance_report,
     write_report,
 )
+from scripts.prepare_tau_bench_retail import install_vendored_runtime
 
 
 @pytest.fixture(scope="module")
@@ -113,3 +117,85 @@ def test_protocol_difference_is_explicit_and_projection_scope_is_bounded(conform
     assert projection["actual_products_mutated_by_any_gold_action"] == 0
     assert projection["hypothetical_product_only_change_ignored_by_evotool_projection"] is True
     assert conformance_report["overall_gate"] == "PASS_WITH_KNOWN_PROTOCOL_DEVIATIONS"
+
+def test_return_error_aware_status_is_a_sensitivity_treatment_not_official_reward(conformance_report):
+    status = conformance_report["status_treatment_replay"]
+    assert status["policy_evaluation_performed"] is False
+    assert status["llm_api_calls"] == 0
+    assert status["binary_task_reward_in_scope"] is False
+    assert status["tool_outputs_and_database_transitions_unchanged"] is True
+    assert status["total_task_count"] == 635
+    assert status["gold_action_count"] == 1375
+    assert status["returned_error_action_count"] == 44
+    assert status["tasks_with_returned_error"] == 38
+    assert status["by_split"]["train"]["returned_error_action_count"] == 20
+    assert status["by_split"]["dev"]["returned_error_action_count"] == 0
+    assert status["by_split"]["test"]["returned_error_action_count"] == 24
+    assert status["mean_return_error_aware_progress"] < status["mean_legacy_progress"]
+    assert status["mean_weighted_shaped_reward_delta"] > 0
+
+
+def test_harness_fake_user_is_a_scripted_transport_not_a_simulator():
+    user = _DeterministicUser()
+    assert user.reset("task-conditioned instruction") == "Deterministic test customer."
+    user.responses = ["continue", "###STOP###"]
+    assert user.step("Agent message one") == "continue"
+    assert user.step("Agent message two") == "###STOP###"
+    assert user.instruction == "task-conditioned instruction"
+    assert user.received_agent_messages == ["Agent message one", "Agent message two"]
+    assert user.get_total_cost() == 0.0
+
+
+def test_official_env_calls_user_step_only_for_respond_and_uses_scripted_stop():
+    all_tools, load_data = install_vendored_runtime()
+    Env, Action, Task, fake_user, _ = _load_official_env(all_tools)
+    row = {
+        "user_id": "offline_fake_user_test",
+        "instruction": "exercise the official Env protocol",
+        "actions": [],
+        "outputs": [],
+    }
+    env = _make_official_env([row], all_tools, load_data, Env, Action, Task, fake_user)
+    fake_user.responses = ["continue", "###STOP###"]
+
+    reset = env.reset(task_index=0)
+    assert reset.observation == "Deterministic test customer."
+    assert fake_user.reset_calls == 1
+    assert fake_user.instruction == row["instruction"]
+
+    tool_response = env.step(Action(name="think", kwargs={"thought": "offline"}))
+    assert tool_response.done is False
+    assert fake_user.step_calls == 0
+
+    first = env.step(Action(name="respond", kwargs={"content": "Agent message one"}))
+    assert first.observation == "continue"
+    assert first.done is False
+    assert fake_user.step_calls == 1
+
+    final = env.step(Action(name="respond", kwargs={"content": "Agent message two"}))
+    assert final.observation == "###STOP###"
+    assert final.done is True
+    assert final.reward == 1.0
+    assert fake_user.step_calls == 2
+    assert fake_user.received_agent_messages == ["Agent message one", "Agent message two"]
+
+
+def test_official_terminal_tool_stops_without_calling_user_simulator():
+    all_tools, load_data = install_vendored_runtime()
+    Env, Action, Task, fake_user, _ = _load_official_env(all_tools)
+    row = {
+        "user_id": "offline_terminal_tool_test",
+        "instruction": "exercise terminal tool behavior",
+        "actions": [],
+        "outputs": [],
+    }
+    env = _make_official_env([row], all_tools, load_data, Env, Action, Task, fake_user)
+    env.reset(task_index=0)
+    response = env.step(
+        Action(name="transfer_to_human_agents", kwargs={"summary": "offline terminal test"})
+    )
+    assert response.observation == "Transfer successful"
+    assert response.done is True
+    assert response.reward == 1.0
+    assert fake_user.step_calls == 0
+

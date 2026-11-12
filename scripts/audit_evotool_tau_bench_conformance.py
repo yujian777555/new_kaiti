@@ -145,19 +145,33 @@ class _Record:
 
 
 class _DeterministicUser:
-    """Offline transport shim; preserves Env's reset/step interface without an LLM."""
+    """Scripted transport shim, not a user simulator.
+
+    It preserves the official Env reset/step interface without an LLM. The
+    initial observation and subsequent user responses are deterministic; Agent
+    messages are recorded for protocol assertions but are never echoed or used
+    to generate task-conditioned customer behavior.
+    """
 
     def __init__(self):
         self.responses = ["###STOP###"]
         self.cursor = 0
         self.instruction = None
+        self.reset_calls = 0
+        self.step_calls = 0
+        self.received_agent_messages = []
 
     def reset(self, instruction=None):
+        self.reset_calls += 1
         self.cursor = 0
         self.instruction = instruction
+        self.step_calls = 0
+        self.received_agent_messages = []
         return "Deterministic test customer."
 
     def step(self, content):
+        self.step_calls += 1
+        self.received_agent_messages.append(content)
         if self.cursor < len(self.responses):
             response = self.responses[self.cursor]
         else:
@@ -445,6 +459,128 @@ def _audit_reward_parity(rows_by_split, all_tools, load_data, Env, Action, Task,
     return result
 
 
+
+def _audit_status_treatments(rows_by_split, evotool_env, metrics):
+    """Paired, deterministic Gold Action replay of two status interpretations.
+
+    This is a shaping-signal sensitivity audit, not policy evaluation. It leaves
+    tool outputs, DB transitions, the official binary reward, and all LLM inputs
+    untouched. The only changed field is the adapter status for a normal return
+    whose text begins with the pinned tool convention "Error:".
+    """
+    by_split = {}
+    all_legacy_progress = []
+    all_return_error_aware_progress = []
+    all_weighted_deltas = []
+    returned_error_counts_by_tool = {}
+    total_gold_actions = 0
+    total_returned_errors = 0
+    total_tasks_with_returned_errors = 0
+
+    for split, rows in rows_by_split.items():
+        legacy_progress_values = []
+        aware_progress_values = []
+        weighted_deltas = []
+        split_gold_actions = 0
+        split_returned_errors = 0
+        split_tasks_with_returned_errors = 0
+
+        for row in rows:
+            adapter = evotool_env.TauBenchEnv()
+            gold_plan = [
+                {"tool": action["name"], "args": action["kwargs"]}
+                for action in row["actions"]
+            ]
+            instance = {"gold_plan": gold_plan}
+            legacy_steps = []
+            aware_steps = []
+            row_returned_errors = 0
+
+            for action in row["actions"]:
+                observation = adapter.execute(action["name"], action["kwargs"])
+                legacy_status = observation["status"]
+                aware_status = legacy_status
+                output = observation.get("output")
+                if (
+                    legacy_status == "success"
+                    and isinstance(output, str)
+                    and output.startswith("Error:")
+                ):
+                    aware_status = "returned_error"
+                    row_returned_errors += 1
+                    tool_name = action["name"]
+                    returned_error_counts_by_tool[tool_name] = (
+                        returned_error_counts_by_tool.get(tool_name, 0) + 1
+                    )
+
+                legacy_steps.append({"tool": action["name"], "status": legacy_status})
+                aware_steps.append({"tool": action["name"], "status": aware_status})
+
+            legacy_progress = metrics.progress(legacy_steps, instance)
+            aware_progress = metrics.progress(aware_steps, instance)
+            weighted_delta = 0.3 * (legacy_progress - aware_progress)
+
+            legacy_progress_values.append(legacy_progress)
+            aware_progress_values.append(aware_progress)
+            weighted_deltas.append(weighted_delta)
+            split_gold_actions += len(row["actions"])
+            split_returned_errors += row_returned_errors
+            if row_returned_errors:
+                split_tasks_with_returned_errors += 1
+
+        by_split[split] = {
+            "task_count": len(rows),
+            "gold_action_count": split_gold_actions,
+            "returned_error_action_count": split_returned_errors,
+            "tasks_with_returned_error": split_tasks_with_returned_errors,
+            "mean_legacy_progress": round(
+                sum(legacy_progress_values) / len(legacy_progress_values), 10
+            ) if legacy_progress_values else 0.0,
+            "mean_return_error_aware_progress": round(
+                sum(aware_progress_values) / len(aware_progress_values), 10
+            ) if aware_progress_values else 0.0,
+            "mean_weighted_shaped_reward_delta": round(
+                sum(weighted_deltas) / len(weighted_deltas), 10
+            ) if weighted_deltas else 0.0,
+        }
+
+        total_gold_actions += split_gold_actions
+        total_returned_errors += split_returned_errors
+        total_tasks_with_returned_errors += split_tasks_with_returned_errors
+        all_legacy_progress.extend(legacy_progress_values)
+        all_return_error_aware_progress.extend(aware_progress_values)
+        all_weighted_deltas.extend(weighted_deltas)
+
+    return {
+        "scope": "deterministic replay of the pinned Gold Action traces; not policy evaluation",
+        "policy_evaluation_performed": False,
+        "llm_api_calls": 0,
+        "binary_task_reward_in_scope": False,
+        "treatment_definition": (
+            "Legacy preserves status=success for every normal function return. "
+            "Return-error-aware changes only a normal return beginning with Error: "
+            "to status=returned_error; exceptions and unknown tools retain status=error."
+        ),
+        "tool_outputs_and_database_transitions_unchanged": True,
+        "total_task_count": sum(len(rows) for rows in rows_by_split.values()),
+        "gold_action_count": total_gold_actions,
+        "returned_error_action_count": total_returned_errors,
+        "tasks_with_returned_error": total_tasks_with_returned_errors,
+        "returned_error_counts_by_tool": dict(sorted(returned_error_counts_by_tool.items())),
+        "mean_legacy_progress": round(
+            sum(all_legacy_progress) / len(all_legacy_progress), 10
+        ) if all_legacy_progress else 0.0,
+        "mean_return_error_aware_progress": round(
+            sum(all_return_error_aware_progress) / len(all_return_error_aware_progress), 10
+        ) if all_return_error_aware_progress else 0.0,
+        "mean_weighted_shaped_reward_delta": round(
+            sum(all_weighted_deltas) / len(all_weighted_deltas), 10
+        ) if all_weighted_deltas else 0.0,
+        "weighted_delta_formula": "0.3 * (legacy_progress - return_error_aware_progress)",
+        "by_split": by_split,
+    }
+
+
 def _run_output_probe(rows, all_tools, load_data, Env, Action, Task, fake_user, evotool_env, outputs, responses):
     synthetic = {
         "user_id": "offline_probe_user",
@@ -543,6 +679,9 @@ def build_conformance_report(dataset_dir: Path) -> dict:
         rows_by_split, all_tools, load_data, Env, Action, Task,
         fake_user, evotool_env, base_data,
     )
+    status_treatment_replay = _audit_status_treatments(
+        rows_by_split, evotool_env, metrics
+    )
 
     output_probes = {
         "case_insensitive": _run_output_probe(
@@ -627,6 +766,18 @@ def build_conformance_report(dataset_dir: Path) -> dict:
             "gate": "PASS" if reward_gate else "FAIL",
             **reward_parity,
         },
+        "status_treatment_replay": status_treatment_replay,
+        "fake_user_semantics": {
+            "kind": "deterministic scripted transport shim",
+            "calls_llm": False,
+            "task_conditioned_response_generation": False,
+            "echoes_agent_message": False,
+            "gold_replay_discards_reset_observation": True,
+            "purpose": (
+                "exercise the pinned Env reset/step/reward termination path offline; "
+                "this is not user-simulator or conversational-policy parity"
+            ),
+        },
         "output_semantics_probes": output_probes,
         "domain_error_progress_probe": progress_probe,
         "mutable_state_projection_probe": {
@@ -678,6 +829,17 @@ def write_report(report: dict, output_dir: Path) -> None:
         f"- Official gold reward failures: {len(reward['official_gold_reward_failures'])}",
         f"- EvoTool gold success failures: {len(reward['evotool_gold_success_failures'])}",
         f"- Official/EvoTool gold-result mismatches: {reward['official_vs_evotool_gold_mismatch_count']}",
+        "",
+        "## Status-treatment sensitivity replay",
+        "",
+        "- Scope: deterministic Gold Action replay only; not policy evaluation.",
+        f"- Gold actions: {report['status_treatment_replay']['gold_action_count']}",
+        f"- Normal returns beginning with Error:: {report['status_treatment_replay']['returned_error_action_count']}",
+        f"- Tasks containing such returns: {report['status_treatment_replay']['tasks_with_returned_error']}",
+        f"- Mean legacy progress: {report['status_treatment_replay']['mean_legacy_progress']}",
+        f"- Mean return-error-aware progress: {report['status_treatment_replay']['mean_return_error_aware_progress']}",
+        f"- Mean weighted shaped-reward delta: {report['status_treatment_replay']['mean_weighted_shaped_reward_delta']}",
+        "- Official binary task reward and tool outputs are not changed by this sensitivity replay.",
         "",
         "## Known semantic deviations",
         "",
