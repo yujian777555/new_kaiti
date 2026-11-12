@@ -83,7 +83,7 @@ class StratumParetoArchive:
         self.records = sorted(kept, key=lambda item: item.candidate.fingerprint)
         return any(item.candidate.fingerprint == fingerprint for item in self.records)
 
-    def select_parent(self, rng):
+    def select_parent_record(self, rng):
         """Choose a local Pareto specialist by least-used NSGA-III niche."""
         if not self.records:
             return None
@@ -106,7 +106,11 @@ class StratumParetoArchive:
         else:
             selected = rng.choice(members)
         self.niche_counts[direction] += 1
-        return self.records[selected].candidate.fsm
+        return self.records[selected].candidate
+
+    def select_parent(self, rng):
+        record = self.select_parent_record(rng)
+        return record.fsm if record is not None else None
 
     def best_objectives(self):
         if not self.records:
@@ -251,6 +255,29 @@ def _archive_candidate_records(archives):
         for item in archive.records:
             unique[item.candidate.fingerprint] = item.candidate
     return [unique[key] for key in sorted(unique)]
+
+
+def _inherit_target_gene_block(global_parent, local_donor, gene_keys):
+    """Copy only target-cluster genes from a local donor into a global anchor."""
+    child = global_parent.clone()
+    copied = []
+    for key in sorted(set(gene_keys)):
+        if key in child.genes and key in local_donor.genes:
+            child.genes[key] = local_donor.genes[key].clone()
+            copied.append(key)
+    copied_set = set(copied)
+    non_target_preserved = all(
+        child.genes[key].action == global_parent.genes[key].action
+        and child.genes[key].wait_n == global_parent.genes[key].wait_n
+        for key in child.genes if key not in copied_set
+    )
+    return child, {
+        "block_gene_keys": [list(key) for key in sorted(set(gene_keys))],
+        "copied_gene_keys": [list(key) for key in copied],
+        "block_gene_count": len(set(gene_keys)),
+        "copied_gene_count": len(copied),
+        "block_copy_preserved_non_target": non_target_preserved,
+    }
 
 
 def _record_view(record):
