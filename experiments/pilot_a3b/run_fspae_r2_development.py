@@ -201,6 +201,9 @@ def run_development_experiment():
             "mean_avoidable_harm": _mean(
                 [item["avoidable_harm_mean"] for item in available]
             ),
+            "mean_recovery_decisions": _mean(
+                [item["mean_recovery_decisions"] for item in available]
+            ),
             "all_seeds_hard_safety_pass": bool(available) and all(
                 item["hard_safety_gate"] == "PASS" for item in available
             ),
@@ -208,7 +211,7 @@ def run_development_experiment():
 
     return {
         "schema_version": 1,
-        "experiment": "D079_FSPAE_R2_1_FACTORIAL_DEVELOPMENT_DIAGNOSTIC",
+        "experiment": "D079_FSPAE_R2_3_CONTEXT_CONDITIONED_DEVELOPMENT_DIAGNOSTIC",
         "status": "EXECUTED_DEVELOPMENT_ONLY_DIAGNOSTIC_REUSED",
         "manifest": {
             "generator_version": manifest["generator_version"],
@@ -277,7 +280,7 @@ def write_outputs(result, output_dir):
         encoding="utf-8",
     )
     lines = [
-        "# D-079 FSPAE-R2.1 factorial development experiment",
+        "# D-079 FSPAE-R2.3 context-conditioned development experiment",
         "",
         f"- Status: **{result['status']}**",
         f"- Manifest SHA-256: {result['manifest']['manifest_sha256']}",
@@ -291,8 +294,8 @@ def write_outputs(result, output_dir):
         "",
         "## Diagnostic metrics",
         "",
-        "| Method | Macro success | R1/R2 CondRec | R3 escalation | R4 containment | Avoidable harm | Hard safety |",
-        "|---|---:|---:|---:|---:|---:|---|",
+        "| Method | Macro success | Mean decisions | R1/R2 CondRec | R3 escalation | R4 containment | Avoidable harm | Hard safety |",
+        "|---|---:|---:|---:|---:|---:|---:|---|",
     ]
     order = list(ARMS) + ["hand_fsm", "rule_based", "reflection_proxy"]
     for method in order:
@@ -300,6 +303,7 @@ def write_outputs(result, output_dir):
         if "per_seed" in summary:
             values = (
                 summary.get("mean_macro_class_success"),
+                summary.get("mean_recovery_decisions"),
                 summary.get("mean_cond_rec_r1_r2"),
                 summary.get("mean_correct_escalation_r3"),
                 summary.get("mean_damage_containment_r4"),
@@ -309,6 +313,7 @@ def write_outputs(result, output_dir):
         else:
             values = (
                 summary.get("macro_class_success"),
+                summary.get("mean_recovery_decisions"),
                 summary.get("cond_rec_r1_r2"),
                 summary.get("correct_escalation_r3"),
                 summary.get("damage_containment_r4"),

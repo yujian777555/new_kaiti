@@ -47,13 +47,16 @@ OBS_PARTIAL = "PARTIAL"
 OBS_RATE_LIMIT = "RATE_LIMIT"
 OBS_SCHEMA = "SCHEMA"
 OBS_PERMISSION = "PERMISSION"
-OBS_WAITED = "WAITED"
+OBS_WAITED = "WAITED"  # legacy context-blind observation
+OBS_WAITED_AMBIGUOUS = "WAITED_AMBIGUOUS"
+OBS_WAITED_CLEAR = "WAITED_CLEAR"
 OBS_COMPENSATED = "COMPENSATED"
 OBS_COMP_FAILED = "COMP_FAILED"
 OBS_DUPLICATE = "DUPLICATE"
 OBS_NOOP = "NOOP"
 OBS_ALL = (OBS_START, OBS_TIMEOUT, OBS_PARTIAL, OBS_RATE_LIMIT, OBS_SCHEMA,
            OBS_PERMISSION, OBS_COMMITTED, OBS_NOT_COMMITTED, OBS_WAITED,
+           OBS_WAITED_AMBIGUOUS, OBS_WAITED_CLEAR,
            OBS_COMPENSATED, OBS_COMP_FAILED, OBS_DUPLICATE, OBS_NOOP)
 
 MAX_DECISIONS = 24  # per-episode controller decision budget
@@ -198,6 +201,8 @@ def hand_fsm():
             genes.append(Gene(OBS_START, att, stack, ACT_RETRY, 2))
             genes.append(Gene(OBS_TIMEOUT, att, stack, ACT_WAIT, 4))   # wait out SLA then verify
             genes.append(Gene(OBS_WAITED, att, stack, ACT_VERIFY, 2))
+            genes.append(Gene(OBS_WAITED_AMBIGUOUS, att, stack, ACT_VERIFY, 2))
+            genes.append(Gene(OBS_WAITED_CLEAR, att, stack, ACT_RETRY, 2))
             genes.append(Gene(OBS_NOT_COMMITTED, att, stack, ACT_RETRY, 2))
             genes.append(Gene(OBS_DUPLICATE, att, stack, ACT_ESCALATE, 2))
             genes.append(Gene(OBS_PARTIAL, att, stack, ACT_COMPENSATE, 2))
@@ -239,6 +244,8 @@ _REPAIR_MAP = {
     (OBS_PERMISSION, ACT_COMPENSATE): ACT_ESCALATE,
     (OBS_PERMISSION, ACT_ROLLBACK): ACT_ESCALATE,
     (OBS_PERMISSION, ACT_REPAIR): ACT_ESCALATE,
+    (OBS_WAITED_AMBIGUOUS, ACT_RETRY): ACT_VERIFY,
+    (OBS_WAITED_AMBIGUOUS, ACT_REPAIR): ACT_VERIFY,
     (OBS_COMP_FAILED, ACT_ROLLBACK): ACT_ESCALATE,
     (OBS_SCHEMA, ACT_RETRY): ACT_REPAIR,
     (OBS_SCHEMA, ACT_WAIT): ACT_REPAIR,
@@ -409,7 +416,13 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
                 tool.wait()
             state.sla_waits += wait_n
             state.attempts += 1
-            state.last_obs = OBS_WAITED
+            # WAITED is not a sufficient state: after an ambiguous timeout the
+            # next safe action is VERIFY, whereas after a rate limit it is RETRY.
+            # Ambiguity is public controller state derived from the observed
+            # TIMEOUT, not hidden simulator state.
+            state.last_obs = (
+                OBS_WAITED_AMBIGUOUS if state.ambiguous else OBS_WAITED_CLEAR
+            )
             continue
 
         if action in (ACT_RETRY, ACT_REPAIR):

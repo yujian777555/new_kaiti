@@ -191,3 +191,8 @@ The R2.1 result exposed an action-space/repair mismatch: `repair_fsm` blocked RO
 - The fixed hand baseline has also been corrected: after compensating a partial current step, retry that step while preserving the committed prefix; on permission denial, rollback the prefix and then escalate. Check both R2 and R3/R4 integration tests and report any remaining hard-safety failures honestly.
 
 - Verify R4 semantics as well: after an uncompensatable current-step partial effect, compensate the prefix if possible, then escalate. The blocking observation must remain `COMP_FAILED` after rollback; the independent validator must require `stack=True` for this rollback.
+
+
+## Step 10 — R2.3 context-conditioned recovery state
+
+The D-079 hand controller reaches 100% on the reused diagnostic set, so success-rate improvement is saturated. R2.3 tests whether evolving a context-conditioned FSM can reduce unnecessary decisions: after WAIT, distinguish ambiguous TIMEOUT (VERIFY before retry) from clear RATE_LIMIT (RETRY). Check the new WAITED_AMBIGUOUS / WAITED_CLEAR tests, mean decision count, per-seed metrics, and safety. Treat all D-079 diagnostic results as development-only. Next, if promising, build a fresh locked challenge with variable visibility and retry-after contexts; do not access Validation/Test.

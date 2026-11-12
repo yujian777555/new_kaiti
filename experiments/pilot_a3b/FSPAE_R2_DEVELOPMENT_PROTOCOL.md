@@ -83,3 +83,8 @@ The D-079 simulator tests also pin the strong hand baseline's recovery semantics
 ## R4 committed-prefix containment correction
 
 A second simulator case distinguishes permission denial (R3) from an uncompensatable current-step partial effect (R4). When compensation of the current partial step fails, the controller must roll back any compensatable committed prefix, preserve the `COMP_FAILED` blocking observation, and then escalate. The repairer and independent validator permit `COMP_FAILED + ROLLBACK` only when `stack=True`; an empty-stack rollback is repaired/rejected. The fixed hand policy and integration tests cover this R4 path as well as R3 and R2.
+
+
+## R2.3 context-conditioned observation experiment
+
+The single public observation WAITED conflated two distinct controller states: an ambiguous timeout (where VERIFY is required before retry) and a rate-limit wait (where RETRY is the appropriate next action). The controller already tracks ambiguity from the public TIMEOUT observation, so the state abstraction now emits WAITED_AMBIGUOUS or WAITED_CLEAR. The semantic repair and independent validator forbid RETRY/REPAIR from WAITED_AMBIGUOUS; the strong hand reference uses VERIFY for ambiguous timeouts and RETRY after a rate-limit wait. This adds no hidden environment information. The R2.3 development run measures whether counterexample-guided, fault-stratified evolution can learn this distinction and reduce decision count while preserving class success and zero hard-safety violations. The D-079 diagnostic remains previously inspected and is development-only.

@@ -77,6 +77,8 @@ def _rule_error(gene: RuleGene) -> str:
 
     if e == "PERMISSION" and act in ("RETRY", "WAIT", "VERIFY", "COMPENSATE", "REPAIR"):
         return "PERMISSION cannot be fixed by " + act
+    if e == "WAITED_AMBIGUOUS" and act in ("RETRY", "REPAIR"):
+        return "ambiguous timeout must be verified before retry"
     if e == "PERMISSION" and act == "ROLLBACK" and not gene.stack:
         return "PERMISSION rollback requires a committed prefix"
     if e == "COMP_FAILED" and act == "ROLLBACK" and not gene.stack:

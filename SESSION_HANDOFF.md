@@ -188,3 +188,11 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Corrected the fixed hand baseline as a reference policy: `OBS_COMPENSATED + stack=True` now retries the compensated current step while preserving prior commits; `OBS_PERMISSION + stack=True` rolls back the prefix before escalation. Added integration tests for R2 partial-commit recovery and R3/R4 permission recovery, including independent-validator acceptance and rejection cases.
 
 - Added the analogous R4 path: after current-step partial compensation fails, roll back the compensatable prefix while preserving `COMP_FAILED`, then escalate. The independent validator accepts this only with `stack=True`; tests reject empty-stack rollback.
+
+
+## Step 10 — R2.3 context-conditioned recovery state (2026-11-12)
+
+- D-079 R2.2 established that the corrected hand FSM reaches 100% on all 144 reused diagnostic scenarios with zero avoidable harm and zero hard-safety violations. It is a saturated sanity benchmark for success, not a suitable target for success-rate gains.
+- The hand policy still made an unnecessary VERIFY after rate-limit WAIT because OBS_WAITED conflated ambiguous TIMEOUT and non-ambiguous RATE_LIMIT. The public controller state already tracks ambiguity.
+- R2.3 splits the observation into WAITED_AMBIGUOUS and WAITED_CLEAR; ambiguous waits require VERIFY, clear waits allow RETRY. The strong hand policy uses these semantics. The new test verifies D2 timeout and D4 three-fault interaction behavior, including reducing D4 to five decisions.
+- R2.3 is development-only on the reused D-079 manifest. Evaluate success, decision count, hard-safety gates, per-seed stability, and comparison to matched NSGA-III/SBCG. Do not claim held-out improvement. If the representation change is promising, generate a fresh locked challenge with variable visibility/retry contexts before one-shot validation.

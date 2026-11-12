@@ -7,6 +7,7 @@ import pytest
 from a3_bridge import (
     ACT_COMPENSATE, ACT_ESCALATE, ACT_RETRY, ACT_ROLLBACK, ACT_VERIFY,
     OBS_COMPENSATED, OBS_COMP_FAILED, OBS_PARTIAL, OBS_PERMISSION,
+    OBS_WAITED_AMBIGUOUS, OBS_WAITED_CLEAR,
     evaluate_controller, evaluator_verdict_from_scenario, hand_fsm, repair_fsm,
 )
 from d079_challenge_generator import build_challenge_manifest
@@ -327,3 +328,64 @@ def test_hand_baseline_retries_current_step_after_compensating_partial_commit():
     assert row["invariant_violation"] == 0
     assert row["duplicate"] == 0
     assert row["avoidable_harm"] == 0
+
+
+def test_waited_observation_is_split_by_public_ambiguity_context():
+    manifest = build_challenge_manifest()
+    fsm = repair_fsm(hand_fsm())
+
+    timeout_scenario = next(
+        item for item in manifest["scenarios"]
+        if item["evaluation_role"] == "diagnostic"
+        and item["difficulty_stratum"] == "D2_AMBIGUOUS_NONIDEMPOTENT_COMMIT"
+        and item["label"] == "R2"
+    )
+    timeout_verdict = evaluator_verdict_from_scenario(timeout_scenario)
+    timeout_result = evaluate_controller(
+        fsm, [timeout_scenario], {timeout_scenario["scenario_id"]: timeout_verdict}
+    )
+    timeout_row = timeout_result["rows"][0]
+    assert any(
+        obs == OBS_WAITED_AMBIGUOUS and action == ACT_VERIFY
+        for obs, _att, _stack, action in timeout_row["decision_trace"]
+    )
+    assert timeout_row["class_success"] == 1
+    assert timeout_row["sla_violation"] == 0
+    assert timeout_row["duplicate"] == 0
+
+    interaction_scenario = next(
+        item for item in manifest["scenarios"]
+        if item["evaluation_role"] == "diagnostic"
+        and item["difficulty_stratum"] == "D4_CROSS_TOOL_THREE_FAULT_INTERACTION"
+        and item["label"] == "R2"
+        and any(fault["fault"] == "rate_limit" for fault in item["faults"])
+    )
+    interaction_verdict = evaluator_verdict_from_scenario(interaction_scenario)
+    interaction_result = evaluate_controller(
+        fsm, [interaction_scenario],
+        {interaction_scenario["scenario_id"]: interaction_verdict},
+    )
+    interaction_row = interaction_result["rows"][0]
+    assert any(
+        obs == OBS_WAITED_CLEAR and action == ACT_RETRY
+        for obs, _att, _stack, action in interaction_row["decision_trace"]
+    )
+    assert not any(
+        obs == OBS_WAITED_CLEAR and action == ACT_VERIFY
+        for obs, _att, _stack, action in interaction_row["decision_trace"]
+    )
+    assert interaction_row["decision_count"] == 5
+    assert interaction_row["class_success"] == 1
+    assert interaction_row["invariant_violation"] == 0
+    assert interaction_row["sla_violation"] == 0
+    assert interaction_row["duplicate"] == 0
+
+    invalid = hand_fsm()
+    invalid.genes[(OBS_WAITED_AMBIGUOUS, 1, False)].action = ACT_RETRY
+    report = validate_genome(
+        invalid.genes_list(), invalid.default_action, invalid.default_wait
+    )
+    assert any(
+        "ambiguous timeout must be verified before retry" in item
+        for item in report.rule_violations
+    )
