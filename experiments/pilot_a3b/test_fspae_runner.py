@@ -263,17 +263,19 @@ def test_permission_prefix_rollback_and_independent_validator_are_consistent():
 
 
 def test_hand_baseline_retries_current_step_after_compensating_partial_commit():
-    manifest = build_challenge_manifest()
-    scenario = next(
-        item for item in manifest["scenarios"]
-        if item["evaluation_role"] == "diagnostic"
-        and item["difficulty_stratum"] == "D3_COMPENSATABLE_PARTIAL_COMMIT"
-        and item["label"] == "R2"
-        and any(
-            index > 0 and fault["fault"] == "partial_commit"
-            for index, fault in enumerate(item["faults"])
-        )
-    )
+    scenario = {
+        "scenario_id": "unit|train|diagnostic|prefix-partial-r2",
+        "split": "train",
+        "task": "inventory_order_payment",
+        "composition": "partial_commit_at_step_1",
+        "tools": ["inventory", "order", "payment"],
+        "faults": [
+            {"fault": "none", "delay": 0, "retry_after": 0, "compensation_available": True},
+            {"fault": "partial_commit", "delay": 0, "retry_after": 0, "compensation_available": True},
+            {"fault": "none", "delay": 0, "retry_after": 0, "compensation_available": True},
+        ],
+        "label": "R2",
+    }
     fsm = repair_fsm(hand_fsm())
     verdict = evaluator_verdict_from_scenario(scenario)
     result = evaluate_controller(
