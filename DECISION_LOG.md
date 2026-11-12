@@ -111,3 +111,16 @@
 - Current deterministic status replay is only a progress-metric sensitivity calculation on fixed Gold Action traces. It is not an optimizer treatment and does not test blame/mutation effects.
 - R1 must preserve legacy diagnostic reward for Blamer/Mutator while using outcome-aware selection reward. R2 is a composite full-pipeline treatment. Both remain hypotheses; neither is an official tau-bench correction.
 - No model/API/A800/vLLM/optimizer/training/Test policy scoring was performed.
+
+## D-012 — 2026-11-12: paper budget, split preservation, and Test isolation
+
+- Paper Appendix A.6 explicitly states `G=8`, `B=3`, Qwen3-8B, final prompt selection on `S_sel`, and evaluation on the official benchmark split.
+- Upstream release defaults are a different demo setup: `n_train=90`, `n_sel=30`, `n_test=30`, `epochs=3`, `batch_size=3`, `generations=0`, `max_steps=6`, and `log_test_eval=True`. The README describes 150-instance 90/30/30 demo artifacts.
+- On Train=500 with explicit `generations=8`, `batch_size=3`, the pinned loop shuffles Train without replacement and consumes eight mini-batches, i.e. 24 distinct Train tasks per seed. `epochs` must remain positive due the early return in `evolve()`.
+- Upstream `load_instances/split_instances` reads one combined `samples.json`, shuffles it, and slices counts; it cannot preserve the official Train 500 / Dev 20 / Test 115 boundaries. Use separate JSONL loaders.
+- Upstream `run.py` passes Test into `evolve()`; `log_test_eval=True` triggers a periodic Test probe at the global-budget boundary, before final Dev-based policy selection. Safe runner must set false, pass `test=None`, and defer Test loading until policy freeze and explicit authorization.
+- EvoTool's default `TauBenchEnv.load_db` expects local `taubench_data` files absent from the current adapter snapshot. The conformance harness patches in the pinned official tau-bench DB; a real runner must inject/lock that same loader.
+- Official tau-bench uses a user-simulator conversation and 30 Agent steps by default; released EvoTool uses a single-instruction offline rollout and six tool steps. Keep this protocol distinction explicit.
+- No inference, API, optimizer, training, or Test policy scoring was performed.
+- Next: build/test the split-preserving loader and safe runner preflight; pin the complete EvoTool source needed for it.
+

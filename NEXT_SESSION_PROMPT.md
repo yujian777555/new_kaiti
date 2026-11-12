@@ -137,3 +137,21 @@ Keep execution status separate from operation outcome. The proposed design has t
 - `EVOTOOL_FULL_OUTCOME_AWARE`: operation outcome is exposed to progress, diagnostics, Blamer, and Mutator.
 
 The committed Gold-trace replay is progress-only sensitivity analysis; it is not a full optimizer treatment. See the corrected treatment matrix in `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
+
+## Step 5 — full-source and official-split protocol audit (2026-11-12)
+
+Read `docs/12_EVOTOOL_FULL_SOURCE_AND_SPLIT_PROTOCOL_AUDIT.md`.
+
+- Paper Appendix A.6 uses Qwen3-8B, G=8, B=3. On Train=500, the pinned loop consumes 8 mini-batches × 3 = 24 distinct Train tasks per seed; this is a sample from the 500-task pool, not a full pass.
+- The released base config is a 150-instance demo setup (90/30/30, 3 epochs, generations=0, max_steps=6); it is not the paper G=8 budget.
+- Upstream `split_instances()` shuffles one combined array; it cannot preserve official Train 500 / Dev 20 / Test 115. The normalized JSONL splits must be loaded independently and mapped to EvoTool's schema.
+- Upstream `run.py` passes Test into `evolve()`; default `log_test_eval=true` adds a periodic Test probe before final Dev-based selection. The safe runner must use `test=None`, disable periodic Test, and defer Test loading until after policy freeze and separate authorization.
+- EvoTool's default DB path is absent; inject the pinned official tau-bench DB loader.
+- Full EvoTool optimizer source is not vendored. Pin it before implementing the split-aware runner.
+- Official tau-bench conversation/30-step behavior and EvoTool single-instruction/6-tool-step behavior are distinct protocol settings; choose and label the baseline adaptation.
+- Latest conformance CI `43191651704` passed on `754bdd5e554dfba4895457ae43c413f5cc1e8bef`: 95 passed / 1 skipped existing tests; 12 passed conformance tests.
+
+## Next task
+
+Pin full EvoTool source; implement/test split-preserving loader and safe runner preflight (500/20/115, 8×3 Train batches, Dev-only selection, no Test peeking, DB-loader parity). No Qwen3 inference, paid API, A800/vLLM, optimizer, training, or Test policy scoring without separate explicit approval.
+

@@ -103,3 +103,23 @@ Consequently, changing the raw status label is a full credit-assignment and muta
 - R2: `EVOTOOL_FULL_OUTCOME_AWARE`, operation outcome is also exposed to Blamer/Mutator/diagnostics.
 
 The CI sensitivity replay computes only the progress-metric difference on fixed Gold traces. It does not evaluate R1/R2 optimizer behavior or any blame/mutation effect. Full source hashes and treatment details are in `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
+
+## Step 5 — full-source and official-split protocol audit (2026-11-12)
+
+Read `docs/12_EVOTOOL_FULL_SOURCE_AND_SPLIT_PROTOCOL_AUDIT.md`.
+
+- Paper Appendix A.6: Qwen3-8B, `G=8`, `B=3`, select final policy on Dev/S_sel, evaluate official split.
+- Upstream defaults are demo config 90/30/30, 3 epochs, generations=0, max_steps=6, log_test_eval=true. This is not the paper's G=8 config.
+- On Train=500, G=8/B=3 means 8 no-replacement batches × 3 = 24 distinct Train task episodes per seed, sampled from the 500-task pool. Set `epochs=1` or another positive value because `evolve()` returns early for epochs<=0.
+- Upstream random `split_instances()` shuffles a combined array and cannot preserve official Train/Dev/Test. Use the separate normalized JSONL files and map them to EvoTool's instance schema.
+- Upstream `run.py` passes Test into `evolve()`; default `log_test_eval=true` causes an extra Test probe at the generation-budget boundary before final Dev-based policy selection. The safe runner must pass `test=None`, disable periodic Test, and defer loading Test until policy freeze and explicit approval.
+- EvoTool's local DB path is absent; current conformance CI injects the pinned official tau-bench DB. The actual runner must inject the same locked loader.
+- Full EvoTool optimizer source is not vendored. Pin it before building the runner.
+- Official tau-bench conversational loop/30-step limit and EvoTool single-instruction/6-tool-step adapter remain different protocol settings; choose and report the primary adaptation explicitly.
+
+CI: latest completed conformance run `43191651704` passed on commit `754bdd5e554dfba4895457ae43c413f5cc1e8bef`. It reports 95 passed / 1 skipped existing tests and 12 passed conformance tests, including the new fake-user and progress-sensitivity tests.
+
+## Next immediate task
+
+Pin the full upstream EvoTool source and implement the split-preserving loader plus safe runner preflight. Add deterministic tests for 500/20/115 preservation, 8×3 Train batches, Dev-only selection, no Test read during evolution, and DB-loader parity. Do not start Qwen3 inference, paid API calls, A800/vLLM, optimizer execution, training, or Test policy scoring without separate explicit authorization.
+
