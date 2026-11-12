@@ -205,3 +205,12 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Mechanism diagnosis: local-pair selection plus whole-genome crossover can overwrite behavior learned for non-target fault strata. A new FSPAE-R3-Block operator is now implemented: global-population anchor + local Pareto donor + exact target-cluster gene-block inheritance + target-cluster counterexample mutation. Non-target genes are audited for exact preservation.
 - New files/changes: FSPAE_R3_BLOCK_PROTOCOL.md, fspae_runner.py, sbcg.py, run_fspae_pilot.py, run_fspae_r2_development.py, and test_fspae_runner.py. The R3 arm is added to the D-079 development experiment. CI must verify tests and full run before interpreting results.
 - Next: inspect CI artifact for FSPAE-R3-Block, mechanism audit, per-seed results, and paired contrasts. If the block operator does not improve over matched NSGA-III, stop this FSPAE branch rather than adding more ablations. If it does, create a fresh D-080 challenge with variable visibility/retry context and lock it before one-shot diagnostic. Validation/Test remain inaccessible.
+
+
+## Step 12 — R3-Block result and D-080 pivot (2026-11-12)
+
+- Latest R3-Block CI run: simulator tests passed; the D-079 development experiment and artifact completed. The broader workflow was still in the tau-bench/EvoTool conformance audit when this handoff was updated; do not report the entire workflow as green until its final conclusion is confirmed.
+- R3-Block mechanism audit passed: 120 global anchors, 120 block copies with non-target preservation, 120 in-block mutations, 432 copied genes. No cross-target mutation was recorded.
+- R3-Block performance gate failed: macro class success 0.4167 vs matched NSGA-III 0.5810; R4 containment 0.3333 vs 1.0000; mean decisions 7.236 vs 4.37. It beat FSPAE-R2 but did not beat the strongest evolutionary baseline. Stop current D-079 FSPAE ablations; do not advance to validation.
+- D-079 is saturated by the hand controller (100% all class endpoints, zero avoidable harm/hard violations, mean 2.833 decisions at the per-stratum lower bound). Freeze it as a regression suite.
+- Added D-080 design candidate: use pinned tau-bench Retail tasks with seeded fault injection at real tool boundaries; LLM handles planning/tool selection, EC evolves a separate recovery layer. Current smoke uses deterministic stubs and is not a real LLM result. Implement a small deterministic fault-injection slice and run the hand-policy saturation gate before any evolutionary experiment. Validation/Test remain inaccessible.

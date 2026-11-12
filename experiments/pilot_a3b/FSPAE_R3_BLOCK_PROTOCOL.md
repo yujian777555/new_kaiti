@@ -38,3 +38,8 @@ Compare FSPAE-R3-Block with matched NSGA-III, SBCG-NSGA-III, FSPAE-R1, and FSPAE
 ## Interpretation limits
 
 D-079 diagnostic was already inspected in prior experiments. This is a mechanism-development experiment only; it is not held-out or confirmatory evidence. D-079 hand policy now reaches 100% class success and zero avoidable harm/hard-safety violations, so this benchmark is a safety and mechanism regression suite, not a valid basis for claiming a general algorithmic improvement. A promising R3 result must be tested on a newly generated, independently locked challenge before any Validation/Test access.
+
+
+## Advancement decision after R2.3 / R3-Block
+
+R3-Block mechanism gates passed: the development run recorded 120/120 global anchors, 120/120 block-copy operations preserving non-target genes, 120/120 in-block targeted mutations, and 432 copied genes. Performance gate failed: macro class success was 0.4167 versus matched NSGA-III 0.5810; R4 containment was 0.3333 versus 1.0000; mean decisions were 7.236 versus 4.37. It improved over FSPAE-R2 but did not beat the matched baseline. Do not advance R3-Block to fresh validation or add further D-079 ablations. Freeze D-079 as a regression suite and move to D-080 design.

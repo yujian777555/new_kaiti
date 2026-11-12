@@ -201,3 +201,8 @@ The D-079 hand controller reaches 100% on the reused diagnostic set, so success-
 ## Step 11 — FSPAE-R3-Block
 
 Inspect the latest CI run for the new fspae_r3_block arm. Confirm all simulator tests pass, then read the artifact's paired block comparisons and mechanism audit. Require global anchors, exact non-target gene preservation, in-block target mutation, zero cross-target mutation, zero hard-safety violations, and consistent per-seed improvement over matched NSGA-III and FSPAE-R2. D-079 is saturated by the hand reference (100% success, zero avoidable harm, zero hard-safety violations; mean 2.833 decisions), so treat it only as a mechanism regression set. If R3 does not beat matched NSGA-III, stop the current FSPAE approach and design a fresh D-080 challenge with variable visibility/retry contexts. Do not access Validation/Test.
+
+
+## Step 12 — D-080 real-tool recovery pivot
+
+Read experiments/pilot_a3b/D080_REAL_TOOL_RECOVERY_DESIGN.md. D-079 is frozen as a regression suite; hand FSM saturates it. R3-Block passed mechanism audit but failed performance advancement versus matched NSGA-III, so do not add more D-079 ablations or advance to validation. Build a small deterministic fault-injection wrapper around pinned tau-bench Retail tool calls. The LLM must handle planning/tool selection; EC evolves a separate recovery controller. The current real-tool smoke uses stubs, not a real LLM. First validate tool side-effect semantics, then run the hand-policy saturation check; only then run an evolutionary pilot. Keep Validation/Test inaccessible and do not draft the paper yet.
