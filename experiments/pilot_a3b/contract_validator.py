@@ -79,6 +79,8 @@ def _rule_error(gene: RuleGene) -> str:
         return "PERMISSION cannot be fixed by " + act
     if e == "PERMISSION" and act == "ROLLBACK" and not gene.stack:
         return "PERMISSION rollback requires a committed prefix"
+    if e == "COMP_FAILED" and act == "ROLLBACK" and not gene.stack:
+        return "COMP_FAILED rollback requires a committed prefix"
 
     if e == "SCHEMA" and act in ("RETRY", "WAIT", "VERIFY", "COMPENSATE", "ROLLBACK"):
         return "SCHEMA drift cannot be fixed by " + act
