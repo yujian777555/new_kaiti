@@ -245,7 +245,16 @@ _REPAIR_MAP = {
 def repair_fsm(fsm: StatefulFSM) -> StatefulFSM:
     g2 = fsm.clone()
     for gene in g2.genes_list():
-        fix = _REPAIR_MAP.get((gene.error, gene.action))
+        # A permission denial blocks the current step, but a committed prefix
+        # may still be safely compensated. Preserve ROLLBACK only when the
+        # public compensation stack is non-empty; all other permission-state
+        # actions remain fail-closed and become explicit escalation.
+        prefix_rollback = (
+            gene.error == OBS_PERMISSION
+            and gene.stack
+            and gene.action == ACT_ROLLBACK
+        )
+        fix = None if prefix_rollback else _REPAIR_MAP.get((gene.error, gene.action))
         if fix is not None:
             gene.action = fix
         if gene.action == ACT_REPAIR and gene.error != OBS_SCHEMA:
@@ -433,7 +442,12 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
             continue
 
         if action == ACT_ROLLBACK:
-            # explicit reverse-order compensation of confirmed prior steps
+            # Explicit reverse-order compensation of confirmed prior steps.
+            # When rollback follows PERMISSION, the denial remains the current
+            # blocking observation: after clearing the prefix the controller
+            # must escalate, not retry the denied operation. For other rollback
+            # contexts retain the COMPENSATED observation used by R2 recovery.
+            rollback_after_permission = state.last_obs == OBS_PERMISSION
             order = 0
             for j in reversed(list(state.comp_stack)):
                 order += 1
@@ -443,7 +457,7 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
                     state.confirmed[j] = False
             state.comp_stack = []
             state.attempts += 1
-            state.last_obs = OBS_COMPENSATED
+            state.last_obs = OBS_PERMISSION if rollback_after_permission else OBS_COMPENSATED
             continue
 
         # unknown action: treat as no-op observation

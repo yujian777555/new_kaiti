@@ -180,3 +180,8 @@ This reuses the already inspected D-079 diagnostic role and is development evide
 ## Step 8 — FSPAE-R2.1 factorial completion
 
 Inspect the latest CI artifact `d079-fspae-r2-development`. The new arm `fspae_r2_uniform_global_mut` completes the 2×2 target scheduler × mutation-source design. Compare per-seed and paired cluster results against the other three local-parent factorial cells; inspect hard-safety gates and mechanism audit. This reuses the already inspected D-079 diagnostic and is development evidence only. After selecting a candidate configuration, generate a fresh independent Train-only challenge with a new seed base, commit its manifest/lock and run one diagnostic. Keep Validation/Test inaccessible.
+
+
+## Step 9 — R3 reachability correction
+
+The R2.1 result exposed an action-space/repair mismatch: `repair_fsm` blocked ROLLBACK on PERMISSION even when a committed prefix existed, while R3 scoring requires clearing that prefix before escalation. The correction preserves ROLLBACK only when `OBS_PERMISSION` and `stack=True`, then keeps PERMISSION as the observation after rollback so the empty-stack state escalates. First verify the new simulator integration test and full CI. Then inspect the development-only R2.2 artifact for R3 success, zero residual, and safety. Do not use the old diagnostic as held-out evidence; generate and lock a fresh Train-only challenge before any one-shot independent diagnostic. Do not access Validation/Test.

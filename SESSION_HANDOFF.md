@@ -173,3 +173,12 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - R2 development results showed uniform-target (macro 0.1667) and global-mutation (macro 0.1389) each exceeded the combined performance-deficit + exact-target arm (0.0556) on the reused development diagnostic.
 - The 2×2 scheduler × mutation experiment lacked the uniform-target + global-mutation cell. Added `fspae_r2_uniform_global_mut` to complete the factorial without changing local parent selection, NSGA-III survival, hard constraints, budget, seeds, or scenario manifest.
 - This is still development-only on the already inspected D-079 diagnostic. If a combination is selected, generate a new independent Train-only challenge manifest, validate and lock it, and evaluate its diagnostic once. Do not access Validation/Test.
+
+
+## Step 9 — R3 reachability blocker found and corrected (2026-11-12)
+
+- R2.1 raw diagnostic rows showed all 9 evolutionary arms had R3 success 0/72 and explicitly escalated immediately, leaving one active committed-prefix effect.
+- Root cause: `repair_fsm()` rewrote every `OBS_PERMISSION` `ROLLBACK` action to `ESCALATE`, despite the R3 label proof requiring compensation of a fully compensatable committed prefix before escalation. This made the R3 zero-residual path unreachable to offspring.
+- Corrective change: preserve `ROLLBACK` only for `OBS_PERMISSION` with `stack=True`; after rollback keep `OBS_PERMISSION` as the current blocking observation, so `stack=False` forces explicit escalation. Non-rollback permission actions remain fail-closed.
+- Added simulator integration test using a locked D-079 diagnostic R3 scenario. Required trace: permission/stack true → rollback → permission/stack false → escalate; expected R3 success=1, active effects=0, avoidable harm=0.
+- Re-run only development diagnostics first. The old D-079 diagnostic remains previously inspected and is not held-out/confirmatory. If R3 becomes learnable and candidate results improve, create a new independent Train-only challenge manifest and lock before a one-shot diagnostic. Keep Validation/Test inaccessible.

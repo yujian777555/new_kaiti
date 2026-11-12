@@ -68,3 +68,8 @@ Only if the mechanism gates pass and the class-conditional development metrics s
 ## R2.1 factorial completion
 
 The initial R2 experiment tested three of four combinations of target scheduler (performance deficit / uniform) and counterexample mutation source (exact target cluster / global stratified). R2.1 adds the missing uniform-target + global-stratified-mutation cell. Local parent-pair selection, archive capacity, population, generations, search budget, initial pools, and global survivor selection remain unchanged. This is a development-only completion on the previously inspected diagnostic role; it cannot support confirmatory claims. The next fresh challenge must be generated and locked before a one-shot independent diagnostic.
+
+
+## R3 permission-prefix rollback reachability correction
+
+The R2.1 diagnostic exposed a mismatch between the robust R3 label and semantic repair: permission-state ROLLBACK was being rewritten to ESCALATE even when the public compensation stack contained a committed prefix. This made the required zero-residual path unreachable to evolution. The repair rule is now conditional: preserve ROLLBACK only for `OBS_PERMISSION` with `stack=True`; after rollback, retain PERMISSION as the current blocking observation, so the empty-stack permission rule forces explicit escalation. Other permission-state actions remain fail-closed. A simulator integration test must prove the trace `PERMISSION(stack=True) → ROLLBACK → PERMISSION(stack=False) → ESCALATE` yields R3 success, zero active effects, and zero avoidable harm before any new development run is interpreted.

@@ -4,7 +4,11 @@ from unittest.mock import patch
 
 import pytest
 
-from a3_bridge import ACT_ESCALATE, ACT_RETRY, ACT_VERIFY
+from a3_bridge import (
+    ACT_ESCALATE, ACT_RETRY, ACT_ROLLBACK, ACT_VERIFY, OBS_PERMISSION,
+    evaluate_controller, evaluator_verdict_from_scenario, hand_fsm, repair_fsm,
+)
+from d079_challenge_generator import build_challenge_manifest
 from sbcg import CandidateRecord, fsm_fingerprint, make_shared_initial_pool
 from fspae_runner import StratumParetoArchive, _target_cluster, run_fspae_evolution
 
@@ -208,3 +212,41 @@ def test_fspae_refuses_diagnostic_or_test_rows_before_fitness():
                 pool, [{**SCENARIOS[0], "split": "test"}],
                 VERDICTS, pop_size=4, generations=1, eval_budget=8, seed=1,
             )
+
+
+def test_r3_permission_prefix_rollback_is_preserved_and_reaches_zero_residual():
+    manifest = build_challenge_manifest()
+    scenario = next(
+        item for item in manifest["scenarios"]
+        if item["evaluation_role"] == "diagnostic"
+        and item["difficulty_stratum"] == "D5_PERMISSION_AFTER_COMMITTED_PREFIX"
+        and item["label"] == "R3"
+    )
+    fsm = hand_fsm()
+    for gene in fsm.genes_list():
+        if gene.error == OBS_PERMISSION:
+            gene.action = ACT_RETRY
+    # The first permission decision has a committed prefix and must roll it back.
+    fsm.genes[(OBS_PERMISSION, 1, True)].action = ACT_ROLLBACK
+    # Once the prefix is cleared, the still-active permission denial must escalate.
+    # A ROLLBACK with an empty stack is not a valid recovery action and is repaired.
+    fsm.genes[(OBS_PERMISSION, 2, False)].action = ACT_ROLLBACK
+
+    repaired = repair_fsm(fsm)
+    assert repaired.genes[(OBS_PERMISSION, 1, True)].action == ACT_ROLLBACK
+    assert repaired.genes[(OBS_PERMISSION, 2, False)].action == ACT_ESCALATE
+
+    verdict = evaluator_verdict_from_scenario(scenario)
+    result = evaluate_controller(
+        repaired, [scenario], {scenario["scenario_id"]: verdict}
+    )
+    row = result["rows"][0]
+    assert row["decision_trace"] == [
+        (OBS_PERMISSION, 1, True, ACT_ROLLBACK),
+        (OBS_PERMISSION, 2, False, ACT_ESCALATE),
+    ]
+    assert row["policy_selected_escalation"] == 1
+    assert row["class_success"] == 1
+    assert row["avoidable_harm"] == 0
+    assert row["active_effects"] == 0
+    assert row["compensation_failures"] == 0
