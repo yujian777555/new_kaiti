@@ -11,10 +11,11 @@ Contract semantics (from 47_PILOT_A3_PROTOCOL / pilot_a3 TOOLS):
 - PARTIAL commit on a non-compensatable tool cannot be cleared by COMPENSATE;
   COMPENSATE on such a tool is contract-blocked and must not be relied on;
 - PERMISSION denial is never fixed by retry/wait/verify/compensate/repair;
+  ROLLBACK is allowed only when the public stack confirms a committed prefix,
+  because it compensates prior effects before the policy escalates the denial;
 - SCHEMA drift is only fixable by REPAIR (schema repair), not by retry loops;
-- ROLLBACK presupposes at least one confirmed prior effect; as a static rule
-  it is legal everywhere (runtime records emptiness), but default actions
-  must be total (cover every guard).
+- ROLLBACK presupposes at least one confirmed prior effect; the stack guard
+  must be true, and default actions must be total (cover every guard).
 """
 from __future__ import annotations
 
@@ -73,8 +74,10 @@ def _rule_error(gene: RuleGene) -> str:
     if act == "REPAIR" and e != "SCHEMA" and e != "START":
         return "REPAIR only meaningful for SCHEMA drift"
 
-    if e == "PERMISSION" and act in ("RETRY", "WAIT", "VERIFY", "COMPENSATE", "ROLLBACK", "REPAIR"):
+    if e == "PERMISSION" and act in ("RETRY", "WAIT", "VERIFY", "COMPENSATE", "REPAIR"):
         return "PERMISSION cannot be fixed by " + act
+    if e == "PERMISSION" and act == "ROLLBACK" and not gene.stack:
+        return "PERMISSION rollback requires a committed prefix"
 
     if e == "SCHEMA" and act in ("RETRY", "WAIT", "VERIFY", "COMPENSATE", "ROLLBACK"):
         return "SCHEMA drift cannot be fixed by " + act

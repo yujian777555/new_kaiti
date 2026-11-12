@@ -9,6 +9,7 @@ from a3_bridge import (
     evaluate_controller, evaluator_verdict_from_scenario, hand_fsm, repair_fsm,
 )
 from d079_challenge_generator import build_challenge_manifest
+from contract_validator import validate_genome
 from sbcg import CandidateRecord, fsm_fingerprint, make_shared_initial_pool
 from fspae_runner import StratumParetoArchive, _target_cluster, run_fspae_evolution
 
@@ -235,6 +236,11 @@ def test_r3_permission_prefix_rollback_is_preserved_and_reaches_zero_residual():
     repaired = repair_fsm(fsm)
     assert repaired.genes[(OBS_PERMISSION, 1, True)].action == ACT_ROLLBACK
     assert repaired.genes[(OBS_PERMISSION, 2, False)].action == ACT_ESCALATE
+    validity = validate_genome(
+        repaired.genes_list(), repaired.default_action, repaired.default_wait
+    )
+    assert validity.rule_invalid == 0, validity.rule_violations
+    assert not validity.genome_invalid, validity.genome_violations
 
     verdict = evaluator_verdict_from_scenario(scenario)
     result = evaluate_controller(

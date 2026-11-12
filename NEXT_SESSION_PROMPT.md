@@ -185,3 +185,5 @@ Inspect the latest CI artifact `d079-fspae-r2-development`. The new arm `fspae_r
 ## Step 9 — R3 reachability correction
 
 The R2.1 result exposed an action-space/repair mismatch: `repair_fsm` blocked ROLLBACK on PERMISSION even when a committed prefix existed, while R3 scoring requires clearing that prefix before escalation. The correction preserves ROLLBACK only when `OBS_PERMISSION` and `stack=True`, then keeps PERMISSION as the observation after rollback so the empty-stack state escalates. First verify the new simulator integration test and full CI. Then inspect the development-only R2.2 artifact for R3 success, zero residual, and safety. Do not use the old diagnostic as held-out evidence; generate and lock a fresh Train-only challenge before any one-shot independent diagnostic. Do not access Validation/Test.
+
+- Also verify the independent contract validator: it must accept `OBS_PERMISSION + ROLLBACK + stack=True` and reject the same action when `stack=False`. The simulator test now checks this before evaluating R3.
