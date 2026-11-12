@@ -214,3 +214,12 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - R3-Block performance gate failed: macro class success 0.4167 vs matched NSGA-III 0.5810; R4 containment 0.3333 vs 1.0000; mean decisions 7.236 vs 4.37. It beat FSPAE-R2 but did not beat the strongest evolutionary baseline. Stop current D-079 FSPAE ablations; do not advance to validation.
 - D-079 is saturated by the hand controller (100% all class endpoints, zero avoidable harm/hard violations, mean 2.833 decisions at the per-stratum lower bound). Freeze it as a regression suite.
 - Added D-080 design candidate: use pinned tau-bench Retail tasks with seeded fault injection at real tool boundaries; LLM handles planning/tool selection, EC evolves a separate recovery layer. Current smoke uses deterministic stubs and is not a real LLM result. Implement a small deterministic fault-injection slice and run the hand-policy saturation gate before any evolutionary experiment. Validation/Test remain inaccessible.
+
+
+## Step 13 — D-080 Stage A deterministic tool-boundary fault injection (2026-11-12)
+
+- Added `treatments/fault_injection.py`: deterministic, task/tool/call/seed-bound fault events; no sleeps, network, model calls, optimizer, or vendor-source changes.
+- Supported initial modes: timeout before execution, rate limit before execution, schema rejection before execution, and timeout after a real state-changing tool call.
+- Added tests against the pinned official Retail `cancel_pending_order` tool: pre-execution timeout leaves state unchanged; post-commit timeout preserves the committed cancellation/refund; a blind retry is rejected and does not append another refund; rate-limit/schema rejection do not invoke the tool.
+- Added protocol `experiments/pilot_a3b/D080_FAULT_INJECTION_PROTOCOL.md`. CI must pass before accepting Stage A.
+- Scope is one real tool's semantics only. It does not establish generic idempotency, compensation behavior, or algorithmic improvement. Next add a second semantically distinct write tool and task-linked Train-only fault manifest, then run the hand-policy saturation gate. No LLM/A800/API/optimizer/Dev/Test.

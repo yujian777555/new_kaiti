@@ -206,3 +206,8 @@ Inspect the latest CI run for the new fspae_r3_block arm. Confirm all simulator 
 ## Step 12 — D-080 real-tool recovery pivot
 
 Read experiments/pilot_a3b/D080_REAL_TOOL_RECOVERY_DESIGN.md. D-079 is frozen as a regression suite; hand FSM saturates it. R3-Block passed mechanism audit but failed performance advancement versus matched NSGA-III, so do not add more D-079 ablations or advance to validation. Build a small deterministic fault-injection wrapper around pinned tau-bench Retail tool calls. The LLM must handle planning/tool selection; EC evolves a separate recovery controller. The current real-tool smoke uses stubs, not a real LLM. First validate tool side-effect semantics, then run the hand-policy saturation check; only then run an evolutionary pilot. Keep Validation/Test inaccessible and do not draft the paper yet.
+
+
+## Step 13 — D-080 Stage A
+
+Inspect `experiments/pilot_a3b/D080_FAULT_INJECTION_PROTOCOL.md`, `treatments/fault_injection.py`, and `tests/test_d080_fault_injection.py`. Confirm CI validates all four event modes and real pinned `cancel_pending_order` semantics. Do not yet run LLM inference or evolutionary search. Next add a second semantically distinct write-tool probe (idempotent address modification), create a seeded Train-only task/fault manifest with explicit before/after-commit labels, and run the fixed hand recovery controller saturation gate. Keep Dev/Test inaccessible.

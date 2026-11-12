@@ -170,3 +170,11 @@ T1 state-effect measurement now hashes JSON DB state directly instead of deep-co
 - Added ablations for global mutation, uniform target selection and the legacy scheduler; matched NSGA-III, SBCG-NSGA-III and R1 FSPAE remain in the same-seed, same-budget comparison.
 - New development runner uses 8 arms × 3 seeds, 6,912 search episodes per arm/seed.
 - D-079 diagnostic was previously inspected; this experiment is development-only. No Validation/Test or LLM/API/GPU/A800/model-training access.
+
+
+## D-017 — 2026-11-12: pivot from saturated D-079 to D-080 real-tool semantics
+
+- D-079 is frozen as a regression suite: corrected hand FSM saturates all class-success endpoints and reaches the natural decision lower bound. FSPAE-R3-Block passed its mechanism audit but failed against matched NSGA-III (macro 0.4167 vs 0.5810; R4 containment 0.3333 vs 1.0; mean decisions 7.236 vs 4.37).
+- Stop adding D-079 ablations. D-080 separates the LLM's planning/ordinary tool choice from an EC-optimized recovery layer.
+- Stage A adds deterministic tool-boundary fault injection around unchanged pinned Retail callables. Initial real-tool probe uses `cancel_pending_order` to distinguish pre-execution timeout from post-commit timeout and verify that blind retry cannot duplicate refund history.
+- CI validation pending. This is simulator semantics evidence only; no LLM/API/A800/optimizer/Dev/Test run.
