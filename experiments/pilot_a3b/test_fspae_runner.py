@@ -338,7 +338,6 @@ def test_waited_observation_is_split_by_public_ambiguity_context():
         item for item in manifest["scenarios"]
         if item["evaluation_role"] == "diagnostic"
         and item["difficulty_stratum"] == "D2_AMBIGUOUS_NONIDEMPOTENT_COMMIT"
-        and item["label"] == "R2"
     )
     timeout_verdict = evaluator_verdict_from_scenario(timeout_scenario)
     timeout_result = evaluate_controller(
@@ -357,7 +356,6 @@ def test_waited_observation_is_split_by_public_ambiguity_context():
         item for item in manifest["scenarios"]
         if item["evaluation_role"] == "diagnostic"
         and item["difficulty_stratum"] == "D4_CROSS_TOOL_THREE_FAULT_INTERACTION"
-        and item["label"] == "R2"
         and any(fault["fault"] == "rate_limit" for fault in item["faults"])
     )
     interaction_verdict = evaluator_verdict_from_scenario(interaction_scenario)
