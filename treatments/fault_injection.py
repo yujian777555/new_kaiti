@@ -117,3 +117,56 @@ class FaultInjectionBoundary:
             "state_after_sha256": after, "tool_invoked": True,
         })
         return output
+
+
+class FaultInjectedExecutor:
+    """TauBenchEnv-compatible executor using per-tool call ordinals.
+
+    A verification read does not shift the scheduled ordinal of a write tool.
+    """
+
+    def __init__(self, delegate, task_id, tool_map, events=()):
+        from collections import defaultdict
+        self._delegate = delegate
+        self._task_id = task_id
+        self._boundary = FaultInjectionBoundary(tool_map, events)
+        self._call_counts = defaultdict(int)
+
+    @property
+    def db(self):
+        return self._delegate.db
+
+    @property
+    def fault_audit(self):
+        return self._boundary.audit
+
+    @property
+    def call_counts(self):
+        return dict(self._call_counts)
+
+    def __getattr__(self, name):
+        return getattr(self._delegate, name)
+
+    def execute(self, tool, args=None):
+        args = dict(args or {})
+        call_index = self._call_counts[tool]
+        self._call_counts[tool] += 1
+        if tool not in self._boundary.tool_map:
+            return self._delegate.execute(tool, args)
+        try:
+            output = self._boundary.invoke(self._task_id, call_index, self.db, tool, args)
+            return {"tool": tool, "args": args, "output": output, "status": "success"}
+        except InjectedToolFailure as exc:
+            return {
+                "tool": tool, "args": args,
+                "output": f"Error: injected {exc.mode} at {exc.phase}",
+                "status": "error", "fault_injected": True,
+                "fault_mode": exc.mode, "fault_phase": exc.phase,
+                "fault_event_id": exc.event_id,
+            }
+        except Exception as exc:
+            return {
+                "tool": tool, "args": args,
+                "output": f"Error: {type(exc).__name__}: {exc}",
+                "status": "error",
+            }

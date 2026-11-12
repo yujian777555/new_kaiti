@@ -184,3 +184,11 @@ T1 state-effect measurement now hashes JSON DB state directly instead of deep-co
 
 - D-080 Stage A now contrasts two actual pinned write tools: non-repeatable cancellation/refund and idempotent address assignment. The same post-commit timeout cannot safely imply the same retry action for both.
 - Removed automatic D-079 exploratory optimizer executions from PR CI after D-079 was frozen as a regression suite. Existing D-079 tests remain mandatory; historical artifacts preserve the exploratory results.
+
+
+### D-017 Stage A acceptance and Stage B implementation — 2026-11-12
+
+- Stage A CI run 43151788172 passed, including two real pinned Retail write-tool semantics: non-repeatable cancellation/refund and idempotent address assignment.
+- Stage B implements a 48-task disjoint Train-only fault manifest across six state-changing tools, with balanced fault modes and no Gold arguments in event payloads.
+- The fault-aware executor uses per-tool call ordinals; live-state scoring is separate from EvoTool's replay-based score.
+- Stage B remains pending CI. No LLM/API/A800/optimizer/Dev/Test performance run.

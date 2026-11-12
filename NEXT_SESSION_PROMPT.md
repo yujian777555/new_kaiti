@@ -211,3 +211,8 @@ Read experiments/pilot_a3b/D080_REAL_TOOL_RECOVERY_DESIGN.md. D-079 is frozen as
 ## Step 13 — D-080 Stage A
 
 Inspect `experiments/pilot_a3b/D080_FAULT_INJECTION_PROTOCOL.md`, `treatments/fault_injection.py`, and `tests/test_d080_fault_injection.py`. Confirm CI validates all four event modes and real pinned `cancel_pending_order` semantics. Do not yet run LLM inference or evolutionary search. Next add a second semantically distinct write-tool probe (idempotent address modification), create a seeded Train-only task/fault manifest with explicit before/after-commit labels, and run the fixed hand recovery controller saturation gate. Keep Dev/Test inaccessible.
+
+
+## Step 14 — D-080 Stage B
+
+Inspect scripts/build_d080_fault_manifest.py, treatments/fault_injection.py, treatments/fault_episode_integration.py, and experiments/pilot_a3b/D080_FAULT_INJECTION_PROTOCOL.md. Confirm the 48-event manifest is disjoint, 8 tasks per tool, 2 per fault mode, Train-only, source-hash bound, and contains no Gold kwargs. Verify live-state scoring distinguishes pre-execution and post-commit timeouts. Do not start EC optimization until the fixed recovery-controller saturation gate is specified and run. Keep Dev/Validation/Test inaccessible.

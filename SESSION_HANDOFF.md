@@ -230,3 +230,12 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Added a second pinned write-tool probe: `modify_pending_order_address`. A post-commit timeout followed by the same assignment must converge to the identical full DB hash.
 - This contrasts with `cancel_pending_order`, whose second call is rejected after the first commit and must not append a second refund.
 - CI workflow no longer reruns the saturated D-079 exploratory optimizer on every PR; D-079 simulator/controller tests remain in the regression suite. This reduces irrelevant compute while preserving regression coverage.
+
+
+## Step 14 — D-080 Stage A acceptance and Stage B build (2026-11-12)
+
+- CI run 43151788172 passed on commit a0cd42a: existing simulator regression, pinned Retail dataset build, EvoTool/Tau-bench conformance, T1/T3 audit, deterministic real-tool smoke, and Stage A fault tests.
+- Stage A establishes two distinct post-commit semantics: cancel_pending_order is a non-repeatable cancellation/refund transition; modify_pending_order_address is an idempotent assignment.
+- Stage B adds a 48-task disjoint Train-only manifest across six state-changing Retail tools, balanced at 2 examples per fault mode per tool. Manifest events contain no Gold arguments and are bound to the Train JSONL source hash.
+- Added per-tool call ordinals and a fault-aware executor. Added an episode runner that scores actual live DB state rather than confusing it with EvoTool's replay-based reward.
+- CI validation pending for Stage B. No LLM/API/A800/optimizer/Dev/Test.

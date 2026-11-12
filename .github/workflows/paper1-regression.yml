@@ -61,6 +61,11 @@ jobs:
               "failures": report["failures"],
           }, ensure_ascii=False, indent=2))
           PY
+      - name: Build D-080 Train-only real-tool fault manifest
+        run: |
+          python scripts/build_d080_fault_manifest.py \
+            --dataset-dir "$RUNNER_TEMP/tau-bench-retail" \
+            --output-dir "$RUNNER_TEMP/d080-fault-manifest"
       - name: Audit official tau-bench and EvoTool adapter conformance
         run: |
           python scripts/audit_evotool_tau_bench_conformance.py --dataset-dir "$RUNNER_TEMP/tau-bench-retail"
@@ -74,17 +79,28 @@ jobs:
           python scripts/run_evotool_real_tool_episode_smoke.py \
             --dataset-dir "$RUNNER_TEMP/tau-bench-retail" \
             --output "$RUNNER_TEMP/tau-bench-retail/evotool_real_episode_smoke.json"
-      - name: Run pinned dataset, conformance, and treatment tests
+      - name: Run pinned dataset, conformance, and D-080 tests
         env:
           TAU_BENCH_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
           EVOTOOL_TREATMENT_AUDIT_OUTPUT: ${{ runner.temp }}/tau-bench-retail
+          D080_DATASET_DIR: ${{ runner.temp }}/tau-bench-retail
         run: |
           python -m pytest -q \
             tests/test_tau_bench_retail_dataset.py \
             tests/test_evotool_tau_bench_conformance.py \
             tests/test_evotool_treatments.py \
             tests/test_evotool_episode_integration.py \
-            tests/test_d080_fault_injection.py
+            tests/test_d080_fault_injection.py \
+            tests/test_d080_fault_episode_integration.py \
+            tests/test_d080_fault_manifest.py
+      - name: Upload D-080 Train-only fault manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d080-fault-manifest-train-only-${{ github.sha }}
+          path: ${{ runner.temp }}/d080-fault-manifest/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Upload normalized dataset and integrity report
         if: always()
         uses: actions/upload-artifact@v4

@@ -43,6 +43,8 @@ def _state_sha256(state: Any) -> str | None:
 def _execution_status(tool: str, legacy_result: Mapping[str, Any], known_tools: Collection[str]) -> str:
     if tool not in known_tools:
         return "unknown_tool"
+    if legacy_result.get("fault_injected") is True:
+        return "injected_failure"
     if legacy_result.get("status") == "success":
         return "returned"
     if legacy_result.get("status") == "error":

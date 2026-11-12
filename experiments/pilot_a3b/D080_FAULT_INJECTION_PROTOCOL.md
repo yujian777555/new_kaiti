@@ -1,6 +1,6 @@
 # D-080 Stage A — deterministic Retail tool-boundary fault injection
 
-Status: IMPLEMENTED CANDIDATE; CI validation pending. No LLM, optimizer, paid API, A800, Dev, or Test execution.
+Status: Stage A PASSED in CI run 43151788172. Stage B manifest generator and live-state integration are under CI validation. No LLM, optimizer, paid API, A800, Dev, or Test execution.
 
 ## Scope
 
@@ -33,7 +33,7 @@ The wrapper does not simulate partial commits inside a tool, fabricate compensat
 
 ## Limitations / next step
 
-Passing these tests validates only this tool's observed commit/retry semantics. It does not establish that all Retail tools are idempotent or that a generic recovery controller is safe. Next, add one more semantically distinct write-tool case (e.g. address modification) and a task-linked Train-only deterministic fault manifest. Then run the fixed recovery policy saturation gate before any evolutionary search. No Validation/Test access.
+Passing these tests validates only this tool's observed commit/retry semantics. It does not establish that all Retail tools are idempotent or that a generic recovery controller is safe. Next, validate the six-tool Train-only fault manifest and live-state episode integration. Then run the fixed recovery-policy saturation gate before any evolutionary search. No Validation/Test access.
 
 
 ## Semantic distinction established by the slice
@@ -42,3 +42,16 @@ Passing these tests validates only this tool's observed commit/retry semantics. 
 - `modify_pending_order_address`: idempotent assignment; after-commit retry converges to the same DB state.
 
 This distinction prevents treating all post-commit timeouts with one retry rule. The controller must condition recovery on tool contract and whether the effect may already have committed.
+
+
+## Stage B: task-linked Train-only manifest and live-state execution
+
+The manifest generator selects 48 disjoint Train tasks: 8 each for cancel, order-address modification, item modification, payment modification, return, and exchange. Each tool receives exactly two examples of each fault mode. Every selected event is checked against a successful state-changing Gold action in the pinned Train trajectory.
+
+The event payload contains task/tool identity, per-tool call ordinal, mode, seed, semantic class, event ID, and a one-way source-row hash. It contains no Gold kwargs or action payload. The manifest and lock bind to the exact Train JSONL SHA-256. Dev/Validation/Test are excluded.
+
+Fault call ordinals are per tool, not global episode call count. A read-back call to get_order_details therefore does not shift the scheduled ordinal for cancel_pending_order.
+
+A fault-aware EvoTool executor returns injected failures as structured tool observations. A new episode runner grades the actual post-fault database state using the pinned official state-equality and required-output rule. It reports the original EvoTool replay-based reward separately; the two are not conflated.
+
+Stage B gates: 48 unique Train tasks; 8 tasks per tool; exactly 2 examples per tool/mode; every scheduled call is a successful state-changing Gold action; no Gold arguments in event payload; live-state scorer distinguishes pre-execution from post-commit timeout. No policy-performance experiment or LLM inference is included.
