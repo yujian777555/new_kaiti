@@ -5,7 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from a3_bridge import (
-    ACT_ESCALATE, ACT_RETRY, ACT_ROLLBACK, ACT_VERIFY, OBS_PERMISSION,
+    ACT_COMPENSATE, ACT_ESCALATE, ACT_RETRY, ACT_ROLLBACK, ACT_VERIFY,
+    OBS_COMPENSATED, OBS_PARTIAL, OBS_PERMISSION,
     evaluate_controller, evaluator_verdict_from_scenario, hand_fsm, repair_fsm,
 )
 from d079_challenge_generator import build_challenge_manifest
@@ -215,44 +216,76 @@ def test_fspae_refuses_diagnostic_or_test_rows_before_fitness():
             )
 
 
-def test_r3_permission_prefix_rollback_is_preserved_and_reaches_zero_residual():
+def test_permission_prefix_rollback_and_independent_validator_are_consistent():
+    manifest = build_challenge_manifest()
+    fsm = repair_fsm(hand_fsm())
+    validity = validate_genome(
+        fsm.genes_list(), fsm.default_action, fsm.default_wait
+    )
+    assert validity.rule_invalid == 0, validity.rule_violations
+    assert not validity.genome_invalid, validity.genome_violations
+    assert fsm.genes[(OBS_PERMISSION, 1, True)].action == ACT_ROLLBACK
+    assert fsm.genes[(OBS_PERMISSION, 2, False)].action == ACT_ESCALATE
+
+    for label in ("R3", "R4"):
+        scenario = next(
+            item for item in manifest["scenarios"]
+            if item["evaluation_role"] == "diagnostic"
+            and item["difficulty_stratum"] == "D5_PERMISSION_AFTER_COMMITTED_PREFIX"
+            and item["label"] == label
+        )
+        verdict = evaluator_verdict_from_scenario(scenario)
+        result = evaluate_controller(
+            fsm, [scenario], {scenario["scenario_id"]: verdict}
+        )
+        row = result["rows"][0]
+        assert row["decision_trace"] == [
+            (OBS_PERMISSION, 1, True, ACT_ROLLBACK),
+            (OBS_PERMISSION, 2, False, ACT_ESCALATE),
+        ]
+        assert row["policy_selected_escalation"] == 1
+        assert row["class_success"] == 1
+        assert row["avoidable_harm"] == 0
+        assert row["active_effects"] == verdict["min_reachable_harm"]
+        assert row["invariant_violation"] == 0
+        assert row["duplicate"] == 0
+
+    # The independent validator must reject a prefix rollback with no prefix.
+    invalid = hand_fsm()
+    invalid.genes[(OBS_PERMISSION, 2, False)].action = ACT_ROLLBACK
+    invalid_report = validate_genome(
+        invalid.genes_list(), invalid.default_action, invalid.default_wait
+    )
+    assert any(
+        "PERMISSION rollback requires a committed prefix" in item
+        for item in invalid_report.rule_violations
+    )
+
+
+def test_hand_baseline_retries_current_step_after_compensating_partial_commit():
     manifest = build_challenge_manifest()
     scenario = next(
         item for item in manifest["scenarios"]
         if item["evaluation_role"] == "diagnostic"
-        and item["difficulty_stratum"] == "D5_PERMISSION_AFTER_COMMITTED_PREFIX"
-        and item["label"] == "R3"
+        and item["difficulty_stratum"] == "D3_COMPENSATABLE_PARTIAL_COMMIT"
+        and item["label"] == "R2"
+        and any(
+            index > 0 and fault["fault"] == "partial_commit"
+            for index, fault in enumerate(item["faults"])
+        )
     )
-    fsm = hand_fsm()
-    for gene in fsm.genes_list():
-        if gene.error == OBS_PERMISSION:
-            gene.action = ACT_RETRY
-    # The first permission decision has a committed prefix and must roll it back.
-    fsm.genes[(OBS_PERMISSION, 1, True)].action = ACT_ROLLBACK
-    # Once the prefix is cleared, the still-active permission denial must escalate.
-    # A ROLLBACK with an empty stack is not a valid recovery action and is repaired.
-    fsm.genes[(OBS_PERMISSION, 2, False)].action = ACT_ROLLBACK
-
-    repaired = repair_fsm(fsm)
-    assert repaired.genes[(OBS_PERMISSION, 1, True)].action == ACT_ROLLBACK
-    assert repaired.genes[(OBS_PERMISSION, 2, False)].action == ACT_ESCALATE
-    validity = validate_genome(
-        repaired.genes_list(), repaired.default_action, repaired.default_wait
-    )
-    assert validity.rule_invalid == 0, validity.rule_violations
-    assert not validity.genome_invalid, validity.genome_violations
-
+    fsm = repair_fsm(hand_fsm())
     verdict = evaluator_verdict_from_scenario(scenario)
     result = evaluate_controller(
-        repaired, [scenario], {scenario["scenario_id"]: verdict}
+        fsm, [scenario], {scenario["scenario_id"]: verdict}
     )
     row = result["rows"][0]
     assert row["decision_trace"] == [
-        (OBS_PERMISSION, 1, True, ACT_ROLLBACK),
-        (OBS_PERMISSION, 2, False, ACT_ESCALATE),
+        (OBS_PARTIAL, 1, True, ACT_COMPENSATE),
+        (OBS_COMPENSATED, 2, True, ACT_RETRY),
     ]
-    assert row["policy_selected_escalation"] == 1
+    assert row["task_success"] == 1
     assert row["class_success"] == 1
+    assert row["invariant_violation"] == 0
+    assert row["duplicate"] == 0
     assert row["avoidable_harm"] == 0
-    assert row["active_effects"] == 0
-    assert row["compensation_failures"] == 0

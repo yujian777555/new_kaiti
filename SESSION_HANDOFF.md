@@ -184,3 +184,5 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Re-run only development diagnostics first. The old D-079 diagnostic remains previously inspected and is not held-out/confirmatory. If R3 becomes learnable and candidate results improve, create a new independent Train-only challenge manifest and lock before a one-shot diagnostic. Keep Validation/Test inaccessible.
 
 - Follow-up audit found the independent `contract_validator.py` also rejected permission-state ROLLBACK unconditionally. It is corrected to allow ROLLBACK only when `stack=True`, and reject it when `stack=False`. The R3 integration test now requires the repaired genome to pass this independent validator before execution.
+
+- Corrected the fixed hand baseline as a reference policy: `OBS_COMPENSATED + stack=True` now retries the compensated current step while preserving prior commits; `OBS_PERMISSION + stack=True` rolls back the prefix before escalation. Added integration tests for R2 partial-commit recovery and R3/R4 permission recovery, including independent-validator acceptance and rejection cases.

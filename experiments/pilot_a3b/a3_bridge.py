@@ -203,9 +203,15 @@ def hand_fsm():
             genes.append(Gene(OBS_PARTIAL, att, stack, ACT_COMPENSATE, 2))
             genes.append(Gene(OBS_RATE_LIMIT, att, stack, ACT_WAIT, 3))
             genes.append(Gene(OBS_SCHEMA, att, stack, ACT_REPAIR, 2))
-            genes.append(Gene(OBS_PERMISSION, att, stack, ACT_ESCALATE, 2))
+            genes.append(Gene(
+                OBS_PERMISSION, att, stack,
+                ACT_ROLLBACK if stack else ACT_ESCALATE, 2,
+            ))
             genes.append(Gene(OBS_COMMITTED, att, stack, ACT_STOP, 2))
-            genes.append(Gene(OBS_COMPENSATED, att, True, ACT_ROLLBACK, 2))
+            # Compensation of the current partial step preserves the already
+            # committed prefix; retry the current step instead of rolling the
+            # prefix back and then illegally continuing downstream.
+            genes.append(Gene(OBS_COMPENSATED, att, True, ACT_RETRY, 2))
             genes.append(Gene(OBS_COMPENSATED, att, False, ACT_RETRY, 2))
             genes.append(Gene(OBS_COMP_FAILED, att, stack, ACT_ESCALATE, 2))
             genes.append(Gene(OBS_NOOP, att, stack, ACT_VERIFY, 2))
