@@ -1,0 +1,19 @@
+{
+  "report_type": "db_parity",
+  "date": "2026-11-12",
+  "db_source": "vendor/tau_bench/tau_bench/envs/retail/data/{users,orders,products}.json",
+  "counts": {
+    "users": 500,
+    "orders": 1000,
+    "products": 50
+  },
+  "sha256": {
+    "users": "c712a9b61256070e5c0dc676645b93d6f5ec2dc8a80182fab312d9de51cd0582",
+    "orders": "db372c34a4226c830305cb78feefbeaf79897de300f67db4c0b8214e205d194b",
+    "products": "b739a976c91e39561b40e7064f8f65572978e7cbb5a72a5bf0f2bedfa6f584dc",
+    "combined": "ae10e8a7f23bedf88c90a528efa2d59d27cae24b5ce1f0d28768b39257bf9f0d"
+  },
+  "env_injection_hash_match": true,
+  "deep_copy_isolation_verified": true,
+  "gate": "PASS"
+}

@@ -1,0 +1,30 @@
+{
+  "cache_hits": 0,
+  "candidate_pass_count": 0,
+  "checks": {
+    "all_baselines_present": true,
+    "artifact_hashes": true,
+    "budget": true,
+    "candidate_count": true,
+    "candidate_integrity": true,
+    "decision_recomputed": true,
+    "frozen_genome_unchanged": true,
+    "frozen_seed_mapping": true,
+    "metrics_recomputed": true,
+    "no_test": true,
+    "no_train_search": true,
+    "one_evaluation_per_pair": true,
+    "raw_json_csv_exact": true,
+    "scenario_ids_match_manifest": true,
+    "source_config_unchanged": true,
+    "source_runs_unchanged": true,
+    "validation_only": true
+  },
+  "decision": "REPLICATION_FAILED",
+  "metric_mismatches": [],
+  "ok": true,
+  "optimizer_runs": 0,
+  "raw_row_count": 1040,
+  "test_accessed": false,
+  "train_search_performed": false
+}

@@ -1,0 +1,144 @@
+{
+  "algorithm_sha256": {
+    "dependency_genome.py": "b5dbfb3f8686f49b8a685125a330b6cf2d92f1bc013fab85018377d4448fb149",
+    "dependency_policies.py": "7b22f50a7891d1268189461fa51bfd7f59c7e1948934c1456c967d12c96fb56d",
+    "dependency_recovery.py": "82832b88d7a4a8ec945727ca6cd0d31efff4bee79eebdcb4a4a4dec096a3de12"
+  },
+  "candidate_evaluation_cap": 400,
+  "candidates": [
+    {
+      "genome": {
+        "allow_alternate": true,
+        "allow_verify": true,
+        "cost_weight": -2.15807524671097,
+        "dependency_weight": 1.0,
+        "failure_weight": -2.001991668400718,
+        "hint_weight": -0.13154348680671735,
+        "max_attempts": 2,
+        "position_weight": 0.16311852183639708,
+        "retry_unknown": false,
+        "stop_action": "ESCALATE",
+        "stop_pending": false,
+        "stop_residual": 0,
+        "verify_delay": 1
+      },
+      "genome_fingerprint": "[('allow_alternate', True), ('allow_verify', True), ('cost_weight', -2.15807524671097), ('dependency_weight', 1.0), ('failure_weight', -2.001991668400718), ('hint_weight', -0.13154348680671735), ('max_attempts', 2), ('position_weight', 0.16311852183639708), ('retry_unknown', False), ('stop_action', 'ESCALATE'), ('stop_pending', False), ('stop_residual', 0), ('verify_delay', 1)]",
+      "genome_sha256": "a224de1c514ad0e9e109a47b5357443dfd6bda84bbcd93ed2e304ea7fa84e1e5",
+      "seed": 711,
+      "source_archive_candidates": 82,
+      "source_r3_cost": 5.0,
+      "source_validation_unique": 1968
+    },
+    {
+      "genome": {
+        "allow_alternate": true,
+        "allow_verify": true,
+        "cost_weight": -2.0,
+        "dependency_weight": 1.0,
+        "failure_weight": -1.0,
+        "hint_weight": 0.2,
+        "max_attempts": 3,
+        "position_weight": 0.0,
+        "retry_unknown": false,
+        "stop_action": "ESCALATE",
+        "stop_pending": false,
+        "stop_residual": 0,
+        "verify_delay": 1
+      },
+      "genome_fingerprint": "[('allow_alternate', True), ('allow_verify', True), ('cost_weight', -2.0), ('dependency_weight', 1.0), ('failure_weight', -1.0), ('hint_weight', 0.2), ('max_attempts', 3), ('position_weight', 0.0), ('retry_unknown', False), ('stop_action', 'ESCALATE'), ('stop_pending', False), ('stop_residual', 0), ('verify_delay', 1)]",
+      "genome_sha256": "5da139f1b7e8a6cd31daf3e691f0c3833757f818fcb65eb64baceecbb955beab",
+      "seed": 822,
+      "source_archive_candidates": 84,
+      "source_r3_cost": 5.0,
+      "source_validation_unique": 2016
+    },
+    {
+      "genome": {
+        "allow_alternate": true,
+        "allow_verify": true,
+        "cost_weight": -1.2939293155264746,
+        "dependency_weight": 1.0,
+        "failure_weight": -1.0,
+        "hint_weight": 0.2,
+        "max_attempts": 3,
+        "position_weight": 0.0,
+        "retry_unknown": false,
+        "stop_action": "ESCALATE",
+        "stop_pending": false,
+        "stop_residual": 0,
+        "verify_delay": 1
+      },
+      "genome_fingerprint": "[('allow_alternate', True), ('allow_verify', True), ('cost_weight', -1.2939293155264746), ('dependency_weight', 1.0), ('failure_weight', -1.0), ('hint_weight', 0.2), ('max_attempts', 3), ('position_weight', 0.0), ('retry_unknown', False), ('stop_action', 'ESCALATE'), ('stop_pending', False), ('stop_residual', 0), ('verify_delay', 1)]",
+      "genome_sha256": "e0c48be44cc36930e95ab0f60a97c19d8a40225f423a40b85bc3d459623284b2",
+      "seed": 933,
+      "source_archive_candidates": 84,
+      "source_r3_cost": 5.0,
+      "source_validation_unique": 2016
+    },
+    {
+      "genome": {
+        "allow_alternate": true,
+        "allow_verify": true,
+        "cost_weight": -1.58829905552848,
+        "dependency_weight": 1.0,
+        "failure_weight": -1.0,
+        "hint_weight": 0.2,
+        "max_attempts": 4,
+        "position_weight": 0.0,
+        "retry_unknown": false,
+        "stop_action": "ESCALATE",
+        "stop_pending": false,
+        "stop_residual": 0,
+        "verify_delay": 1
+      },
+      "genome_fingerprint": "[('allow_alternate', True), ('allow_verify', True), ('cost_weight', -1.58829905552848), ('dependency_weight', 1.0), ('failure_weight', -1.0), ('hint_weight', 0.2), ('max_attempts', 4), ('position_weight', 0.0), ('retry_unknown', False), ('stop_action', 'ESCALATE'), ('stop_pending', False), ('stop_residual', 0), ('verify_delay', 1)]",
+      "genome_sha256": "efd236f0c04b93abc688763d168b45bbeb1c5f65dae2f763947bcc50d843ddf2",
+      "seed": 1044,
+      "source_archive_candidates": 84,
+      "source_r3_cost": 5.0,
+      "source_validation_unique": 2016
+    },
+    {
+      "genome": {
+        "allow_alternate": true,
+        "allow_verify": true,
+        "cost_weight": -1.5518072861593937,
+        "dependency_weight": 0.2666995207221259,
+        "failure_weight": -0.8179897650858843,
+        "hint_weight": 0.2,
+        "max_attempts": 4,
+        "position_weight": 0.0,
+        "retry_unknown": false,
+        "stop_action": "ESCALATE",
+        "stop_pending": false,
+        "stop_residual": 0,
+        "verify_delay": 1
+      },
+      "genome_fingerprint": "[('allow_alternate', True), ('allow_verify', True), ('cost_weight', -1.5518072861593937), ('dependency_weight', 0.2666995207221259), ('failure_weight', -0.8179897650858843), ('hint_weight', 0.2), ('max_attempts', 4), ('position_weight', 0.0), ('retry_unknown', False), ('stop_action', 'ESCALATE'), ('stop_pending', False), ('stop_residual', 0), ('verify_delay', 1)]",
+      "genome_sha256": "424f1ca40ac35056e266507208531d59b2e1bda629b408bdecb8eb6369e558d8",
+      "seed": 1155,
+      "source_archive_candidates": 82,
+      "source_r3_cost": 5.0,
+      "source_validation_unique": 1968
+    }
+  ],
+  "frozen_candidates_sha256": "31495e830da326778b44398a649e2614416451107fdea982530378b4abc6244c",
+  "new_genomes_created": false,
+  "protocol_id": "D-087-REPLICATION",
+  "source_commit": "5210d1c40fbb41b39a51e2ef7ef544e582dc4af5",
+  "source_config_sha256": "4af3ac953a5610a476344bca90e4ac7f9995eac871610e02809e54976e819adc",
+  "source_episode_cap": 6048,
+  "source_generations": 6,
+  "source_manifest_sha256": "362e7a8a0acafbb40f6ddccf207bede85a656193c6544bf3cd949c1fe43ffd67",
+  "source_population_size": 12,
+  "source_runs_sha256": "5eaaa935a6e7a652a011c2f9da20362d1ddd21a192b77ae4b4980d4db50dbc06",
+  "source_seeds": [
+    711,
+    822,
+    933,
+    1044,
+    1155
+  ],
+  "test_accessed": false,
+  "train_search_performed": false
+}

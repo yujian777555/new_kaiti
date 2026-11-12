@@ -166,3 +166,38 @@ Pin full EvoTool source; implement/test split-preserving loader and safe runner 
 - Upstream data and local DB files are excluded from the full source vendor; the safe runner must inject the official pinned tau-bench DB.
 - Next: build/test a safe runner that passes `test=None`, disables periodic Test logging, selects on Dev only, and proves no Test read before policy freeze; add DB-loader parity tests. Resolve max_steps=6 vs official 30 and the user-simulator protocol before any authorized run.
 - No model/API/A800/vLLM/optimizer/training/Test policy scoring without separate explicit approval.
+
+## D-088 takeover update — 2026-11-12
+
+The current remote `main` is `caa2fed180c5d6efc48478962e5f23a099d960a5`; continue from the isolated branch `codex/d088-step1-takeover`. The full EvoTool source and split-loader commits are now present on `origin/main`; the older statements above about source pinning being absent are historical handoff context and must be rechecked against the current HEAD.
+
+D-087 historical evidence has been migrated to `data/historical/d087/` from `kaitibaogao` commit `916b371ebc10825752d85b31e1ede5c6827c2cb3`. Read `docs/13_D087_FAILURE_MECHANISM_AUDIT.md` and `data/historical/d087/counterfactual_diagnosis.json` before designing new mechanisms. The independent audit confirms `REPLICATION_FAILED / NO-GO`; no candidate passed all R3/R4 criteria. Five failure classes have legal public-information counterfactual sequences under 24 decisions, while `rv03` R3 repeat 4 has a 25-decision lower bound.
+
+Next work is mechanism-only and Train-only: implement three distinct state-conditioned candidates (feedback-triggered route switching; delay-aware confirmation/budget allocation; dependency-graph alternate-path coordination), add matched baselines and independent ablations, and create new family/scenario IDs. Do not reuse D-087 Validation for tuning, do not access formal Test, and do not start Qwen3/vLLM, paid API, A800 training, or optimizer execution without separate authorization.
+
+## Step 7 — safe runner preflight (2026-11-12)
+
+Read `docs/14_PAPER1_SAFE_RUNNER_PREFLIGHT.md`.
+
+- Safe runner: `scripts/paper1_safe_runner.py`. Tests: `tests/test_paper1_safe_runner_preflight.py` (43 tests, all passing).
+- All 10 preflight gates PASS: split preservation 500/20/115, 8x3 batch plan (24 unique Train tasks), Dev-only selection, Test file-access interception, evolve(test=None), log_test_eval=False, DB injection + hash parity, deep-copy isolation, Treatment cache isolation (L/R1/R2), no LLM/API coupling.
+- Three treatments pre-built (not executed): EVOTOOL_LEGACY (L), EVOTOOL_OUTCOME_AWARE_SELECTION (R1), EVOTOOL_FULL_OUTCOME_AWARE (R2). operation_outcome orthogonal to execution status. Per-treatment episode caches.
+- DB parity: 500 users / 1000 orders / 50 products. Combined SHA-256 `ae10e8a7f23bedf88c90a528efa2d59d27cae24b5ce1f0d28768b39257bf9f0d`.
+- CI: new test file added to workflow.
+
+## Next task
+
+Prepare formal experiment authorization request with exact model revision, endpoint, seeds, split use, batch IDs, max_steps, evaluator, status treatment, token budget, cache namespace, and rollback plan. Do not start Qwen3 inference, paid API, A800/vLLM, optimizer, training, or Test policy scoring without separate explicit authorization.
+
+## D-088 Phase 1 — 三机制实现与实验完成（2026-11-12）
+
+读 `docs/D088_MECHANISM_DESIGN.md` 和 `docs/D088_TRAIN_ONLY_EXPERIMENT_REPORT.md`。
+
+- 代码：`experiments/d088/`。20 项测试通过。
+- 三机制 A/B/C 已实现为 D088Genome + D088Policy，NSGA-III 演化搜索参数。
+- 八组对照：BC（预算调度+依赖图协调）最优，Discovery R3=0.967/R4=1.000/Harm=0.000；Fresh R4=0.983/Harm=0.012。
+- B 单独最有效，BC 有协同，ABC 不优于 BC。所有硬约束零违规。
+
+## Next task (D-088 Phase 2)
+
+增加 family 难度、改进 A 成本模型、扩大搜索预算、研究机制交互条件依赖。继续 Train-only，不访问 D-087 Validation/Test。

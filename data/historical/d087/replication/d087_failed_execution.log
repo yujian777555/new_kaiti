@@ -1,0 +1,9 @@
+D-087 first replication execution failed during CSV serialization.
+
+Error:
+ValueError: dict contains fields not in fieldnames: 'genome_sha256'
+
+Cause:
+The CSV header was derived only from the first baseline row, which lacks the candidate-only genome_sha256 field. The evaluation results have not been accepted or used for a scientific conclusion. The frozen candidates, manifest, algorithm, seeds, budget, and metrics are unchanged.
+
+The failed run must not be described as a valid replication. A field-union regression is required before rerunning the same protocol.

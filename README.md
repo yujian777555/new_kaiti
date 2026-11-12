@@ -59,3 +59,10 @@ The source files were transferred from a pinned source commit without modifying 
 ## Provenance
 
 The initial research snapshot was reviewed from `yujian777555/kaitibaogao`, branch `pilot-a-stateful-recovery`, source HEAD `33672562ebaeb6c3a533e7e0fd975cbac045b5e3` on 2026-11-11. The old repository was not modified by this initialization.
+
+## D-088 takeover status — 2026-11-12
+
+- Current remote `main` was re-queried at `caa2fed180c5d6efc48478962e5f23a099d960a5`; new work is isolated on `codex/d088-step1-takeover`.
+- D-087 historical evidence was copied from historical commit `916b371ebc10825752d85b31e1ede5c6827c2cb3` into `data/historical/d087/` with byte-level SHA-256 verification. See `data/historical/d087/D087_PROVENANCE.json`.
+- Independent raw-ledger recomputation confirms D-087 `REPLICATION_FAILED / NO-GO`: 1,040 rows, 30 candidate failures, all at repeat 4 and 24-decision forced abort, with zero candidate hard-constraint violations.
+- `docs/13_D087_FAILURE_MECHANISM_AUDIT.md` separates five counterfactually repairable failure classes from the `rv03` R3 repeat-4 25-step lower bound. No new algorithmic uplift, model training, LLM/API call, or Test scoring has been run.

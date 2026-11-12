@@ -133,3 +133,40 @@
 - Added `scripts/paper1_tau_bench_splits.py`: split-preserving Train/Dev loader, explicitly gated Test loader, official tool schema mapping, EvoTool instance mapping, and deterministic G=8/B=3 first-epoch batch planner.
 - Added tests for 500/20 preservation, no Test file read by Train/Dev loader, explicit Test authorization, tool schema parity, and 8 batches × 3 unique Train IDs.
 - This is a data/protocol preflight only; no optimizer or model was run.
+
+## D-014 — 2026-11-12: D-087 evidence migration and failure-mechanism audit
+
+- Historical `kaitibaogao` was read-only audited at commit `916b371ebc10825752d85b31e1ede5c6827c2cb3`; no file was written there.
+- D-087 raw JSON/CSV, manifest, frozen candidates, CI/provenance logs, protocol files, and source inputs were copied byte-for-byte into `data/historical/d087/`. Source/target SHA-256 equality is recorded in `data/historical/d087/D087_PROVENANCE.json`.
+- Independent parsing of the raw ledger reproduces 1,040 unique evaluations, 80 scenarios, five identical candidate metric vectors (`R3=R4=0.85`, `CondRecSucc=1.0`, `RecoveryCost=8.85`), 30 failed candidate rows, and zero candidate hard-constraint violations.
+- D-087 remains `REPLICATION_FAILED / NO-GO`; the lower cost does not offset failed R3/R4 recovery.
+- Counterfactual replay using only public dependencies, receipt type and observed feedback finds legal under-budget sequences for five failure classes. `rv03_MULTI_ROUTE` R3 repeat 4 has a 25-decision lower bound under the frozen 24-decision contract.
+- This is historical mechanism evidence, not a new method result. No optimizer, model, API, A800, or Test execution was performed.
+
+## D-015 — 2026-11-12: safe runner preflight framework
+
+- Implemented `scripts/paper1_safe_runner.py`: deterministic, model-free preflight for the Paper 1 evolutionary runner.
+- Data loading: Train 500 / Dev 20 via `load_train_dev_splits()`, Test deferred behind `load_test_after_freeze()` with dual gate (policy_frozen + explicit_authorization). Cross-split overlap = 0. Original task_id preserved. No random resplitting.
+- Evolution budget: `generations=8`, `batch_size=3`, `epochs=1`; 8 batches x 3 distinct Train tasks per seed (24 unique). Batch plan deterministic per seed; verified for seeds 42 and 99.
+- Selection: population selection and final policy selection on Dev only (S_sel = 20). `evolve(test=None)` and `log_test_eval=False` verified by source inspection and config assertion.
+- Test isolation: `TestIsolationGuard` intercepts `pathlib.Path.open` and `builtins.open` at file-access level. Violations raise `TestAccessViolation` and are recorded. Guard can be armed/disarmed; context manager supported.
+- DB injection: official tau-bench Retail DB loaded directly from vendored JSON files (bypassing `tau_bench` package import chain that requires `litellm`). `inject_official_db()` patches EvoTool's `load_db()` to return deep copies. Hash parity verified (500 users / 1000 orders / 50 products). Deep-copy isolation confirmed.
+- Treatment interface (L/R1/R2) pre-built: `Treatment` enum, `EpisodeCache` with per-treatment namespace isolation, `classify_operation_outcome()` orthogonal to execution status, `compute_progress()` dispatching per treatment. Cross-treatment cache contamination impossible.
+- Tests: `tests/test_paper1_safe_runner_preflight.py` — 43 tests, all passing. Covers all 10 required gates.
+- CI: test file added to `.github/workflows/paper1-regression.yml`.
+- Reports: `docs/14_PAPER1_SAFE_RUNNER_PREFLIGHT.md`, `data/taubench_legacy/retail/db_parity_report.json`, `data/taubench_legacy/retail/treatment_isolation_report.json`.
+- No LLM inference, API calls, A800/vLLM startup, optimizer execution, training, or Test policy scoring was performed.
+- Known issue: local Windows full-source lock test fails due to CRLF/LF Git blob SHA mismatch; CI on Ubuntu passes. Pre-existing, unrelated to this change.
+
+## D-016 — 2026-11-12: D-088 三机制实现与 Train-only 演化实验
+
+- 实现三个状态条件化恢复机制：A 失败反馈路线切换、B 延迟感知预算调度、C 依赖图与备用路线协调。
+- D088Genome 继承 RecoveryGenome，新增 15 个可演化参数（含 enable_mech_{a,b,c} 开关支持八组实验）。
+- NSGA-III 适配 RecoveryGenome（5 维目标：CondRecSucc/AvoidableHarm/ActionCost/CorrectEscalation/DamageContainment）。
+- 新 Train-only 家族：6 discovery（CHAIN_BLOCK/FORK_JOIN/CYCLE_ALT/PARALLEL_SINK/DEEP_CHAIN/STAR_HUB）+ 4 fresh（DIAMOND/LADDER/MULTI_FORK/LOOP_BREAK）。ID namespace `d088|train|`，与历史场景无重叠。
+- 三轮迭代：第一轮基线 → 第二轮机制改进（stop_pending 修复/批量确认/依赖链排序）→ 第三轮 Fresh 独立验证。
+- 最优组合 BC（预算调度+依赖图协调）：Discovery R3=0.967/R4=1.000/Harm=0.000；Fresh R4=0.983/Harm=0.012。
+- B 单独最有效（零伤害），BC 存在协同效应。ABC 不优于 BC（搜索空间过大）。
+- 所有硬约束零违规：constraint=0, duplicate=0, pending 无违规。
+- 20 项单元测试通过。pilot_a3b 95 项回归测试通过。
+- 无 LLM/API/A800/优化器真实执行/Test 访问/金标准修改。

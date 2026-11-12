@@ -1,0 +1,148 @@
+{
+  "all_failed_have_runtime_forced_abort": true,
+  "all_failed_have_zero_duplicate": true,
+  "all_failed_have_zero_pending": true,
+  "candidate_failure_count": 30,
+  "candidate_hard_constraint_count": 0,
+  "candidate_mean_r3_cost": 8.850000000000001,
+  "candidate_metric_vectors_identical_across_seeds": true,
+  "failure_family_counts": {
+    "rv02_CROSS_DELAY": 10,
+    "rv03_MULTI_ROUTE": 10,
+    "rv04_REVERSE_RECOVERY": 10
+  },
+  "failure_label_counts": {
+    "R3": 15,
+    "R4": 15
+  },
+  "failure_repeat_counts": {
+    "4": 30
+  },
+  "greedy_r3_cost": 20.0,
+  "mechanism": "Delayed failed alternate compensation plus the frozen verification cadence exhausts the 24-decision budget on repeat 4 in rv02/rv03/rv04, leaving avoidable residual; no hidden information or safety violation explains the failure.",
+  "new_search_or_training": false,
+  "per_family": {
+    "rv01_PARALLEL_ALT": {
+      "R1": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 1.0,
+        "scenario_count": 25
+      },
+      "R2": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 2.0,
+        "scenario_count": 25
+      },
+      "R3": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 3.0,
+        "scenario_count": 25
+      },
+      "R4": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 2.0,
+        "scenario_count": 25
+      }
+    },
+    "rv02_CROSS_DELAY": {
+      "R1": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 1.0,
+        "scenario_count": 25
+      },
+      "R2": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 2.0,
+        "scenario_count": 25
+      },
+      "R3": {
+        "avoidable_harm_sum": 15,
+        "class_success_sum": 20,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 10.8,
+        "scenario_count": 25
+      },
+      "R4": {
+        "avoidable_harm_sum": 10,
+        "class_success_sum": 20,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 8.8,
+        "scenario_count": 25
+      }
+    },
+    "rv03_MULTI_ROUTE": {
+      "R1": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 1.0,
+        "scenario_count": 25
+      },
+      "R2": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 2.0,
+        "scenario_count": 25
+      },
+      "R3": {
+        "avoidable_harm_sum": 15,
+        "class_success_sum": 20,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 10.8,
+        "scenario_count": 25
+      },
+      "R4": {
+        "avoidable_harm_sum": 10,
+        "class_success_sum": 20,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 8.8,
+        "scenario_count": 25
+      }
+    },
+    "rv04_REVERSE_RECOVERY": {
+      "R1": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 1.0,
+        "scenario_count": 25
+      },
+      "R2": {
+        "avoidable_harm_sum": 0,
+        "class_success_sum": 25,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 2.0,
+        "scenario_count": 25
+      },
+      "R3": {
+        "avoidable_harm_sum": 15,
+        "class_success_sum": 20,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 10.8,
+        "scenario_count": 25
+      },
+      "R4": {
+        "avoidable_harm_sum": 10,
+        "class_success_sum": 20,
+        "constraint_violation_sum": 0,
+        "mean_recovery_cost": 8.8,
+        "scenario_count": 25
+      }
+    }
+  },
+  "status": "REPLICATION_FAILED",
+  "test_accessed": false
+}

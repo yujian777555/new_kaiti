@@ -1,0 +1,40 @@
+{
+  "allocation": {
+    "validation": [
+      "rv01_PARALLEL_ALT",
+      "rv02_CROSS_DELAY",
+      "rv03_MULTI_ROUTE",
+      "rv04_REVERSE_RECOVERY"
+    ]
+  },
+  "budget": {
+    "decision_cap_per_episode": 24,
+    "fixed_baseline_episodes": 640,
+    "frozen_candidate_episodes": 400,
+    "test_access": false,
+    "total_episode_cap": 1040,
+    "train_search": false
+  },
+  "family_count": 4,
+  "generator_source_sha256": "3ea5d6b6588e15ec56021bddceee9b70b5e31416dea4f0ef327827c4bb05c686",
+  "generator_version": "d087-independent-validation-v1",
+  "lock_schema_version": 1,
+  "lock_status": "FROZEN_REPLICATION_VALIDATION_ONLY",
+  "manifest_sha256": "d2cdc1aa697592e2439b5a8d5dd354726d3b8dc74e4f215530f0d4c575d88ed8",
+  "protocol_id": "D-087-REPLICATION",
+  "scenario_count": 80,
+  "scenario_counts": {
+    "validation": 80
+  },
+  "seed_base": 2026112200,
+  "strata": [
+    "D1_RECOVERABLE_TIMEOUT",
+    "D2_PARTIAL_THEN_REDO",
+    "D3_DEPENDENT_ABORT",
+    "D4_BLOCKED_COMPENSATION"
+  ],
+  "test_included": false,
+  "test_outcomes_read": false,
+  "train_included": false,
+  "validation_only": true
+}

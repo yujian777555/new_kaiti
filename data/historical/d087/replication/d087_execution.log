@@ -1,0 +1,20 @@
+{
+  "algorithm_sha256": {
+    "dependency_genome.py": "b5dbfb3f8686f49b8a685125a330b6cf2d92f1bc013fab85018377d4448fb149",
+    "dependency_policies.py": "7b22f50a7891d1268189461fa51bfd7f59c7e1948934c1456c967d12c96fb56d",
+    "dependency_recovery.py": "82832b88d7a4a8ec945727ca6cd0d31efff4bee79eebdcb4a4a4dec096a3de12"
+  },
+  "budget": {
+    "baseline_cap": 640,
+    "candidate_cap": 400,
+    "decision_cap_per_episode": 24,
+    "total_cap": 1040
+  },
+  "candidate_sha256": "31495e830da326778b44398a649e2614416451107fdea982530378b4abc6244c",
+  "manifest_sha256": "d2cdc1aa697592e2439b5a8d5dd354726d3b8dc74e4f215530f0d4c575d88ed8",
+  "raw_row_count": 1040,
+  "source_config_sha256": "4af3ac953a5610a476344bca90e4ac7f9995eac871610e02809e54976e819adc",
+  "status": "REPLICATION_FAILED",
+  "test_accessed": false,
+  "train_search_performed": false
+}

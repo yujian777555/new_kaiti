@@ -1,0 +1,111 @@
+{
+  "arm": "NSGA-III",
+  "caution": "This evaluates a pre-registered baseline, not a new algorithm innovation; independent replication is still required.",
+  "comparisons": {
+    "NSGA-II": {
+      "no_regression": true,
+      "per_seed": [
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": 0.0,
+          "r3_difference": 0.0,
+          "r4_difference": 0.0,
+          "seed": 711
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": -1.0,
+          "r3_difference": 0.16666666666666663,
+          "r4_difference": 0.0,
+          "seed": 822
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": 0.0,
+          "r3_difference": 0.0,
+          "r4_difference": 0.0,
+          "seed": 933
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": -1.0,
+          "r3_difference": 0.16666666666666663,
+          "r4_difference": 0.0,
+          "seed": 1044
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": 0.0,
+          "r3_difference": 0.0,
+          "r4_difference": 0.0,
+          "seed": 1155
+        }
+      ]
+    },
+    "RandomSearch": {
+      "no_regression": true,
+      "per_seed": [
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": -1.0,
+          "r3_difference": 0.16666666666666663,
+          "r4_difference": 0.0,
+          "seed": 711
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": 0.0,
+          "r3_difference": 0.0,
+          "r4_difference": 0.0,
+          "seed": 822
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": -1.0,
+          "r3_difference": 0.16666666666666663,
+          "r4_difference": 0.0,
+          "seed": 933
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": -1.0,
+          "r3_difference": 0.16666666666666663,
+          "r4_difference": 0.0,
+          "seed": 1044
+        },
+        {
+          "condrec_difference": 0.0,
+          "constraint_difference": 0,
+          "cost_difference": -1.0,
+          "r3_difference": 0.16666666666666663,
+          "r4_difference": 0.0,
+          "seed": 1155
+        }
+      ]
+    }
+  },
+  "criteria": {
+    "budget_valid": true,
+    "condrec_all_one": true,
+    "cost_below_greedy": true,
+    "no_regression_vs_ea": true,
+    "r3_all_one": true,
+    "r4_all_one": true,
+    "selected_all_seeds": true,
+    "zero_constraints": true
+  },
+  "greedy_r3_cost": 15.166666666666666,
+  "mean_r3_cost": 5.0,
+  "optimizer_runs_in_assessment": 0,
+  "status": "EXPLORATORY_CANDIDATE_ONLY_NOT_CONFIRMATION",
+  "test_accessed": false
+}

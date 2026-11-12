@@ -1,0 +1,21 @@
+{
+  "protocol_id": "D-086-EVOLUTION",
+  "preregistration": "90_D086_EVOLUTION_PREREGISTRATION.md",
+  "generator_version": "d086-dependency-recovery-v1",
+  "evaluator_version": "d086-dependency-v1",
+  "manifest_sha256": "362e7a8a0acafbb40f6ddccf207bede85a656193c6544bf3cd949c1fe43ffd67",
+  "population_size": 12,
+  "generations": 6,
+  "optimizer_seeds": [711, 822, 933, 1044, 1155],
+  "methods": ["RandomSearch", "NSGA-II", "NSGA-III", "C-NSGA-III"],
+  "ablations": ["NoDependencyPriority", "NoFailureFeedback", "NoAlternate", "NoPendingVerification"],
+  "episode_cap_per_arm_seed": 6048,
+  "decision_cap_per_episode": 24,
+  "train_scenario_count": 72,
+  "validation_scenario_count": 24,
+  "random_policy_seed": 20261122,
+  "status": "FROZEN_FOR_TRAIN_ONLY_EXPLORATORY_SEARCH",
+  "test_access": false,
+  "selection_rule": "feasible Pareto; R3; R4; harm; CondRecSucc; cost; fingerprint",
+  "statistics": "five-seed exploratory paired descriptive comparisons only; no confirmatory test"
+}

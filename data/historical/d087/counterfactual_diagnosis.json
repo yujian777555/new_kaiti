@@ -1,0 +1,68 @@
+{
+  "schema": "d088-d087-counterfactual-v1",
+  "source_manifest_sha256": "d2cdc1aa697592e2439b5a8d5dd354726d3b8dc74e4f215530f0d4c575d88ed8",
+  "decision_cap_per_episode": 24,
+  "uses_hidden_information": false,
+  "changes_gold_criteria": false,
+  "cases": [
+    {
+      "scenario_id": "d086r|validation|rv02_CROSS_DELAY|D3_DEPENDENT_ABORT|r4",
+      "actions": [["COMPENSATE", "C", "primary"], ["COMPENSATE", "C", "primary"], ["COMPENSATE", "C", "primary"], ["COMPENSATE", "B", "primary"], ["COMPENSATE", "B", "primary"], ["COMPENSATE", "B", "primary"], ["COMPENSATE", "A", "primary"], ["COMPENSATE", "A", "primary"], ["COMPENSATE", "A", "primary"], ["ESCALATE"]],
+      "decisions": 10,
+      "action_cost": 9,
+      "terminal": "ESCALATE",
+      "active_residual": 0,
+      "pending": 0,
+      "duplicate": 0
+    },
+    {
+      "scenario_id": "d086r|validation|rv04_REVERSE_RECOVERY|D3_DEPENDENT_ABORT|r4",
+      "actions": [["COMPENSATE", "A", "primary"], ["COMPENSATE", "A", "primary"], ["COMPENSATE", "A", "primary"], ["COMPENSATE", "B", "primary"], ["COMPENSATE", "B", "primary"], ["COMPENSATE", "B", "primary"], ["COMPENSATE", "C", "primary"], ["COMPENSATE", "C", "primary"], ["COMPENSATE", "C", "primary"], ["ESCALATE"]],
+      "decisions": 10,
+      "action_cost": 9,
+      "terminal": "ESCALATE",
+      "active_residual": 0,
+      "pending": 0,
+      "duplicate": 0
+    },
+    {
+      "scenario_id": "d086r|validation|rv02_CROSS_DELAY|D4_BLOCKED_COMPENSATION|r4",
+      "decisions": 16,
+      "action_cost": 15,
+      "terminal": "ESCALATE",
+      "active_residual": 1,
+      "pending": 0,
+      "duplicate": 0,
+      "strategy": "C primary three attempts; A alternate attempts with WAIT, WAIT, VERIFY after each delayed receipt; ESCALATE"
+    },
+    {
+      "scenario_id": "d086r|validation|rv03_MULTI_ROUTE|D4_BLOCKED_COMPENSATION|r4",
+      "decisions": 19,
+      "action_cost": 18,
+      "terminal": "ESCALATE",
+      "active_residual": 1,
+      "pending": 0,
+      "duplicate": 0,
+      "strategy": "Three parallel rounds of COMPENSATE A/B, WAIT, WAIT, VERIFY A/B; ESCALATE"
+    },
+    {
+      "scenario_id": "d086r|validation|rv04_REVERSE_RECOVERY|D4_BLOCKED_COMPENSATION|r4",
+      "decisions": 16,
+      "action_cost": 15,
+      "terminal": "ESCALATE",
+      "active_residual": 1,
+      "pending": 0,
+      "duplicate": 0,
+      "strategy": "A primary three attempts; C alternate attempts with WAIT, WAIT, VERIFY after each delayed receipt; ESCALATE"
+    }
+  ],
+  "unreachable_within_budget": {
+    "scenario_id": "d086r|validation|rv03_MULTI_ROUTE|D3_DEPENDENT_ABORT|r4",
+    "public_dependency_cycle": "A<-C, B<-C, C<-A",
+    "alternate_outcomes": [false, false, true],
+    "alternate_receipt_delay": 2,
+    "lower_bound_decisions": 25,
+    "status": "UNREACHABLE_WITHIN_24",
+    "proof": "Three tools require three alternate attempts each. Each round needs 3 compensation actions, 3 receipt resolutions, and at least 2 waits; 3*(3+3+2)=24, followed by the required ESCALATE action."
+  }
+}
