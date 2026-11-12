@@ -200,3 +200,36 @@ operation_outcome is orthogonal to execution status (D-011). status is never ove
 ## Next immediate task
 
 Prepare formal experiment authorization request (model revision, endpoint, seeds, split use, batch IDs, max_steps, evaluator, status treatment, token budget, cache namespace, rollback). Do not start any model/API/A800/optimizer/training/Test policy scoring without separate explicit authorization.
+
+## D-088 Phase 1 — 三机制实现与 Train-only 演化实验（2026-11-12）
+
+实现三个状态条件化恢复机制并在全新 Train-only 家族上完成三轮八组对照实验。
+
+### 交付物
+
+- `experiments/d088/mechanism_genome.py`: D088Genome（扩展 RecoveryGenome，15 个机制参数，全部可演化）
+- `experiments/d088/mechanism_policies.py`: D088Policy（A 路线切换/B 预算调度/C 依赖图协调）
+- `experiments/d088/d088_scenario_generator.py`: 6 discovery + 4 fresh families，namespace `d088|train|`
+- `experiments/d088/d088_nsga3.py`: NSGA-III 适配 RecoveryGenome
+- `experiments/d088/d088_experiment.py`: 八组对照实验运行器
+- `experiments/d088/test_d088_mechanisms.py`: 20 项单元测试
+- `docs/D088_MECHANISM_DESIGN.md` + `docs/D088_TRAIN_ONLY_EXPERIMENT_REPORT.md`
+
+### 关键结果（三轮迭代）
+
+BC（预算调度+依赖图协调）为最佳组合：
+- Discovery: R3=0.967, R4=1.000, Harm=0.000
+- Fresh: R4=0.983, Harm=0.012（最优）
+
+B（预算调度）单独最有效，零伤害。BC 存在协同效应。所有硬约束零违规。
+
+### 安全边界
+
+Train-only 机制搜索。未访问 D-087 Validation/Test。无 LLM/API/A800。金标准未修改。
+
+## Next D-088 work (Phase 2)
+
+1. 增加 family 难度（5+ 工具、更长延迟、多重依赖环）
+2. 改进 A 的成本模型
+3. 扩大搜索预算（pop=48, gen=60）
+4. 研究机制交互的条件依赖

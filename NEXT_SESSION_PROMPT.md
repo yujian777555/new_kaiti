@@ -188,3 +188,16 @@ Read `docs/14_PAPER1_SAFE_RUNNER_PREFLIGHT.md`.
 ## Next task
 
 Prepare formal experiment authorization request with exact model revision, endpoint, seeds, split use, batch IDs, max_steps, evaluator, status treatment, token budget, cache namespace, and rollback plan. Do not start Qwen3 inference, paid API, A800/vLLM, optimizer, training, or Test policy scoring without separate explicit authorization.
+
+## D-088 Phase 1 — 三机制实现与实验完成（2026-11-12）
+
+读 `docs/D088_MECHANISM_DESIGN.md` 和 `docs/D088_TRAIN_ONLY_EXPERIMENT_REPORT.md`。
+
+- 代码：`experiments/d088/`。20 项测试通过。
+- 三机制 A/B/C 已实现为 D088Genome + D088Policy，NSGA-III 演化搜索参数。
+- 八组对照：BC（预算调度+依赖图协调）最优，Discovery R3=0.967/R4=1.000/Harm=0.000；Fresh R4=0.983/Harm=0.012。
+- B 单独最有效，BC 有协同，ABC 不优于 BC。所有硬约束零违规。
+
+## Next task (D-088 Phase 2)
+
+增加 family 难度、改进 A 成本模型、扩大搜索预算、研究机制交互条件依赖。继续 Train-only，不访问 D-087 Validation/Test。

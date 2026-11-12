@@ -1,0 +1,448 @@
+{
+  "protocol_id": "D-088-MECHANISM-EXPERIMENT",
+  "tier": "fresh",
+  "manifest_sha256": "42352e1eede13a39db49a97b810f6e6c11b7037655366a42d9a50237b00884a0",
+  "scenario_count": 80,
+  "seeds": [
+    411,
+    522,
+    633
+  ],
+  "pop_size": 24,
+  "generations": 30,
+  "groups": {
+    "L": {
+      "mean_r3": 0.9499999999999998,
+      "mean_r4": 0.9666666666666667,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 7.7124999999999995,
+      "mean_avoid_harm": 0.029166666666666664,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.025,
+            6.8625,
+            0.050000000000000044,
+            0.0
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 1.0,
+          "avoid_harm": 0.025,
+          "action_cost": 6.8625
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.5875,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.5875
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.025,
+            8.6875,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.025,
+          "action_cost": 8.6875
+        }
+      ]
+    },
+    "A": {
+      "mean_r3": 0.9333333333333332,
+      "mean_r4": 0.9499999999999998,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 7.654166666666666,
+      "mean_avoid_harm": 0.049999999999999996,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.05,
+            7.75,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.05,
+          "action_cost": 7.75
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.7375,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.7375
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.0625,
+            7.475,
+            0.09999999999999998,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.9,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0625,
+          "action_cost": 7.475
+        }
+      ]
+    },
+    "B": {
+      "mean_r3": 0.9499999999999998,
+      "mean_r4": 0.9666666666666667,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 7.6375,
+      "mean_avoid_harm": 0.029166666666666664,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.6375,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.6375
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.0,
+            7.5875,
+            0.050000000000000044,
+            0.0
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 1.0,
+          "avoid_harm": 0.0,
+          "action_cost": 7.5875
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.05,
+            7.6875,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.05,
+          "action_cost": 7.6875
+        }
+      ]
+    },
+    "C": {
+      "mean_r3": 0.9499999999999998,
+      "mean_r4": 0.9666666666666667,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 7.754166666666666,
+      "mean_avoid_harm": 0.03333333333333333,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.0,
+            7.5875,
+            0.050000000000000044,
+            0.0
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 1.0,
+          "avoid_harm": 0.0,
+          "action_cost": 7.5875
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.05,
+            7.925,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.05,
+          "action_cost": 7.925
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.05,
+            7.75,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.05,
+          "action_cost": 7.75
+        }
+      ]
+    },
+    "AB": {
+      "mean_r3": 0.9499999999999998,
+      "mean_r4": 0.9499999999999998,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 7.575,
+      "mean_avoid_harm": 0.0375,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.7375,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.7375
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.5875,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.5875
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.4,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.4
+        }
+      ]
+    },
+    "AC": {
+      "mean_r3": 0.9499999999999998,
+      "mean_r4": 0.9499999999999998,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 8.445833333333333,
+      "mean_avoid_harm": 0.041666666666666664,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.0375,
+            9.05,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 9.05
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.025,
+            8.3875,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.025,
+          "action_cost": 8.3875
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.0625,
+            7.9,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0625,
+          "action_cost": 7.9
+        }
+      ]
+    },
+    "BC": {
+      "mean_r3": 0.9499999999999998,
+      "mean_r4": 0.9833333333333334,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 8.0125,
+      "mean_avoid_harm": 0.012499999999999999,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.0,
+            8.1,
+            0.050000000000000044,
+            0.0
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 1.0,
+          "avoid_harm": 0.0,
+          "action_cost": 8.1
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.0,
+            8.1375,
+            0.050000000000000044,
+            0.0
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 1.0,
+          "avoid_harm": 0.0,
+          "action_cost": 8.1375
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.8,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.8
+        }
+      ]
+    },
+    "ABC": {
+      "mean_r3": 0.9499999999999998,
+      "mean_r4": 0.9499999999999998,
+      "mean_cond_rec": 1.0,
+      "mean_action_cost": 7.3875,
+      "mean_avoid_harm": 0.041666666666666664,
+      "per_seed": [
+        {
+          "seed": 411,
+          "objectives": [
+            0.0,
+            0.0375,
+            7.6875,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 7.6875
+        },
+        {
+          "seed": 522,
+          "objectives": [
+            0.0,
+            0.0375,
+            6.7125,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.0375,
+          "action_cost": 6.7125
+        },
+        {
+          "seed": 633,
+          "objectives": [
+            0.0,
+            0.05,
+            7.7625,
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "cond_rec": 1.0,
+          "r3_success": 0.95,
+          "r4_success": 0.95,
+          "avoid_harm": 0.05,
+          "action_cost": 7.7625
+        }
+      ]
+    }
+  },
+  "summary_sha256": "b7a6c5fa2350ce4f902c09ac3d0a21a1e381221a6086ef291434adb36fce861b"
+}

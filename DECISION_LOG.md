@@ -157,3 +157,16 @@
 - Reports: `docs/14_PAPER1_SAFE_RUNNER_PREFLIGHT.md`, `data/taubench_legacy/retail/db_parity_report.json`, `data/taubench_legacy/retail/treatment_isolation_report.json`.
 - No LLM inference, API calls, A800/vLLM startup, optimizer execution, training, or Test policy scoring was performed.
 - Known issue: local Windows full-source lock test fails due to CRLF/LF Git blob SHA mismatch; CI on Ubuntu passes. Pre-existing, unrelated to this change.
+
+## D-016 — 2026-11-12: D-088 三机制实现与 Train-only 演化实验
+
+- 实现三个状态条件化恢复机制：A 失败反馈路线切换、B 延迟感知预算调度、C 依赖图与备用路线协调。
+- D088Genome 继承 RecoveryGenome，新增 15 个可演化参数（含 enable_mech_{a,b,c} 开关支持八组实验）。
+- NSGA-III 适配 RecoveryGenome（5 维目标：CondRecSucc/AvoidableHarm/ActionCost/CorrectEscalation/DamageContainment）。
+- 新 Train-only 家族：6 discovery（CHAIN_BLOCK/FORK_JOIN/CYCLE_ALT/PARALLEL_SINK/DEEP_CHAIN/STAR_HUB）+ 4 fresh（DIAMOND/LADDER/MULTI_FORK/LOOP_BREAK）。ID namespace `d088|train|`，与历史场景无重叠。
+- 三轮迭代：第一轮基线 → 第二轮机制改进（stop_pending 修复/批量确认/依赖链排序）→ 第三轮 Fresh 独立验证。
+- 最优组合 BC（预算调度+依赖图协调）：Discovery R3=0.967/R4=1.000/Harm=0.000；Fresh R4=0.983/Harm=0.012。
+- B 单独最有效（零伤害），BC 存在协同效应。ABC 不优于 BC（搜索空间过大）。
+- 所有硬约束零违规：constraint=0, duplicate=0, pending 无违规。
+- 20 项单元测试通过。pilot_a3b 95 项回归测试通过。
+- 无 LLM/API/A800/优化器真实执行/Test 访问/金标准修改。

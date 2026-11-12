@@ -74,6 +74,9 @@ jobs:
             tests/test_evotool_full_source_lock.py \
             tests/test_paper1_tau_bench_splits.py \
             tests/test_paper1_safe_runner_preflight.py
+      - name: Run D-088 mechanism tests
+        working-directory: experiments/d088
+        run: python -m pytest -q test_d088_mechanisms.py
       - name: Upload normalized dataset and integrity report
         if: always()
         uses: actions/upload-artifact@v4
