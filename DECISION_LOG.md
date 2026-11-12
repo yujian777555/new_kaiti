@@ -142,3 +142,18 @@
 - D-087 remains `REPLICATION_FAILED / NO-GO`; the lower cost does not offset failed R3/R4 recovery.
 - Counterfactual replay using only public dependencies, receipt type and observed feedback finds legal under-budget sequences for five failure classes. `rv03_MULTI_ROUTE` R3 repeat 4 has a 25-decision lower bound under the frozen 24-decision contract.
 - This is historical mechanism evidence, not a new method result. No optimizer, model, API, A800, or Test execution was performed.
+
+## D-015 — 2026-11-12: safe runner preflight framework
+
+- Implemented `scripts/paper1_safe_runner.py`: deterministic, model-free preflight for the Paper 1 evolutionary runner.
+- Data loading: Train 500 / Dev 20 via `load_train_dev_splits()`, Test deferred behind `load_test_after_freeze()` with dual gate (policy_frozen + explicit_authorization). Cross-split overlap = 0. Original task_id preserved. No random resplitting.
+- Evolution budget: `generations=8`, `batch_size=3`, `epochs=1`; 8 batches x 3 distinct Train tasks per seed (24 unique). Batch plan deterministic per seed; verified for seeds 42 and 99.
+- Selection: population selection and final policy selection on Dev only (S_sel = 20). `evolve(test=None)` and `log_test_eval=False` verified by source inspection and config assertion.
+- Test isolation: `TestIsolationGuard` intercepts `pathlib.Path.open` and `builtins.open` at file-access level. Violations raise `TestAccessViolation` and are recorded. Guard can be armed/disarmed; context manager supported.
+- DB injection: official tau-bench Retail DB loaded directly from vendored JSON files (bypassing `tau_bench` package import chain that requires `litellm`). `inject_official_db()` patches EvoTool's `load_db()` to return deep copies. Hash parity verified (500 users / 1000 orders / 50 products). Deep-copy isolation confirmed.
+- Treatment interface (L/R1/R2) pre-built: `Treatment` enum, `EpisodeCache` with per-treatment namespace isolation, `classify_operation_outcome()` orthogonal to execution status, `compute_progress()` dispatching per treatment. Cross-treatment cache contamination impossible.
+- Tests: `tests/test_paper1_safe_runner_preflight.py` — 43 tests, all passing. Covers all 10 required gates.
+- CI: test file added to `.github/workflows/paper1-regression.yml`.
+- Reports: `docs/14_PAPER1_SAFE_RUNNER_PREFLIGHT.md`, `data/taubench_legacy/retail/db_parity_report.json`, `data/taubench_legacy/retail/treatment_isolation_report.json`.
+- No LLM inference, API calls, A800/vLLM startup, optimizer execution, training, or Test policy scoring was performed.
+- Known issue: local Windows full-source lock test fails due to CRLF/LF Git blob SHA mismatch; CI on Ubuntu passes. Pre-existing, unrelated to this change.

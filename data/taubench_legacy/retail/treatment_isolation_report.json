@@ -1,0 +1,49 @@
+{
+  "report_type": "treatment_isolation",
+  "date": "2026-11-12",
+  "treatments": [
+    {
+      "name": "EVOTOOL_LEGACY",
+      "id": "L",
+      "cache_namespace": "cache_L_legacy"
+    },
+    {
+      "name": "EVOTOOL_OUTCOME_AWARE_SELECTION",
+      "id": "R1",
+      "cache_namespace": "cache_R1_outcome_aware_selection"
+    },
+    {
+      "name": "EVOTOOL_FULL_OUTCOME_AWARE",
+      "id": "R2",
+      "cache_namespace": "cache_R2_full_outcome_aware"
+    }
+  ],
+  "cache_isolation": {
+    "description": "EpisodeCache keys include treatment namespace; cross-treatment reads return None",
+    "verified": true
+  },
+  "operation_outcome_separation": {
+    "description": "operation_outcome is orthogonal to execution status; status is never overwritten",
+    "mapping": {
+      "success + Error: prefix": "domain_rejection",
+      "success + normal output": "completed",
+      "error + any output": "execution_error"
+    }
+  },
+  "progress_semantics": {
+    "legacy_L": {
+      "formula": "count(status==success) / total_steps",
+      "example_3_steps": 0.6666666666666666
+    },
+    "outcome_aware_R1_R2": {
+      "formula": "count(outcome==completed) / total_steps",
+      "example_3_steps": 0.3333333333333333
+    }
+  },
+  "blamer_mutator_evidence": {
+    "L": "legacy status",
+    "R1": "legacy status (unchanged)",
+    "R2": "operation_outcome"
+  },
+  "gate": "PASS"
+}

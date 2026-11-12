@@ -174,3 +174,17 @@ The current remote `main` is `caa2fed180c5d6efc48478962e5f23a099d960a5`; continu
 D-087 historical evidence has been migrated to `data/historical/d087/` from `kaitibaogao` commit `916b371ebc10825752d85b31e1ede5c6827c2cb3`. Read `docs/13_D087_FAILURE_MECHANISM_AUDIT.md` and `data/historical/d087/counterfactual_diagnosis.json` before designing new mechanisms. The independent audit confirms `REPLICATION_FAILED / NO-GO`; no candidate passed all R3/R4 criteria. Five failure classes have legal public-information counterfactual sequences under 24 decisions, while `rv03` R3 repeat 4 has a 25-decision lower bound.
 
 Next work is mechanism-only and Train-only: implement three distinct state-conditioned candidates (feedback-triggered route switching; delay-aware confirmation/budget allocation; dependency-graph alternate-path coordination), add matched baselines and independent ablations, and create new family/scenario IDs. Do not reuse D-087 Validation for tuning, do not access formal Test, and do not start Qwen3/vLLM, paid API, A800 training, or optimizer execution without separate authorization.
+
+## Step 7 — safe runner preflight (2026-11-12)
+
+Read `docs/14_PAPER1_SAFE_RUNNER_PREFLIGHT.md`.
+
+- Safe runner: `scripts/paper1_safe_runner.py`. Tests: `tests/test_paper1_safe_runner_preflight.py` (43 tests, all passing).
+- All 10 preflight gates PASS: split preservation 500/20/115, 8x3 batch plan (24 unique Train tasks), Dev-only selection, Test file-access interception, evolve(test=None), log_test_eval=False, DB injection + hash parity, deep-copy isolation, Treatment cache isolation (L/R1/R2), no LLM/API coupling.
+- Three treatments pre-built (not executed): EVOTOOL_LEGACY (L), EVOTOOL_OUTCOME_AWARE_SELECTION (R1), EVOTOOL_FULL_OUTCOME_AWARE (R2). operation_outcome orthogonal to execution status. Per-treatment episode caches.
+- DB parity: 500 users / 1000 orders / 50 products. Combined SHA-256 `ae10e8a7f23bedf88c90a528efa2d59d27cae24b5ce1f0d28768b39257bf9f0d`.
+- CI: new test file added to workflow.
+
+## Next task
+
+Prepare formal experiment authorization request with exact model revision, endpoint, seeds, split use, batch IDs, max_steps, evaluator, status treatment, token budget, cache namespace, and rollback plan. Do not start Qwen3 inference, paid API, A800/vLLM, optimizer, training, or Test policy scoring without separate explicit authorization.
