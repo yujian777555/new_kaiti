@@ -102,3 +102,34 @@ def test_fault_events_are_bound_to_unique_task_tool_call_and_seed():
     assert first.event_id != other_seed.event_id
     with pytest.raises(ValueError, match="duplicate fault event"):
         FaultInjectionBoundary({}, [first, same])
+
+
+
+def test_post_commit_timeout_on_address_update_is_idempotent_on_retry():
+    tools, load_data = _runtime()
+    db = load_data()
+    order_id, order = _pending_order(db)
+    args = {
+        "order_id": order_id,
+        "address1": "42 Deterministic Test Way",
+        "address2": "Unit 3",
+        "city": "Seattle",
+        "state": "WA",
+        "country": "USA",
+        "zip": "98101",
+    }
+    boundary = FaultInjectionBoundary(tools, [
+        FaultEvent("train-smoke-4", "modify_pending_order_address", 0,
+                   "timeout_after_commit", 43)
+    ])
+    with pytest.raises(InjectedToolFailure) as error:
+        boundary.invoke("train-smoke-4", 0, db, "modify_pending_order_address", args)
+    assert error.value.phase == "after_commit"
+    committed_address = deepcopy(db["orders"][order_id]["address"])
+    committed_hash = state_sha256(db)
+    output = boundary.invoke(
+        "train-smoke-4", 1, db, "modify_pending_order_address", args
+    )
+    assert not output.startswith("Error:")
+    assert db["orders"][order_id]["address"] == committed_address
+    assert state_sha256(db) == committed_hash

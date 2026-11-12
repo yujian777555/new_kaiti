@@ -178,3 +178,9 @@ T1 state-effect measurement now hashes JSON DB state directly instead of deep-co
 - Stop adding D-079 ablations. D-080 separates the LLM's planning/ordinary tool choice from an EC-optimized recovery layer.
 - Stage A adds deterministic tool-boundary fault injection around unchanged pinned Retail callables. Initial real-tool probe uses `cancel_pending_order` to distinguish pre-execution timeout from post-commit timeout and verify that blind retry cannot duplicate refund history.
 - CI validation pending. This is simulator semantics evidence only; no LLM/API/A800/optimizer/Dev/Test run.
+
+
+### D-017 implementation refinement — 2026-11-12
+
+- D-080 Stage A now contrasts two actual pinned write tools: non-repeatable cancellation/refund and idempotent address assignment. The same post-commit timeout cannot safely imply the same retry action for both.
+- Removed automatic D-079 exploratory optimizer executions from PR CI after D-079 was frozen as a regression suite. Existing D-079 tests remain mandatory; historical artifacts preserve the exploratory results.

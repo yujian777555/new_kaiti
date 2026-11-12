@@ -223,3 +223,10 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Added tests against the pinned official Retail `cancel_pending_order` tool: pre-execution timeout leaves state unchanged; post-commit timeout preserves the committed cancellation/refund; a blind retry is rejected and does not append another refund; rate-limit/schema rejection do not invoke the tool.
 - Added protocol `experiments/pilot_a3b/D080_FAULT_INJECTION_PROTOCOL.md`. CI must pass before accepting Stage A.
 - Scope is one real tool's semantics only. It does not establish generic idempotency, compensation behavior, or algorithmic improvement. Next add a second semantically distinct write tool and task-linked Train-only fault manifest, then run the hand-policy saturation gate. No LLM/A800/API/optimizer/Dev/Test.
+
+
+### D-080 Stage A extension — idempotency contrast
+
+- Added a second pinned write-tool probe: `modify_pending_order_address`. A post-commit timeout followed by the same assignment must converge to the identical full DB hash.
+- This contrasts with `cancel_pending_order`, whose second call is rejected after the first commit and must not append a second refund.
+- CI workflow no longer reruns the saturated D-079 exploratory optimizer on every PR; D-079 simulator/controller tests remain in the regression suite. This reduces irrelevant compute while preserving regression coverage.

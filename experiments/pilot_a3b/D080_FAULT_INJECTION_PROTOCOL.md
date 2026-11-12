@@ -14,11 +14,12 @@ Implemented modes:
 
 ## Real-tool semantic probe
 
-Uses the pinned `cancel_pending_order` implementation and a pending order from the pinned Retail DB:
+Uses the pinned `cancel_pending_order` and `modify_pending_order_address` implementations with pending orders from the pinned Retail DB:
 1. Pre-execution timeout leaves the order and payment history unchanged; a subsequent call may execute.
 2. Post-commit timeout leaves the order cancelled and refund history committed.
 3. A blind retry is rejected by the real tool because the order is no longer pending; payment history must not receive a second refund.
-4. Rate-limit/schema rejection occur before invocation and leave the DB unchanged.
+4. A second real write tool, `modify_pending_order_address`, is tested as an idempotent state assignment: a post-commit timeout followed by the same call leaves the final address and full DB hash unchanged.
+5. Rate-limit/schema rejection occur before invocation and leave the DB unchanged.
 
 The wrapper does not simulate partial commits inside a tool, fabricate compensation semantics, sleep, or alter vendor source. It does not decide recovery actions; it supplies deterministic observations for a separate recovery policy.
 
@@ -33,3 +34,11 @@ The wrapper does not simulate partial commits inside a tool, fabricate compensat
 ## Limitations / next step
 
 Passing these tests validates only this tool's observed commit/retry semantics. It does not establish that all Retail tools are idempotent or that a generic recovery controller is safe. Next, add one more semantically distinct write-tool case (e.g. address modification) and a task-linked Train-only deterministic fault manifest. Then run the fixed recovery policy saturation gate before any evolutionary search. No Validation/Test access.
+
+
+## Semantic distinction established by the slice
+
+- `cancel_pending_order`: non-repeatable state transition; after-commit retry is rejected and cannot duplicate refund entries.
+- `modify_pending_order_address`: idempotent assignment; after-commit retry converges to the same DB state.
+
+This distinction prevents treating all post-commit timeouts with one retry rule. The controller must condition recovery on tool contract and whether the effect may already have committed.
