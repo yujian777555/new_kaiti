@@ -139,10 +139,10 @@ For an episode with `n` tool calls and `k` returned-error calls, if the tool seq
 ## 7. Fair comparison and contamination controls
 
 - Keep the original vendored EvoTool files and source lock unchanged.
-- Run L and R as separate named treatments. The cleanest implementation is a separate process per arm; alternatively, include the treatment ID in every episode-cache key.
+- Run L, R1, and R2 as separate named treatments. The cleanest implementation is a separate process per arm; alternatively, include the treatment ID in every episode-cache key.
 - This is important because upstream `_EPISODE_CACHE` is global and its key is only policy hash plus instance ID. Running both arms in one process without cache isolation can reuse an episode scored under the other arm.
 - Use the same model revision, temperature, prompts, seeds, generation budget, batch size, task manifests, and action-step cap. For R1, isolate reward channels so Blamer/Mutator inputs remain legacy; for R2, deliberately expose operation outcomes to those modules.
-- For the status-only ablation, keep EvoTool's current output evaluator unchanged. Correcting case/comma/multiple-response output semantics or restoring the official conversation loop must be a separate treatment; otherwise the status effect is confounded.
+- For the outcome-aware ablations, keep EvoTool's current output evaluator unchanged. Correcting case/comma/multiple-response output semantics or restoring the official conversation loop must be a separate treatment; otherwise the operation-outcome effect is confounded.
 - Keep Train for evolution, Dev for selection, and Test held out for one final evaluation after policy and protocol freeze. The present authorization does not permit any of those model/optimizer runs.
 
 ## 8. Next gates

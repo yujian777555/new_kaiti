@@ -117,7 +117,7 @@ Read `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
 - 1,375 direct tool comparisons cover exact Gold Action arguments only; they are not exhaustive arbitrary-input dispatch tests.
 - The 44 returned `Error:` strings in 38 Gold tasks are part of source trajectories, and all 635 Gold trajectories pass official reward replay. Do not label the legacy `status=success` behavior a proven bug.
 - Compare two separate treatments: `EVOTOOL_LEGACY` (unchanged) and `EVOTOOL_RETURN_ERROR_AWARE` (only normal returned `Error:` text becomes `returned_error`). This is a status-semantics ablation, not an official correction. Keep exceptions as `error`, outputs/DB transitions/binary evaluator/reward weights unchanged.
-- The status field is not rendered into the current Selector/Synthesizer prompt content; it changes progress shaping and selection. Upstream `_EPISODE_CACHE` is global and omits treatment ID, so use separate processes or isolate cache keys.
+- Selector/Synthesizer omit status, but upstream Blamer trajectory rendering and Mutator trajectory feedback include it, and diagnostics branches on it. A raw status change therefore affects credit assignment and mutation too. Keep execution status separate from `operation_outcome`; use the L/R1/R2 design in D-011. Upstream `_EPISODE_CACHE` is global and omits treatment ID, so use separate processes or isolate cache keys.
 - The full EvoTool optimizer source is not vendored. Pin the complete upstream source before any optimizer run.
 - New direct fake-user tests and all-Gold status sensitivity replay are included in the current code changes; CI acceptance is pending.
 
