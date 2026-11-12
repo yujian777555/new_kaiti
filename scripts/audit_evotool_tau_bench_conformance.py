@@ -552,14 +552,17 @@ def _audit_status_treatments(rows_by_split, evotool_env, metrics):
         all_weighted_deltas.extend(weighted_deltas)
 
     return {
-        "scope": "deterministic replay of the pinned Gold Action traces; not policy evaluation",
+        "scope": "offline progress-metric sensitivity replay on pinned Gold Action traces; not policy evaluation",
         "policy_evaluation_performed": False,
         "llm_api_calls": 0,
         "binary_task_reward_in_scope": False,
+        "raw_execution_status_unchanged": True,
+        "blamer_mutator_effect_evaluated": False,
         "treatment_definition": (
-            "Legacy preserves status=success for every normal function return. "
-            "Return-error-aware changes only a normal return beginning with Error: "
-            "to status=returned_error; exceptions and unknown tools retain status=error."
+            "Compute progress twice on each exact Gold Action trace. In the second "
+            "temporary metrics input only, a normal return beginning with Error: is "
+            "represented as returned_error. No adapter observation, Episode status, "
+            "diagnostic, Blamer/Mutator input, or official binary reward is changed."
         ),
         "tool_outputs_and_database_transitions_unchanged": True,
         "total_task_count": sum(len(rows) for rows in rows_by_split.values()),
@@ -834,7 +837,7 @@ def write_report(report: dict, output_dir: Path) -> None:
         "",
         "- Scope: deterministic Gold Action replay only; not policy evaluation.",
         f"- Gold actions: {report['status_treatment_replay']['gold_action_count']}",
-        f"- Normal returns beginning with Error:: {report['status_treatment_replay']['returned_error_action_count']}",
+        f"- Normal tool returns with Error: prefix: {report['status_treatment_replay']['returned_error_action_count']}",
         f"- Tasks containing such returns: {report['status_treatment_replay']['tasks_with_returned_error']}",
         f"- Mean legacy progress: {report['status_treatment_replay']['mean_legacy_progress']}",
         f"- Mean return-error-aware progress: {report['status_treatment_replay']['mean_return_error_aware_progress']}",

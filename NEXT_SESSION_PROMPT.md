@@ -125,3 +125,15 @@ Read `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
 
 Finish CI acceptance, then audit/pin the full EvoTool source and reconcile the exact `G=8, B=3` sampling protocol with official Train 500 / Dev 20 / Test 115. No Qwen3 inference, paid API, A800/vLLM, optimizer, training, or Test policy scoring without separate explicit approval.
 
+
+
+## Step 4 review correction — status affects Blamer and Mutator
+
+At upstream EvoTool SHA `6a82719ea6e22cf23f963078e2527094e50b47f6`, `blame.py::_trajectory_text` includes `[status]`, `mutate.py` includes that trajectory when `use_trajectory=true`, and `diagnostics.py` branches on status. Thus a raw status change affects blame and mutation, not only progress/selection. Selector/Synthesizer omit status, but that is insufficient to claim isolation.
+
+Keep execution status separate from operation outcome. The proposed design has three arms:
+- `EVOTOOL_LEGACY`: exact original.
+- `EVOTOOL_OUTCOME_AWARE_SELECTION`: outcome-aware selection reward with a separate legacy diagnostic reward; Blamer/Mutator see unchanged legacy evidence.
+- `EVOTOOL_FULL_OUTCOME_AWARE`: operation outcome is exposed to progress, diagnostics, Blamer, and Mutator.
+
+The committed Gold-trace replay is progress-only sensitivity analysis; it is not a full optimizer treatment. See the corrected treatment matrix in `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.

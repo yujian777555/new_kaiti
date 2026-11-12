@@ -30,6 +30,18 @@ The review does not authorize model inference, A800/vLLM startup, paid API calls
 | EvoTool progress metric | `vendor/evotool/src/metrics.py` | `e28bc8fd73107be43f4c83453e677d630f00fa40` |
 | EvoTool success evaluator | `vendor/evotool/src/evaluators.py` | `5fd2f092b251e05d6cd66267051aa07deae5cad3` |
 
+Additional upstream EvoTool files were inspected at the same pinned revision `6a82719ea6e22cf23f963078e2527094e50b47f6`, but are not vendored in the current repository lock:
+
+| Component | Upstream path | Git blob SHA |
+|---|---|---|
+| Blamer trajectory rendering | `src/evolve/blame.py` | `788a60987380e5394044c817e4e3d81aefa1d081` |
+| Status-based diagnostics | `src/evolve/diagnostics.py` | `c1abdbde9235807371abbc814984d497e45f24b5` |
+| Trajectory-guided mutation | `src/evolve/mutate.py` | `d3b2c9f04c139ddce69975de2ab36d9c55527741` |
+| Prompt module rendering | `src/policy/modules.py` | `0d7de352449f878644f67a754031077da074ae56` |
+| Evolution loop | `src/evolve/loop.py` | `036a3d3f9c1ad14ad08b72ebd51dd27ef61c5515` |
+| Population selection | `src/evolve/select.py` | `f514568a286f90192cb463ac16012dee47f2c74f` |
+| Configuration | `src/config.py` | `a70ba9cd4415a3e04a834c49dcd6c29630b76b4a` |
+
 The tau-bench source lock covers 42 official source files. The EvoTool lock covers the nine vendored adapter/config files; it does **not** vendor the complete optimizer implementation. The upstream pinned revision also contains `src/policy/modules.py` (`0d7de352449f878644f67a754031077da074ae56`), `src/evolve/loop.py` (`036a3d3f9c1ad14ad08b72ebd51dd27ef61c5515`), `src/evolve/select.py` (`f514568a286f90192cb463ac16012dee47f2c74f`), and `src/config.py` (`a70ba9cd4415a3e04a834c49dcd6c29630b76b4a`), but these are not part of the current vendored lock. A runnable, full-source reproduction still requires a separately pinned complete source checkout or an expanded source lock.
 
 ## 3. What the fake user actually does
@@ -63,9 +75,9 @@ The Retail Env stores a separate rules list, but the default `ToolCallingAgent` 
 
 1. `run_episode` executes Planner → Selector → Caller → tool executor → Synthesizer.
 2. The adapter is a stateful, single-instruction Retail DB executor; it does not call the official `Env.reset`, `Env.step`, user simulator, or Wiki prompt.
-3. The Synthesizer's `_render_step` receives the tool output text, not the `status` field. Selector state summaries also carry the output text. Thus changing the status label alone does not change the LLM prompt content in the current implementation.
-4. `metrics.progress` computes `0.5 × tool-sequence F1 + 0.5 × status-success fraction`; `run_episode` combines binary task success and progress as `0.7 × success + 0.3 × progress`. The status field therefore affects the evolutionary reward/selection path even though it is not rendered into the Agent's tool-output prompt.
-5. The optional `route_episode` helper also counts only `status="error"` in its error-count tie-break. A new `returned_error` status must be included there if that optional path is used.
+3. The Selector's state summary and Synthesizer's `_render_step` render tool output text, not the status field.
+4. The status field **does** enter the Blamer's `_trajectory_text` as `[status]`, and enters the Mutator's trajectory packet when `use_trajectory=true`. `diagnostics.extract_diagnostics` also branches on status (currently it treats `status="error"` as a Caller event). Therefore, changing the raw status affects credit assignment and mutation evidence as well as progress scoring.
+5. `metrics.progress` computes `0.5 × tool-sequence F1 + 0.5 × status-success fraction`; `run_episode` combines binary task success and progress as `0.7 × success + 0.3 × progress`. The optional `route_episode` helper also counts only `status="error"` in its tie-break. A full outcome-aware treatment must define its behavior in diagnostics and this optional helper rather than merely changing the progress metric.
 
 ## 5. Review findings and limits
 
@@ -80,52 +92,63 @@ The Retail Env stores a separate rules list, but the default `ToolCallingAgent` 
 
 The existing 1,375-call parity result is exact-trace coverage: it demonstrates agreement on the pinned Gold Action inputs, not all possible argument values, malformed calls, or unknown tool names. The current exception-mismatch count must likewise be interpreted within those tested calls.
 
-## 6. Separate status treatments
+## 6. Separate status/outcome treatments
 
-The official tau-bench environment does not expose EvoTool's `status` field. It returns observation text and computes task reward from state and required outputs. Consequently, the return-error-aware arm below is a **metric-semantics ablation**, not a correction mandated by official tau-bench.
+The official tau-bench environment does not expose EvoTool's `status` field. It returns observation text and computes task reward from state and required outputs. A returned `Error:` string is therefore not an official status category. The treatment should preserve two orthogonal facts:
+
+- **Execution status:** whether the Python tool function returned normally (`success`) or raised/was unknown (`error`).
+- **Operation outcome:** whether a normal return represents an accepted operation or a tool/business rejection.
+
+Do not overwrite execution status with a mixed business-outcome label. Add an orthogonal `operation_outcome` field in the treatment implementation.
 
 ### Arm L — `EVOTOOL_LEGACY`
 
-- Preserve the pinned EvoTool adapter unchanged.
+- Preserve the pinned EvoTool adapter and all source behavior unchanged.
 - A tool function that returns normally receives `status="success"`, even if its returned text begins with `Error:`.
-- Python exceptions and unknown tools retain the original error behavior.
+- Python exceptions and unknown tools retain the original `status="error"`.
 - Preserve the original `progress` and `0.7/0.3` reward formula.
 
-### Arm R — `EVOTOOL_RETURN_ERROR_AWARE`
+### Arm R1 — `EVOTOOL_OUTCOME_AWARE_SELECTION`
 
-- Keep the exact same tool function, raw output, database mutation, prompts, binary task evaluator, progress formula, and reward weights.
-- Only reclassify a normal tool return whose output begins exactly with `Error:` from `success` to `returned_error`.
-- Keep Python exceptions and unknown tools as `error`; do not collapse execution exceptions and returned business/tool errors into one category.
-- The existing progress function counts only `status="success"`, so `returned_error` contributes zero to the execution-success fraction.
-- If the optional `route_episode` path is used, its error-count helper must count both `error` and `returned_error`.
+- Derive `operation_outcome="rejected"` for a normal return whose output begins exactly with `Error:`; use `accepted` for other normal returns and `unknown` for execution exceptions/unknown tools.
+- Keep the raw `Step.observation.status` unchanged. Blamer, Mutator, and diagnostics therefore see the legacy execution-status evidence.
+- Compute an outcome-aware progress/selection score using `operation_outcome`, while preserving a separate legacy `diagnostic_reward` for the Blamer and Mutator. The evolution loop uses the outcome-aware selection reward for representative-episode choice, parent/child acceptance, and population selection; the diagnostic prompts continue to receive the legacy reward.
+- This requires explicit separate reward channels; simply changing `Episode.reward` is not sufficient because the current Blamer and Mutator also consume it.
+- This arm isolates the effect of outcome-aware fitness/selection from changes in blame and mutation evidence.
 
-This arm tests whether the shaped reward should reward successful function invocation or successful business-operation outcome. Neither interpretation is assumed superior in advance.
+### Arm R2 — `EVOTOOL_FULL_OUTCOME_AWARE`
+
+- Add the same orthogonal `operation_outcome` field, but expose it to the Blamer and Mutator trajectory text and to structured diagnostics.
+- Add a distinct diagnostic event for a returned business/tool rejection; do not mislabel it as a Python exception. The Blamer can decide whether the rejection indicates a Caller, Planner, or expected intermediate action.
+- Use outcome-aware progress and reward consistently for search, blame, and mutation.
+- Update optional `route_episode` tie-breaking to distinguish execution exceptions from returned operation rejections.
+- This arm tests whether explicit outcome evidence improves credit assignment and targeted mutation beyond the reward-only effect.
+
+The current deterministic replay added to the harness is a **progress-only sensitivity calculation** for R1. It computes `metrics.progress` twice on the same Gold Action traces, placing `returned_error` only in a temporary copy of the metric input. It does not modify the adapter observation, run Blamer/Mutator, or simulate either full optimizer treatment.
 
 ### Why the distinction matters
 
 The source audit found 44 normal-return `Error:` observations across 38 official Gold tasks (Train 20, Dev 0, Test 24). All 635 exact Gold Action trajectories passed the official reward replay. Some returned errors are deliberate intermediate observations, such as an incorrect identity/order/product identifier that the task trajectory later corrects; others expose genuine business constraints.
 
-Therefore, Arm R can penalize actions that are part of an officially successful reference trajectory. That is an intentional sensitivity question, not evidence that Arm R is the corrected official metric.
+Therefore, neither R1 nor R2 is the official metric correction. They are hypotheses about how evolutionary search should interpret returned operation rejections. Arm R2 can also change blame attribution and mutation targets, so it must not be interpreted as a pure fitness ablation.
 
-For an episode with `n` tool calls and `k` returned-error calls, if the tool sequence is otherwise identical, the status-only weighted shaping difference is:
+For an episode with `n` tool calls and `k` returned-error calls, if the tool sequence is otherwise identical, the R1 progress-only weighted shaping difference is:
 
 `0.3 × 0.5 × (k/n) = 0.15 × (k/n)`.
-
-The deterministic replay added to the harness quantifies this effect on all pinned Gold Action traces without an LLM or optimizer.
 
 ## 7. Fair comparison and contamination controls
 
 - Keep the original vendored EvoTool files and source lock unchanged.
 - Run L and R as separate named treatments. The cleanest implementation is a separate process per arm; alternatively, include the treatment ID in every episode-cache key.
 - This is important because upstream `_EPISODE_CACHE` is global and its key is only policy hash plus instance ID. Running both arms in one process without cache isolation can reuse an episode scored under the other arm.
-- Use the same model revision, temperature, prompts, seeds, generation budget, batch size, task manifests, and action-step cap. Change only the status interpretation.
+- Use the same model revision, temperature, prompts, seeds, generation budget, batch size, task manifests, and action-step cap. For R1, isolate reward channels so Blamer/Mutator inputs remain legacy; for R2, deliberately expose operation outcomes to those modules.
 - For the status-only ablation, keep EvoTool's current output evaluator unchanged. Correcting case/comma/multiple-response output semantics or restoring the official conversation loop must be a separate treatment; otherwise the status effect is confounded.
 - Keep Train for evolution, Dev for selection, and Test held out for one final evaluation after policy and protocol freeze. The present authorization does not permit any of those model/optimizer runs.
 
 ## 8. Next gates
 
-1. Run the new fake-user contract tests and full deterministic status replay in CI.
-2. Preserve the legacy arm as the primary historical baseline; keep the return-error-aware arm as a diagnostic ablation.
+1. Complete CI acceptance for the fake-user contract tests and progress-only sensitivity replay.
+2. Preserve Legacy as the primary historical baseline; implement R1 and R2 only as separately named, independently cached treatments.
 3. Pin the complete upstream EvoTool source needed for the optimizer and audit its config/split-loading path before any execution.
 4. Reconcile `G=8, B=3` with the full 500/20/115 official splits and document the exact sampling budget. Do not use the mixed 150-instance demo builder.
 5. Prepare a separate inference/optimizer authorization request with exact model revision, split use, seeds, budget, metrics, stop rules, and rollback. Until that approval exists, run deterministic source/unit tests only.

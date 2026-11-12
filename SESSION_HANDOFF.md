@@ -87,3 +87,19 @@ Review: `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.
 
 Complete the deterministic status replay and fake-user tests in CI, then pin/audit the complete EvoTool optimizer source and reconcile `G=8, B=3` with the 500/20/115 split. Do not start model inference, API calls, A800/vLLM, optimizer execution, training, or Test policy scoring without separate explicit authorization.
 
+
+
+## Step 4 review correction — status enters credit assignment too (2026-11-12)
+
+Further inspection of upstream EvoTool at `6a82719ea6e22cf23f963078e2527094e50b47f6` shows:
+- `blame.py::_trajectory_text` renders `[status]` for every step.
+- `mutate.py` includes that trajectory when `use_trajectory=true` (the default).
+- `diagnostics.py` branches on `status="error"` and exposes the status list.
+- Selector state summaries and Synthesizer step rendering omit status, but Blamer/Mutator do not.
+
+Consequently, changing the raw status label is a full credit-assignment and mutation-input change, not merely a selection change. Keep execution status and operation outcome as separate fields. The intended comparison is now:
+- L: `EVOTOOL_LEGACY`, exact release behavior.
+- R1: `EVOTOOL_OUTCOME_AWARE_SELECTION`, separate selection and diagnostic reward channels; Blamer/Mutator retain legacy evidence.
+- R2: `EVOTOOL_FULL_OUTCOME_AWARE`, operation outcome is also exposed to Blamer/Mutator/diagnostics.
+
+The CI sensitivity replay computes only the progress-metric difference on fixed Gold traces. It does not evaluate R1/R2 optimizer behavior or any blame/mutation effect. Full source hashes and treatment details are in `docs/11_INDEPENDENT_REVIEW_AND_STATUS_TREATMENT_DESIGN.md`.

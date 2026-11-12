@@ -100,3 +100,14 @@
 - New deterministic tests/replay quantify fake-user and status semantics. This is source/conformance evidence only, not a policy-performance or EC-uplift result.
 - No LLM/API/A800/vLLM/optimizer/training/Test policy scoring was performed.
 
+
+
+## D-011 — 2026-11-12: distinguish progress sensitivity from full outcome-aware evolution
+
+- Further inspection of the pinned upstream EvoTool source found that `src/evolve/blame.py::_trajectory_text` includes each step's `[status]`; `src/evolve/mutate.py` includes that trajectory when `use_trajectory=true`; and `src/evolve/diagnostics.py` branches on status.
+- Therefore, changing `Step.observation.status` changes Blamer evidence and potentially Mutator edits, not just progress/selection. The Selector state summary and Synthesizer renderer omit status, but that does not isolate the whole pipeline.
+- Keep execution status and business outcome as orthogonal fields. Do not overwrite `status="success"` with a mixed rejection/exception category.
+- Proposed arms: L `EVOTOOL_LEGACY`; R1 `EVOTOOL_OUTCOME_AWARE_SELECTION` with separate selection and diagnostic reward channels; R2 `EVOTOOL_FULL_OUTCOME_AWARE` with operation outcome exposed to Blamer/Mutator/diagnostics as well as progress.
+- Current deterministic status replay is only a progress-metric sensitivity calculation on fixed Gold Action traces. It is not an optimizer treatment and does not test blame/mutation effects.
+- R1 must preserve legacy diagnostic reward for Blamer/Mutator while using outcome-aware selection reward. R2 is a composite full-pipeline treatment. Both remain hypotheses; neither is an official tau-bench correction.
+- No model/API/A800/vLLM/optimizer/training/Test policy scoring was performed.

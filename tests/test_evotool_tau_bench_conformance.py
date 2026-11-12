@@ -123,6 +123,8 @@ def test_return_error_aware_status_is_a_sensitivity_treatment_not_official_rewar
     assert status["policy_evaluation_performed"] is False
     assert status["llm_api_calls"] == 0
     assert status["binary_task_reward_in_scope"] is False
+    assert status["raw_execution_status_unchanged"] is True
+    assert status["blamer_mutator_effect_evaluated"] is False
     assert status["tool_outputs_and_database_transitions_unchanged"] is True
     assert status["total_task_count"] == 635
     assert status["gold_action_count"] == 1375
