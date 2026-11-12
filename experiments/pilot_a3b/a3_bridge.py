@@ -213,7 +213,10 @@ def hand_fsm():
             # prefix back and then illegally continuing downstream.
             genes.append(Gene(OBS_COMPENSATED, att, True, ACT_RETRY, 2))
             genes.append(Gene(OBS_COMPENSATED, att, False, ACT_RETRY, 2))
-            genes.append(Gene(OBS_COMP_FAILED, att, stack, ACT_ESCALATE, 2))
+            genes.append(Gene(
+                OBS_COMP_FAILED, att, stack,
+                ACT_ROLLBACK if stack else ACT_ESCALATE, 2,
+            ))
             genes.append(Gene(OBS_NOOP, att, stack, ACT_VERIFY, 2))
     return StatefulFSM(genes, (ACT_ESCALATE, 2))
 
@@ -236,6 +239,7 @@ _REPAIR_MAP = {
     (OBS_PERMISSION, ACT_COMPENSATE): ACT_ESCALATE,
     (OBS_PERMISSION, ACT_ROLLBACK): ACT_ESCALATE,
     (OBS_PERMISSION, ACT_REPAIR): ACT_ESCALATE,
+    (OBS_COMP_FAILED, ACT_ROLLBACK): ACT_ESCALATE,
     (OBS_SCHEMA, ACT_RETRY): ACT_REPAIR,
     (OBS_SCHEMA, ACT_WAIT): ACT_REPAIR,
     (OBS_SCHEMA, ACT_VERIFY): ACT_REPAIR,
@@ -256,7 +260,7 @@ def repair_fsm(fsm: StatefulFSM) -> StatefulFSM:
         # public compensation stack is non-empty; all other permission-state
         # actions remain fail-closed and become explicit escalation.
         prefix_rollback = (
-            gene.error == OBS_PERMISSION
+            gene.error in (OBS_PERMISSION, OBS_COMP_FAILED)
             and gene.stack
             and gene.action == ACT_ROLLBACK
         )
@@ -453,7 +457,7 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
             # blocking observation: after clearing the prefix the controller
             # must escalate, not retry the denied operation. For other rollback
             # contexts retain the COMPENSATED observation used by R2 recovery.
-            rollback_after_permission = state.last_obs == OBS_PERMISSION
+            rollback_blocking_failure = state.last_obs in (OBS_PERMISSION, OBS_COMP_FAILED)
             order = 0
             for j in reversed(list(state.comp_stack)):
                 order += 1
@@ -463,7 +467,7 @@ def run_episode_fsm(fsm: StatefulFSM, scenario):
                     state.confirmed[j] = False
             state.comp_stack = []
             state.attempts += 1
-            state.last_obs = OBS_PERMISSION if rollback_after_permission else OBS_COMPENSATED
+            state.last_obs = state.last_obs if rollback_blocking_failure else OBS_COMPENSATED
             continue
 
         # unknown action: treat as no-op observation

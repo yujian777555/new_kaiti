@@ -186,3 +186,5 @@ Independent review is complete. Step 4 now separates the immutable EvoTool legac
 - Follow-up audit found the independent `contract_validator.py` also rejected permission-state ROLLBACK unconditionally. It is corrected to allow ROLLBACK only when `stack=True`, and reject it when `stack=False`. The R3 integration test now requires the repaired genome to pass this independent validator before execution.
 
 - Corrected the fixed hand baseline as a reference policy: `OBS_COMPENSATED + stack=True` now retries the compensated current step while preserving prior commits; `OBS_PERMISSION + stack=True` rolls back the prefix before escalation. Added integration tests for R2 partial-commit recovery and R3/R4 permission recovery, including independent-validator acceptance and rejection cases.
+
+- Added the analogous R4 path: after current-step partial compensation fails, roll back the compensatable prefix while preserving `COMP_FAILED`, then escalate. The independent validator accepts this only with `stack=True`; tests reject empty-stack rollback.

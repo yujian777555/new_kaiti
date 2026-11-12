@@ -78,3 +78,8 @@ The R2.1 diagnostic exposed a mismatch between the robust R3 label and semantic 
 ## Fixed-policy reference correction
 
 The D-079 simulator tests also pin the strong hand baseline's recovery semantics: after a partial current-step effect is successfully compensated, the committed prefix must remain intact and the current step must be retried (`OBS_COMPENSATED, stack=True → RETRY`); it must not roll back the prefix and then continue downstream. On permission denial, a non-empty prefix is rolled back, and the still-active permission denial is escalated. The fixed reference policy is updated to these two-step semantics. The tests verify R2 partial-commit recovery and R3/R4 permission-prefix handling under the independent contract validator. Fixed-policy hard-safety failures, if any remain on other scenario families, must still be reported rather than waived.
+
+
+## R4 committed-prefix containment correction
+
+A second simulator case distinguishes permission denial (R3) from an uncompensatable current-step partial effect (R4). When compensation of the current partial step fails, the controller must roll back any compensatable committed prefix, preserve the `COMP_FAILED` blocking observation, and then escalate. The repairer and independent validator permit `COMP_FAILED + ROLLBACK` only when `stack=True`; an empty-stack rollback is repaired/rejected. The fixed hand policy and integration tests cover this R4 path as well as R3 and R2.

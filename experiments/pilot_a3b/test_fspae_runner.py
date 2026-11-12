@@ -6,7 +6,7 @@ import pytest
 
 from a3_bridge import (
     ACT_COMPENSATE, ACT_ESCALATE, ACT_RETRY, ACT_ROLLBACK, ACT_VERIFY,
-    OBS_COMPENSATED, OBS_PARTIAL, OBS_PERMISSION,
+    OBS_COMPENSATED, OBS_COMP_FAILED, OBS_PARTIAL, OBS_PERMISSION,
     evaluate_controller, evaluator_verdict_from_scenario, hand_fsm, repair_fsm,
 )
 from d079_challenge_generator import build_challenge_manifest
@@ -227,37 +227,73 @@ def test_permission_prefix_rollback_and_independent_validator_are_consistent():
     assert fsm.genes[(OBS_PERMISSION, 1, True)].action == ACT_ROLLBACK
     assert fsm.genes[(OBS_PERMISSION, 2, False)].action == ACT_ESCALATE
 
-    for label in ("R3", "R4"):
-        scenario = next(
-            item for item in manifest["scenarios"]
-            if item["evaluation_role"] == "diagnostic"
-            and item["difficulty_stratum"] == "D5_PERMISSION_AFTER_COMMITTED_PREFIX"
-            and item["label"] == label
-        )
-        verdict = evaluator_verdict_from_scenario(scenario)
-        result = evaluate_controller(
-            fsm, [scenario], {scenario["scenario_id"]: verdict}
-        )
-        row = result["rows"][0]
-        assert row["decision_trace"] == [
-            (OBS_PERMISSION, 1, True, ACT_ROLLBACK),
-            (OBS_PERMISSION, 2, False, ACT_ESCALATE),
-        ]
-        assert row["policy_selected_escalation"] == 1
-        assert row["class_success"] == 1
-        assert row["avoidable_harm"] == 0
-        assert row["active_effects"] == verdict["min_reachable_harm"]
-        assert row["invariant_violation"] == 0
-        assert row["duplicate"] == 0
+    scenario = next(
+        item for item in manifest["scenarios"]
+        if item["evaluation_role"] == "diagnostic"
+        and item["difficulty_stratum"] == "D5_PERMISSION_AFTER_COMMITTED_PREFIX"
+        and item["label"] == "R3"
+    )
+    verdict = evaluator_verdict_from_scenario(scenario)
+    result = evaluate_controller(
+        fsm, [scenario], {scenario["scenario_id"]: verdict}
+    )
+    row = result["rows"][0]
+    assert row["decision_trace"] == [
+        (OBS_PERMISSION, 1, True, ACT_ROLLBACK),
+        (OBS_PERMISSION, 2, False, ACT_ESCALATE),
+    ]
+    assert row["policy_selected_escalation"] == 1
+    assert row["class_success"] == 1
+    assert row["avoidable_harm"] == 0
+    assert row["active_effects"] == 0
+    assert row["invariant_violation"] == 0
+    assert row["duplicate"] == 0
 
-    # The independent validator must reject a prefix rollback with no prefix.
+    # R4: current-step compensation fails, then the committed prefix is rolled
+    # back before escalating the still-blocked partial effect.
+    r4_scenario = {
+        "scenario_id": "unit|train|diagnostic|prefix-partial-r4",
+        "split": "train",
+        "task": "inventory_order_payment",
+        "composition": "uncompensatable_partial_at_step_1",
+        "tools": ["inventory", "order", "payment"],
+        "faults": [
+            {"fault": "none", "delay": 0, "retry_after": 0, "compensation_available": True},
+            {"fault": "partial_commit", "delay": 0, "retry_after": 0, "compensation_available": False},
+            {"fault": "none", "delay": 0, "retry_after": 0, "compensation_available": True},
+        ],
+        "label": "R4",
+    }
+    r4_verdict = evaluator_verdict_from_scenario(r4_scenario)
+    r4_result = evaluate_controller(
+        fsm, [r4_scenario], {r4_scenario["scenario_id"]: r4_verdict}
+    )
+    r4_row = r4_result["rows"][0]
+    assert r4_row["decision_trace"] == [
+        (OBS_PARTIAL, 1, True, ACT_COMPENSATE),
+        (OBS_COMP_FAILED, 2, True, ACT_ROLLBACK),
+        (OBS_COMP_FAILED, 2, False, ACT_ESCALATE),
+    ]
+    assert r4_row["policy_selected_escalation"] == 1
+    assert r4_row["class_success"] == 1
+    assert r4_row["avoidable_harm"] == 0
+    assert r4_row["active_effects"] == r4_verdict["min_reachable_harm"]
+    assert r4_row["invariant_violation"] == 0
+    assert r4_row["duplicate"] == 0
+
+    # Both blocking-state rollback actions require an actual committed prefix.
     invalid = hand_fsm()
     invalid.genes[(OBS_PERMISSION, 2, False)].action = ACT_ROLLBACK
+    invalid.genes[(OBS_COMP_FAILED, 2, False)].action = ACT_ROLLBACK
     invalid_report = validate_genome(
         invalid.genes_list(), invalid.default_action, invalid.default_wait
     )
     assert any(
         "PERMISSION rollback requires a committed prefix" in item
+        for item in invalid_report.rule_violations
+    )
+    assert any(
+        "COMP_FAILED rollback requires a committed prefix" in item
         for item in invalid_report.rule_violations
     )
 
