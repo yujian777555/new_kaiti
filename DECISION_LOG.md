@@ -133,3 +133,12 @@
 - Added `scripts/paper1_tau_bench_splits.py`: split-preserving Train/Dev loader, explicitly gated Test loader, official tool schema mapping, EvoTool instance mapping, and deterministic G=8/B=3 first-epoch batch planner.
 - Added tests for 500/20 preservation, no Test file read by Train/Dev loader, explicit Test authorization, tool schema parity, and 8 batches × 3 unique Train IDs.
 - This is a data/protocol preflight only; no optimizer or model was run.
+
+## D-014 — 2026-11-12: D-087 evidence migration and failure-mechanism audit
+
+- Historical `kaitibaogao` was read-only audited at commit `916b371ebc10825752d85b31e1ede5c6827c2cb3`; no file was written there.
+- D-087 raw JSON/CSV, manifest, frozen candidates, CI/provenance logs, protocol files, and source inputs were copied byte-for-byte into `data/historical/d087/`. Source/target SHA-256 equality is recorded in `data/historical/d087/D087_PROVENANCE.json`.
+- Independent parsing of the raw ledger reproduces 1,040 unique evaluations, 80 scenarios, five identical candidate metric vectors (`R3=R4=0.85`, `CondRecSucc=1.0`, `RecoveryCost=8.85`), 30 failed candidate rows, and zero candidate hard-constraint violations.
+- D-087 remains `REPLICATION_FAILED / NO-GO`; the lower cost does not offset failed R3/R4 recovery.
+- Counterfactual replay using only public dependencies, receipt type and observed feedback finds legal under-budget sequences for five failure classes. `rv03_MULTI_ROUTE` R3 repeat 4 has a 25-decision lower bound under the frozen 24-decision contract.
+- This is historical mechanism evidence, not a new method result. No optimizer, model, API, A800, or Test execution was performed.

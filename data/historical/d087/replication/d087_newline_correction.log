@@ -1,0 +1,7 @@
+D-087 CSV newline correction
+
+The Windows text writer transformed the CSV writer's existing CRLF into CRCRLF. This was a serialization defect, not an experiment result.
+
+The writer now uses newline="" for CSV. The CSV was regenerated from the already saved raw JSON without running any policy or optimizer. The prior CSV is preserved byte-for-byte as d087_replication_rows.pre_windows_newline_fix.csv.gz, and the prior manifest as d087_artifact_manifest.pre_windows_newline_fix.json.
+
+Verified after correction: exactly 1,040 data rows, single CRLF line endings, unchanged metrics, unchanged REPLICATION_FAILED decision, and all independent audit checks pass.

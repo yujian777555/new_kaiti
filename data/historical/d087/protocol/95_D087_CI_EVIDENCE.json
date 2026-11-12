@@ -1,0 +1,34 @@
+{
+  "schema": "d087-ci-evidence-v1",
+  "code_and_result_commit": "9ce0df1c0dc011de4424cd0a4f3fff79adf4e87d",
+  "regression_run_id": 43156190408,
+  "regression_job_id": 130976565656,
+  "conclusion": "success",
+  "test_counts": {
+    "pilot_a3b": 398,
+    "pilot_a_recovery": 28,
+    "total": 426
+  },
+  "artifact": {
+    "name": "d087-frozen-replication-regression-evidence",
+    "id": 13915563618,
+    "digest": "sha256:eab41010d2517baa1ca11fe8b0d7ef584dbcb4ac1f904dd47f4d538a9f22177f",
+    "downloaded_and_independently_audited": true,
+    "audit_checks_passed": 16,
+    "raw_row_count": 1040,
+    "candidate_pass_count": 0,
+    "decision": "REPLICATION_FAILED"
+  },
+  "prior_failed_run": {
+    "run_id": 43154910372,
+    "conclusion": "failure",
+    "reason": "raw artifact hashes changed across newline normalization; canonical artifact hashes fixed and independently verified",
+    "log": "experiments/pilot_a3b/results/d087_replication/d087_ci_43154910372_failure.log.gz"
+  },
+  "train_search_performed": false,
+  "new_policy_or_candidate_selection": false,
+  "test_accessed": false,
+  "real_llm_api_calls": 0,
+  "model_training": false,
+  "algorithm_innovation_proven": false
+}

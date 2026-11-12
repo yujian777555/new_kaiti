@@ -1,0 +1,6 @@
+D-087 first independent audit failed with StopIteration.
+
+Cause:
+The audit compared per-family records for every baseline against summary.per_family, which intentionally contains frozen candidates only. The failure was in the audit lookup, not in the replication evaluation or its raw data.
+
+The audit was corrected to compare per-family candidate records only. Baseline aggregate metrics remain independently recomputed. No raw result, candidate, scenario, threshold, or decision rule was changed.

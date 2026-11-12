@@ -166,3 +166,11 @@ Pin full EvoTool source; implement/test split-preserving loader and safe runner 
 - Upstream data and local DB files are excluded from the full source vendor; the safe runner must inject the official pinned tau-bench DB.
 - Next: build/test a safe runner that passes `test=None`, disables periodic Test logging, selects on Dev only, and proves no Test read before policy freeze; add DB-loader parity tests. Resolve max_steps=6 vs official 30 and the user-simulator protocol before any authorized run.
 - No model/API/A800/vLLM/optimizer/training/Test policy scoring without separate explicit approval.
+
+## D-088 takeover update — 2026-11-12
+
+The current remote `main` is `caa2fed180c5d6efc48478962e5f23a099d960a5`; continue from the isolated branch `codex/d088-step1-takeover`. The full EvoTool source and split-loader commits are now present on `origin/main`; the older statements above about source pinning being absent are historical handoff context and must be rechecked against the current HEAD.
+
+D-087 historical evidence has been migrated to `data/historical/d087/` from `kaitibaogao` commit `916b371ebc10825752d85b31e1ede5c6827c2cb3`. Read `docs/13_D087_FAILURE_MECHANISM_AUDIT.md` and `data/historical/d087/counterfactual_diagnosis.json` before designing new mechanisms. The independent audit confirms `REPLICATION_FAILED / NO-GO`; no candidate passed all R3/R4 criteria. Five failure classes have legal public-information counterfactual sequences under 24 decisions, while `rv03` R3 repeat 4 has a 25-decision lower bound.
+
+Next work is mechanism-only and Train-only: implement three distinct state-conditioned candidates (feedback-triggered route switching; delay-aware confirmation/budget allocation; dependency-graph alternate-path coordination), add matched baselines and independent ablations, and create new family/scenario IDs. Do not reuse D-087 Validation for tuning, do not access formal Test, and do not start Qwen3/vLLM, paid API, A800 training, or optimizer execution without separate authorization.

@@ -1,0 +1,12 @@
+{
+  "files": {
+    "d087_execution.log": "60cb678aa828d6461838a08b0c00b2fd4e981611f36b426bbd2dfb9ef07f8cf2",
+    "d087_replication_report.md": "90e1e56a2921c83a205163106bc728af56d7db1ac221dd35149699c56d7e4b83",
+    "d087_replication_rows.csv": "f3144089eb1821f52413e3bae21a1c92538d0b71399fecc1550e7082517bdf2f",
+    "d087_replication_rows.json": "ccce3ec6ba251787126b98bd16ae6f1b0aa8532a743dc599734256a3587abc33",
+    "d087_replication_summary.json": "e616886233da046bd5fe9b524b4da023c6ed10e282feb781ca44b9ba078f0ff6"
+  },
+  "frozen_candidates_sha256": "31495e830da326778b44398a649e2614416451107fdea982530378b4abc6244c",
+  "manifest_sha256": "d2cdc1aa697592e2439b5a8d5dd354726d3b8dc74e4f215530f0d4c575d88ed8",
+  "test_accessed": false
+}

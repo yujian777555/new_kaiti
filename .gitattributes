@@ -1,0 +1,7 @@
+# 保留历史 D-087 artifact 的原始字节，避免 Windows 行尾转换破坏 provenance。
+/data/historical/d087/** -text
+/README.md text eol=lf
+/DECISION_LOG.md text eol=lf
+/SESSION_HANDOFF.md text eol=lf
+/NEXT_SESSION_PROMPT.md text eol=lf
+/docs/13_D087_FAILURE_MECHANISM_AUDIT.md text eol=lf

@@ -136,3 +136,16 @@ Pin the full upstream EvoTool source and implement the split-preserving loader p
 ## Next immediate task
 
 Build a safe Paper 1 runner preflight that injects the pinned official DB loader, passes `test=None` and `log_test_eval=False` into evolution, selects on Dev only, and cannot load Test before policy freeze and separate authorization. Add tests for no Test peeking and DB initial-state hash parity. Then reconcile max_steps=6 vs official 30 and the offline adapter vs official user-simulator protocol. No LLM/API/A800/vLLM/optimizer/training/Test policy scoring without separate explicit authorization.
+
+## D-088 takeover and D-087 failure audit — 2026-11-12
+
+- The current active base was re-fetched from `origin/main` at `caa2fed180c5d6efc48478962e5f23a099d960a5`; work is isolated on `codex/d088-step1-takeover`.
+- Historical D-087 evidence is preserved under `data/historical/d087/`; `data/historical/d087/D087_PROVENANCE.json` binds the copied artifacts to historical commit `916b371ebc10825752d85b31e1ede5c6827c2cb3` and records source/target hashes.
+- Independent raw-ledger audit: 1,040 rows and unique evaluation keys; 80 scenario IDs; 30 frozen-candidate failure rows, all repeat 4 and forced at 24 decisions; pending, duplicate and hard-constraint counts are zero for those failures.
+- Failure mechanism: the frozen genomes share `verify_delay=1`, alternate permission and low-cost preference; after delayed alternate failures they repeat the same route and spend the budget without route switching or cross-tool wait parallelism.
+- Counterfactual diagnosis shows legal public-information sequences for `rv02`/`rv04` R3 and all three R4 failure classes. `rv03` R3 repeat 4 remains unreachable within 24 decisions because the public dependency cycle forces three delayed alternate attempts per tool plus a final ESCALATE (lower bound 25).
+- This audit does not change the historical NO-GO and does not count counterfactual sequences as new validation results.
+
+## Next D-088 work
+
+Design at least three state-conditioned mechanisms (failure-feedback route switching, delay-aware budget scheduling, and dependency-graph/alternate-path coordination) and test them on new Train-only families. Keep D-087 sealed as historical regression evidence; do not tune on its Validation scenarios.
