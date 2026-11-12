@@ -196,3 +196,8 @@ The R2.1 result exposed an action-space/repair mismatch: `repair_fsm` blocked RO
 ## Step 10 — R2.3 context-conditioned recovery state
 
 The D-079 hand controller reaches 100% on the reused diagnostic set, so success-rate improvement is saturated. R2.3 tests whether evolving a context-conditioned FSM can reduce unnecessary decisions: after WAIT, distinguish ambiguous TIMEOUT (VERIFY before retry) from clear RATE_LIMIT (RETRY). Check the new WAITED_AMBIGUOUS / WAITED_CLEAR tests, mean decision count, per-seed metrics, and safety. Treat all D-079 diagnostic results as development-only. Next, if promising, build a fresh locked challenge with variable visibility and retry-after contexts; do not access Validation/Test.
+
+
+## Step 11 — FSPAE-R3-Block
+
+Inspect the latest CI run for the new fspae_r3_block arm. Confirm all simulator tests pass, then read the artifact's paired block comparisons and mechanism audit. Require global anchors, exact non-target gene preservation, in-block target mutation, zero cross-target mutation, zero hard-safety violations, and consistent per-seed improvement over matched NSGA-III and FSPAE-R2. D-079 is saturated by the hand reference (100% success, zero avoidable harm, zero hard-safety violations; mean 2.833 decisions), so treat it only as a mechanism regression set. If R3 does not beat matched NSGA-III, stop the current FSPAE approach and design a fresh D-080 challenge with variable visibility/retry contexts. Do not access Validation/Test.

@@ -262,6 +262,14 @@ class StratifiedCounterexamplePool:
                     "repair_valid": 0, "new_valid_individuals": 0,
                 })
 
+    def gene_keys_for_cluster(self, cluster_id):
+        """Return every observed decision-state gene in one exact fault cluster."""
+        keys = set()
+        for key, entry in self._strata.items():
+            if len(key) == 4 and key[1] == cluster_id:
+                keys.update(entry["genes"])
+        return tuple(sorted(keys))
+
     def stratum_statistics(self):
         count = len(self._strata)
         output = []

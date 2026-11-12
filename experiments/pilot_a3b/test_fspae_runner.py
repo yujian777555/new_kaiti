@@ -12,8 +12,14 @@ from a3_bridge import (
 )
 from d079_challenge_generator import build_challenge_manifest
 from contract_validator import validate_genome
-from sbcg import CandidateRecord, fsm_fingerprint, make_shared_initial_pool
-from fspae_runner import StratumParetoArchive, _target_cluster, run_fspae_evolution
+from sbcg import (
+    CandidateRecord, StratifiedCounterexamplePool, fsm_fingerprint,
+    make_shared_initial_pool,
+)
+from fspae_runner import (
+    StratumParetoArchive, _inherit_target_gene_block, _target_cluster,
+    run_fspae_evolution,
+)
 
 
 SCENARIOS = [
@@ -387,3 +393,82 @@ def test_waited_observation_is_split_by_public_ambiguity_context():
         "ambiguous timeout must be verified before retry" in item
         for item in report.rule_violations
     )
+
+
+def test_counterexample_gene_blocks_are_exactly_cluster_scoped():
+    pool = StratifiedCounterexamplePool()
+    pool.aggregate(
+        [{
+            "rows": [
+                {
+                    "scenario_id": "s1", "class_success": 0, "label": "R1",
+                    "duplicate": 0, "sla_violation": 0, "avoidable_harm": 0,
+                    "compensation_failure": False, "policy_selected_escalation": 0,
+                    "decision_trace": [
+                        ("TIMEOUT", 1, False, "RETRY"),
+                        ("WAITED_AMBIGUOUS", 2, False, "RETRY"),
+                    ],
+                },
+                {
+                    "scenario_id": "s2", "class_success": 0, "label": "R3",
+                    "duplicate": 0, "sla_violation": 0, "avoidable_harm": 0,
+                    "compensation_failure": False, "policy_selected_escalation": 0,
+                    "decision_trace": [("PERMISSION", 1, True, "ESCALATE")],
+                },
+            ]
+        }],
+        {"s1": "family-a", "s2": "family-b"},
+        {"s1": "family-a|D1", "s2": "family-b|D5"},
+    )
+    assert pool.gene_keys_for_cluster("family-a|D1") == (
+        ("TIMEOUT", 1, False), ("WAITED_AMBIGUOUS", 2, False),
+    )
+    assert pool.gene_keys_for_cluster("family-b|D5") == (
+        ("PERMISSION", 1, True),
+    )
+
+
+def test_global_anchor_inherits_only_target_gene_block():
+    pool = make_shared_initial_pool(77, size=8, include_hand=False)
+    global_parent, local_donor = pool[0].clone(), pool[1].clone()
+    target_key = next(iter(global_parent.genes))
+    original_action = global_parent.genes[target_key].action
+    local_donor.genes[target_key].action = (
+        ACT_VERIFY if original_action != ACT_VERIFY else ACT_ESCALATE
+    )
+    child, audit = _inherit_target_gene_block(
+        global_parent, local_donor, [target_key]
+    )
+    assert child.genes[target_key].action == local_donor.genes[target_key].action
+    assert audit["copied_gene_count"] == 1
+    assert audit["block_copy_preserved_non_target"] is True
+    for key in global_parent.genes:
+        if key == target_key:
+            continue
+        assert child.genes[key].action == global_parent.genes[key].action
+        assert child.genes[key].wait_n == global_parent.genes[key].wait_n
+
+
+def test_fspae_r3_block_mode_uses_global_anchor_and_cluster_local_mutation():
+    pool = make_shared_initial_pool(81, size=12, include_hand=False)
+    for candidate in pool[:4]:
+        candidate.genes_list()[0].action = ACT_VERIFY
+    kwargs = {
+        "initial_pool": pool, "scenarios": SCENARIOS, "verdicts": VERDICTS,
+        "pop_size": 4, "generations": 2,
+        "eval_budget": 4 * 3 * len(SCENARIOS), "seed": 19,
+        "archive_capacity": 3, "target_mode": "uniform",
+        "parent_mode": "global_anchor_local_block",
+        "variation_mode": "target_cluster_block",
+    }
+    with patch("fspae_runner.evaluate_sbcg_candidate", side_effect=fake_evaluate):
+        result = run_fspae_evolution(**kwargs)
+    assert result["algorithm"] == "FSPAE-R3-Block"
+    assert result["config"]["target_cluster_gene_block"] is True
+    assert result["mutation_audit"]
+    for audit in result["mutation_audit"]:
+        assert audit["parent_b_source"] == "global_population_anchor"
+        assert audit["block_copy_preserved_non_target"] is True
+        if audit["stratum"] is not None and audit["gene_hit"]:
+            assert audit["target_mutation_within_block"] is True
+            assert audit["gene_key"] in [tuple(key) for key in audit["block_gene_keys"]]

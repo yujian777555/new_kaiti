@@ -278,10 +278,12 @@ def run_fspae_evolution(
         raise ValueError("invalid FSPAE population, generation, or archive capacity")
     if target_mode not in {"deficit", "legacy_deficit", "performance_deficit", "uniform"}:
         raise ValueError("invalid FSPAE target mode")
-    if parent_mode not in {"local_a_global_b", "local_pair"}:
-        raise ValueError("parent_mode must be local_a_global_b or local_pair")
-    if variation_mode not in {"global", "target_cluster"}:
-        raise ValueError("variation_mode must be global or target_cluster")
+    if parent_mode not in {"local_a_global_b", "local_pair", "global_anchor_local_block"}:
+        raise ValueError("invalid FSPAE parent mode")
+    if variation_mode not in {"global", "target_cluster", "target_cluster_block"}:
+        raise ValueError("invalid FSPAE variation mode")
+    if (parent_mode == "global_anchor_local_block") != (variation_mode == "target_cluster_block"):
+        raise ValueError("target_cluster_block requires global_anchor_local_block parent mode")
     if eval_budget < pop_size * len(scenarios):
         raise ValueError("evaluation budget is insufficient for the initial population")
     if len(initial_pool) < pop_size:
@@ -361,7 +363,7 @@ def run_fspae_evolution(
         counterexamples.aggregate(
             [record.metrics for record in records], scenario_families,
             scenario_clusters=(
-                scenario_to_cluster if variation_mode == "target_cluster" else None
+                scenario_to_cluster if variation_mode in {"target_cluster", "target_cluster_block"} else None
             ),
         )
         strata_history.append({
@@ -378,27 +380,64 @@ def run_fspae_evolution(
         for _ in range(pop_size):
             if episodes >= eval_budget:
                 break
-            target = _target_cluster(archives, rng, target_mode)
+            if variation_mode == "target_cluster_block":
+                failing_clusters = [
+                    cluster_id for cluster_id in cluster_ids
+                    if counterexamples.gene_keys_for_cluster(cluster_id)
+                ]
+                target_archives = (
+                    {key: archives[key] for key in failing_clusters}
+                    if failing_clusters else archives
+                )
+                target = _target_cluster(target_archives, rng, target_mode)
+            else:
+                target = _target_cluster(archives, rng, target_mode)
             target_counts[target] += 1
             archives[target].target_selections += 1
             target_archive = archives[target]
-            parent_a = target_archive.select_parent(rng)
-            parent_a_source = "target_archive" if parent_a is not None else "global_population"
-            if parent_a is None:
-                parent_a = population[_population_tournament(records, ranks, crowding, rng)]
-            if parent_mode == "local_pair" and target_archive.records:
-                parent_b = target_archive.select_parent(rng)
-                parent_b_source = "target_archive"
+            block_audit = {}
+            if parent_mode == "global_anchor_local_block":
+                global_index = _population_tournament(records, ranks, crowding, rng)
+                global_record = records[global_index]
+                local_record = target_archive.select_parent_record(rng)
+                local_record = local_record or global_record
+                parent_a = local_record.fsm
+                parent_b = global_record.fsm
+                parent_a_source = (
+                    "target_archive_block_donor"
+                    if local_record is not global_record else "global_population_fallback"
+                )
+                parent_b_source = "global_population_anchor"
+                block_keys = counterexamples.gene_keys_for_cluster(target)
+                child, block_audit = _inherit_target_gene_block(
+                    parent_b, parent_a, block_keys,
+                )
             else:
-                parent_b = population[_population_tournament(records, ranks, crowding, rng)]
-                parent_b_source = "global_population"
+                parent_a = target_archive.select_parent(rng)
+                parent_a_source = "target_archive" if parent_a is not None else "global_population"
+                if parent_a is None:
+                    parent_a = population[_population_tournament(records, ranks, crowding, rng)]
+                if parent_mode == "local_pair" and target_archive.records:
+                    parent_b = target_archive.select_parent(rng)
+                    parent_b_source = "target_archive"
+                else:
+                    parent_b = population[_population_tournament(records, ranks, crowding, rng)]
+                    parent_b_source = "global_population"
+                child = crossover(parent_a, parent_b, rng)
             parent_a_fingerprint = fsm_fingerprint(parent_a)
             parent_b_fingerprint = fsm_fingerprint(parent_b)
-            child = crossover(parent_a, parent_b, rng)
-            if variation_mode == "target_cluster":
+            if variation_mode in {"target_cluster", "target_cluster_block"}:
                 child, audit = counterexamples.mutate_with_record(
                     child, rng, target_cluster=target,
                 )
+                if variation_mode == "target_cluster_block":
+                    block_keys_set = {tuple(key) for key in block_audit.get("block_gene_keys", [])}
+                    audit["target_mutation_within_block"] = (
+                        tuple(audit["gene_key"]) in block_keys_set
+                        if audit.get("gene_key") is not None and audit.get("stratum") is not None
+                        else None
+                    )
+                    audit.update(block_audit)
             elif counterexamples.stratum_statistics():
                 child, audit = counterexamples.mutate_with_record(child, rng)
             else:
@@ -472,35 +511,23 @@ def run_fspae_evolution(
         raise AssertionError("FSPAE evaluation-call accounting is inconsistent")
     if episodes > eval_budget:
         raise AssertionError("FSPAE exceeded its Train episode budget")
+    if parent_mode == "global_anchor_local_block" and variation_mode == "target_cluster_block":
+        algorithm_name = "FSPAE-R3-Block"
+    elif parent_mode == "local_pair" and variation_mode == "target_cluster":
+        algorithm_name = "FSPAE-R2"
+    elif parent_mode == "local_pair" and variation_mode == "global":
+        algorithm_name = "FSPAE-R2-global-mutation-ablation"
+    elif parent_mode == "local_pair" and target_mode == "uniform" and variation_mode == "target_cluster":
+        algorithm_name = "FSPAE-R2-uniform-target-ablation"
+    elif parent_mode == "local_pair" and target_mode == "legacy_deficit" and variation_mode == "target_cluster":
+        algorithm_name = "FSPAE-R2-legacy-scheduler-ablation"
+    elif target_mode == "uniform":
+        algorithm_name = "FSPAE-uniform-target"
+    else:
+        algorithm_name = "FSPAE"
     return {
-        "algorithm": (
-            "FSPAE-R2" if (
-                target_mode == "performance_deficit"
-                and parent_mode == "local_pair"
-                and variation_mode == "target_cluster"
-            ) else (
-                "FSPAE-R2-global-mutation-ablation" if (
-                    target_mode == "performance_deficit"
-                    and parent_mode == "local_pair"
-                    and variation_mode == "global"
-                ) else (
-                    "FSPAE-R2-uniform-target-ablation" if (
-                        target_mode == "uniform"
-                        and parent_mode == "local_pair"
-                        and variation_mode == "target_cluster"
-                    ) else (
-                        "FSPAE-R2-legacy-scheduler-ablation" if (
-                            target_mode == "legacy_deficit"
-                            and parent_mode == "local_pair"
-                            and variation_mode == "target_cluster"
-                        ) else (
-                            "FSPAE-uniform-target" if target_mode == "uniform" else "FSPAE"
-                        )
-                    )
-                )
-            )
-        ),
-        "config": {
+        "algorithm": algorithm_name,
+                "config": {
             "pop_size": pop_size, "generations": generations,
             "archive_capacity_per_stratum": archive_capacity,
             "target_mode": target_mode,
@@ -515,7 +542,8 @@ def run_fspae_evolution(
             "local_reference_direction_count": len(local_directions),
             "global_survivor_optimizer": "NSGA-III",
             "counterexample_guidance": True,
-            "target_cluster_mutation_is_fail_closed": variation_mode == "target_cluster",
+            "target_cluster_gene_block": variation_mode == "target_cluster_block",
+            "target_cluster_mutation_is_fail_closed": variation_mode in {"target_cluster", "target_cluster_block"},
         },
         "seed": seed, "eval_budget": eval_budget, "episodes": episodes,
         "unique_evaluations": unique_evaluations, "cache_hits": cache_hits,

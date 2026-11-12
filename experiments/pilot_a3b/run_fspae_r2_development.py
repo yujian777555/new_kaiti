@@ -35,6 +35,7 @@ ARMS = (
     "fspae_r2_uniform",
     "fspae_r2_uniform_global_mut",
     "fspae_r2_legacy_scheduler",
+    "fspae_r3_block",
 )
 COMPARATORS = {
     "matched_nsga3": "matched_nsga3",
@@ -54,7 +55,7 @@ FIELDS = (
 def _mechanism_audit(results):
     grouped = defaultdict(list)
     for result in results:
-        if not result["method"].startswith("fspae_r2"):
+        if not (result["method"].startswith("fspae_r2") or result["method"] == "fspae_r3_block"):
             continue
         audit = result["search"].get("mutation_audit", [])
         grouped[result["method"]].append({
@@ -82,6 +83,16 @@ def _mechanism_audit(results):
                 item.get("fallback") == "standard_mutation_no_target_counterexamples"
                 for item in audit
             ),
+            "global_anchor_count": sum(
+                item.get("parent_b_source") == "global_population_anchor" for item in audit
+            ),
+            "block_copy_preserved_count": sum(
+                item.get("block_copy_preserved_non_target") is True for item in audit
+            ),
+            "target_mutation_within_block_count": sum(
+                item.get("target_mutation_within_block") is True for item in audit
+            ),
+            "copied_gene_count": sum(item.get("copied_gene_count", 0) for item in audit),
             "target_selection_counts": result["search"].get("target_selection_counts", {}),
         })
     return {
@@ -95,6 +106,10 @@ def _mechanism_audit(results):
             "no_target_counterexample_fallbacks": sum(
                 row["no_target_counterexample_fallbacks"] for row in rows
             ),
+            "global_anchor_count": sum(row["global_anchor_count"] for row in rows),
+            "block_copy_preserved_count": sum(row["block_copy_preserved_count"] for row in rows),
+            "target_mutation_within_block_count": sum(row["target_mutation_within_block_count"] for row in rows),
+            "copied_gene_count": sum(row["copied_gene_count"] for row in rows),
         }
         for method, rows in grouped.items()
     }
@@ -170,6 +185,20 @@ def run_development_experiment():
             field: _paired_cluster_bootstrap(
                 rows_by_method["fspae_r2"], rows_by_method[comparator], field,
                 seed=2026111301 + len(comparisons),
+            )
+            for field in FIELDS
+        }
+    block_comparisons = {}
+    for label, comparator in {
+        "matched_nsga3": "matched_nsga3",
+        "sbcg_nsga3": "sbcg_nsga3",
+        "fspae_r1": "fspae",
+        "fspae_r2": "fspae_r2",
+    }.items():
+        block_comparisons[f"fspae_r3_block_vs_{label}"] = {
+            field: _paired_cluster_bootstrap(
+                rows_by_method["fspae_r3_block"], rows_by_method[comparator], field,
+                seed=2026111401 + len(block_comparisons),
             )
             for field in FIELDS
         }
@@ -261,6 +290,7 @@ def run_development_experiment():
         "fixed_baselines": fixed_baselines,
         "aggregate": aggregate,
         "paired_cluster_bootstrap": comparisons,
+        "paired_block_bootstrap": block_comparisons,
         "mechanism_audit": _mechanism_audit(results),
         "interpretation": (
             "Use this run to decide whether target-conditioned search deserves a "
@@ -345,15 +375,30 @@ def write_outputs(result, output_dir):
 
     lines.extend(["", "## Mechanism dataflow audit", ""])
     lines.append(
-        "| Arm | Offspring | Local parent pairs | Targeted mutations | Exact target matches | Cross-target mutations | No-target fallbacks |"
+        "| Arm | Offspring | Local parent pairs | Targeted mutations | Exact target matches | Cross-target mutations | No-target fallbacks | Global anchors | Block copies | In-block mutations | Copied genes |"
     )
-    lines.append("|---|---:|---:|---:|---:|---:|---:|")
+    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for method, item in result["mechanism_audit"].items():
         lines.append(
             f"| {method} | {item['offspring_count']} | {item['local_parent_pair_count']} | "
             f"{item['targeted_mutation_count']} | {item['target_match_count']} | "
-            f"{item['cross_target_mutation_count']} | {item['no_target_counterexample_fallbacks']} |"
+            f"{item['cross_target_mutation_count']} | {item['no_target_counterexample_fallbacks']} | "
+            f"{item['global_anchor_count']} | {item['block_copy_preserved_count']} | "
+            f"{item['target_mutation_within_block_count']} | {item['copied_gene_count']} |"
         )
+    lines.extend([
+        "",
+        "## R3 global-anchor / local-block contrasts",
+        "",
+    ])
+    for label, fields in result["paired_block_bootstrap"].items():
+        lines.extend([f"### {label}", "", "| Endpoint | Mean cluster difference | 95% descriptive cluster-bootstrap interval | Clusters |", "|---|---:|---:|---:|"])
+        for field, stats in fields.items():
+            if stats is None:
+                lines.append(f"| {field} | NA | NA | 0 |")
+            else:
+                ci = stats["descriptive_cluster_bootstrap_95_ci"]
+                lines.append(f"| {field} | {stats['mean_cluster_difference']:.4f} | [{ci[0]:.4f}, {ci[1]:.4f}] | {stats['clusters']} |")
     lines.extend([
         "",
         "## 2×2 scheduler × mutation factorial",
@@ -382,6 +427,7 @@ def main():
         "manifest_sha256": result["manifest"]["manifest_sha256"],
         "aggregate": result["aggregate"],
         "mechanism_audit": result["mechanism_audit"],
+        "paired_block_bootstrap": result["paired_block_bootstrap"],
         "json": str(json_path),
         "report": str(report_path),
     }, ensure_ascii=False, indent=2))
